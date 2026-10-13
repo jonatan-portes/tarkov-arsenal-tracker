@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tarkov Arsenal Tracker</title>
+
+  <!-- Leaflet.js CSS & JS via CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
   <style>
     /* =========================================================
        RESET & BASE THEME
@@ -99,7 +104,7 @@
     header p.subtitle span { color: var(--accent); font-weight: 600; }
 
     /* =========================================================
-       NAV / TAB BAR
+       NAV / TAB BAR (SEM EMOJIS CONFORME SOLICITADO)
     ========================================================= */
     nav {
       background: var(--bg-nav);
@@ -110,7 +115,7 @@
       gap: 6px;
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1000;
       backdrop-filter: blur(8px);
     }
 
@@ -120,15 +125,15 @@
       color: var(--text-sec);
       cursor: pointer;
       font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 14px 22px;
+      padding: 14px 24px;
       position: relative;
       transition: color 0.2s, background-color 0.2s;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
     }
 
     .nav-btn::after {
@@ -148,7 +153,6 @@
     .nav-btn.active { color: var(--accent-light); }
     .nav-btn.active::after { transform: translateX(-50%) scaleX(1); }
     .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
-    .nav-icon { font-size: 0.95rem; }
 
     /* =========================================================
        STATS & PROGRESS BAR
@@ -289,7 +293,7 @@
     .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
     /* =========================================================
-       GRID SYSTEM
+       GRID SYSTEM (ARMAS & MUNIÇÕES)
     ========================================================= */
     .cards-grid {
       display: grid;
@@ -303,7 +307,7 @@
     @media (min-width: 1100px) { .cards-grid:not(.tasks-grid) { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
     @media (min-width: 1400px) { .cards-grid:not(.tasks-grid) { grid-template-columns: repeat(5, 1fr); } }
 
-    /* Tasks grid - 1 or 2 columns */
+    /* Tasks grid - 1 ou 2 colunas */
     .cards-grid.tasks-grid {
       grid-template-columns: 1fr;
       gap: 12px;
@@ -345,7 +349,6 @@
     .tier-b { --tier-color: var(--tier-b); }
     .tier-d { --tier-color: var(--tier-d); }
 
-    /* Card visual row with thumbnail */
     .card-visual-row {
       display: flex;
       align-items: center;
@@ -478,7 +481,6 @@
       transform: translateY(-1px);
     }
 
-    /* Completed Task Styling */
     .task-card.completed {
       opacity: 0.62;
       border-left-color: var(--status-done);
@@ -498,7 +500,6 @@
       user-select: none;
     }
 
-    /* Custom Checkbox */
     .task-check-wrapper {
       position: relative;
       display: flex;
@@ -639,7 +640,7 @@
       padding: 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .obj-meta-row {
@@ -672,6 +673,13 @@
     .obj-type-build    { background: rgba(154,136,102,0.15); color: var(--accent-light); border: 1px solid rgba(154,136,102,0.3); }
     .obj-type-default  { background: rgba(136,136,136,0.15); color: #ccc; border: 1px solid #333; }
 
+    .obj-location-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     .obj-map-pill {
       font-size: 0.66rem;
       letter-spacing: 0.04em;
@@ -692,10 +700,291 @@
       border: 1px solid #222;
     }
 
+    /* Botão Tático: Ver no Mapa */
+    .btn-view-map {
+      background: rgba(154,136,102,0.15);
+      border: 1px solid var(--accent);
+      color: var(--accent-light);
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-view-map:hover {
+      background: var(--accent);
+      color: #0a0a0a;
+      transform: translateY(-1px);
+    }
+
     .obj-desc {
       font-size: 0.78rem;
       color: var(--text-main);
       line-height: 1.4;
+    }
+
+    /* =========================================================
+       MAPAS INTERATIVOS (LEAFLET CONTAINER)
+    ========================================================= */
+    .maps-section {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+    }
+    .maps-section.hidden { display: none; }
+
+    .maps-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 900px) {
+      .maps-layout {
+        grid-template-columns: 280px 1fr;
+      }
+    }
+
+    /* Sidebar de Mapas */
+    .maps-sidebar {
+      background: #111111;
+      border: 1px solid #222;
+      border-radius: 3px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 700px;
+      overflow-y: auto;
+    }
+
+    .maps-sidebar-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border-bottom: 1px solid #222;
+      padding-bottom: 8px;
+    }
+
+    .map-btn-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .map-select-btn {
+      background: #161616;
+      border: 1px solid #252525;
+      border-left: 3px solid transparent;
+      color: var(--text-sec);
+      padding: 10px 12px;
+      border-radius: 2px;
+      text-align: left;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .map-select-btn:hover {
+      background: #1d1d1d;
+      color: var(--text-main);
+      border-color: #333;
+    }
+
+    .map-select-btn.active {
+      background: #1f1d17;
+      border-color: var(--accent);
+      border-left-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    .map-select-desc {
+      font-size: 0.66rem;
+      color: #777;
+      font-weight: 400;
+    }
+    .map-select-btn.active .map-select-desc {
+      color: #999;
+    }
+
+    /* Área de Visualização do Mapa */
+    .map-viewer-wrapper {
+      background: #111111;
+      border: 1px solid #222;
+      border-radius: 3px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .map-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .map-current-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .map-current-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--accent-light);
+      text-transform: uppercase;
+    }
+
+    .map-reset-btn {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: var(--text-sec);
+      padding: 5px 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .map-reset-btn:hover {
+      background: #252525;
+      color: var(--text-main);
+      border-color: var(--accent);
+    }
+
+    /* Toast Tático de Foco de Missão */
+    .map-toast {
+      background: rgba(21, 21, 21, 0.95);
+      border: 1px solid var(--accent);
+      border-left: 4px solid var(--tier-s);
+      color: var(--text-main);
+      padding: 8px 14px;
+      font-size: 0.74rem;
+      border-radius: 2px;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      animation: fadeIn 0.25s ease;
+    }
+    .map-toast.hidden { display: none; }
+    .map-toast strong { color: var(--accent-light); }
+
+    /* Container do Leaflet */
+    #map {
+      height: 620px;
+      width: 100%;
+      background: #080808;
+      border: 1px solid #202020;
+      border-radius: 2px;
+      z-index: 10;
+    }
+
+    /* Estilização Tática Escura dos Controles do Leaflet */
+    .leaflet-container {
+      background: #080808 !important;
+    }
+    .leaflet-bar {
+      border: 1px solid #333 !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.7) !important;
+      border-radius: 2px !important;
+      overflow: hidden;
+    }
+    .leaflet-bar a {
+      background-color: #161616 !important;
+      color: var(--accent-light) !important;
+      border-bottom: 1px solid #282828 !important;
+    }
+    .leaflet-bar a:hover {
+      background-color: #222 !important;
+      color: #fff !important;
+    }
+
+    /* Popup Tático do Leaflet */
+    .leaflet-popup-content-wrapper {
+      background: #141414 !important;
+      color: var(--text-main) !important;
+      border: 1px solid var(--accent) !important;
+      border-radius: 3px !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.85) !important;
+      padding: 4px !important;
+    }
+    .leaflet-popup-tip {
+      background: #141414 !important;
+      border: 1px solid var(--accent) !important;
+    }
+    .leaflet-popup-content {
+      margin: 8px 10px !important;
+      font-family: inherit !important;
+      font-size: 0.76rem !important;
+      line-height: 1.4 !important;
+    }
+    .leaflet-popup-content strong {
+      color: var(--accent-light) !important;
+      font-size: 0.8rem !important;
+      display: block;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Marcador Customizado com Pulso Tático */
+    .tactical-map-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .marker-pin {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .marker-pulse {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(255, 153, 0, 0.35);
+      border: 1.5px solid var(--tier-s);
+      animation: markerPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes markerPing {
+      0%   { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+    .marker-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--tier-s);
+      border: 2px solid #000;
+      z-index: 2;
+      box-shadow: 0 0 8px #ff9900;
     }
 
     /* =========================================================
@@ -747,24 +1036,19 @@
         <h1>Tarkov Arsenal Tracker</h1>
       </div>
       <p class="subtitle" id="subtitle">
-        Conectando à API · Classificação por Tier dinâmica & Rastreador de Missões
+        Conectando à API em Português (PT-BR) · Classificação por Tier & Mapas Interativos
       </p>
     </div>
   </header>
 
   <!-- ======================================================
-       NAVIGATION TABS
+       NAVIGATION TABS (SEM EMOJIS, APENAS OS NOMES)
   ====================================================== -->
   <nav>
-    <button class="nav-btn active" id="btn-guns" onclick="showSection('guns')">
-      <span class="nav-icon">🔫</span> Armas
-    </button>
-    <button class="nav-btn" id="btn-ammo" onclick="showSection('ammo')">
-      <span class="nav-icon">🎯</span> Munições
-    </button>
-    <button class="nav-btn" id="btn-tasks" onclick="showSection('tasks')">
-      <span class="nav-icon">📜</span> Missões
-    </button>
+    <button class="nav-btn active" id="btn-guns" onclick="showSection('guns')">ARMAS</button>
+    <button class="nav-btn" id="btn-ammo" onclick="showSection('ammo')">MUNIÇÕES</button>
+    <button class="nav-btn" id="btn-tasks" onclick="showSection('tasks')">MISSÕES</button>
+    <button class="nav-btn" id="btn-maps" onclick="showSection('maps')">MAPAS</button>
   </nav>
 
   <!-- ======================================================
@@ -783,6 +1067,10 @@
       <span><span class="dot" style="background:#555"></span> Pendentes: <strong id="tasks-pending-count" style="color:#aaa; margin-left:4px;">0</strong></span>
       <span id="tasks-progress-percent" style="color:var(--accent); font-weight:600;">0% Concluído</span>
     </div>
+    <div id="stats-maps-info" style="display:none; align-items:center; gap:14px; flex-wrap:wrap; color:var(--accent-light);">
+      <span>Sistema de Coordenadas: <strong>CRS.Simple</strong></span>
+      <span>Projeção: <strong>Planimétrica 2D / 3D</strong></span>
+    </div>
   </div>
 
   <!-- ======================================================
@@ -792,7 +1080,7 @@
     <!-- Loading Screen -->
     <div class="loading-wrapper" id="loading">
       <div class="spinner"></div>
-      <p class="loading-text">Carregando arsenal...</p>
+      <p class="loading-text">Carregando arsenal em Português...</p>
       <p class="loading-source" id="loading-source"></p>
     </div>
 
@@ -831,8 +1119,38 @@
       <span class="section-count" id="section-count">0 itens</span>
     </div>
 
-    <!-- Cards Grid -->
+    <!-- Cards Grid (Armas, Munições e Missões) -->
     <div class="cards-grid hidden" id="cards-grid"></div>
+
+    <!-- Mapas Interativos (Leaflet Container) -->
+    <div class="maps-section hidden" id="maps-section">
+      <div class="maps-layout">
+        <!-- Sidebar seletora de mapas -->
+        <aside class="maps-sidebar">
+          <div class="maps-sidebar-title">Mapas de Tarkov</div>
+          <div class="map-btn-list" id="map-btn-list"></div>
+        </aside>
+
+        <!-- Visualizador Leaflet -->
+        <section class="map-viewer-wrapper">
+          <div class="map-toolbar">
+            <div class="map-current-info">
+              <span class="map-current-name" id="current-map-title">CUSTOMS</span>
+            </div>
+            <button class="map-reset-btn" onclick="resetMapView()">Centralizar Visão</button>
+          </div>
+
+          <!-- Toast de Foco de Missão -->
+          <div class="map-toast hidden" id="map-toast">
+            <span>📍</span>
+            <span id="map-toast-text">Área da missão focada</span>
+          </div>
+
+          <!-- Div principal do Leaflet -->
+          <div id="map"></div>
+        </section>
+      </div>
+    </div>
   </main>
 
   <!-- ======================================================
@@ -850,28 +1168,149 @@
     let searchQuery = '';
     const expandedTaskIds = new Set();
 
+    // Estado do Leaflet
+    let leafletMap = null;
+    let currentImageOverlay = null;
+    let currentMapId = 'customs';
+    let activeOverlayBounds = null;
+    let missionMarkersGroup = null;
+
     /* ════════════════════════════════════════════════════════
-       API CONSTANTS & QUERIES
+       DATABASE DE MAPAS (LEAFLET IMAGE OVERLAY)
+    ════════════════════════════════════════════════════════ */
+    const MAPS_DATABASE = [
+      {
+        id: "customs",
+        name: "Customs",
+        namePt: "Customs (Alfândega)",
+        desc: "Parque industrial com dormitórios, armazéns e terminal alfandegário.",
+        image: "https://tarkov.dev/maps/customs-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/Customs.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "woods",
+        name: "Woods",
+        namePt: "Woods (Bosques)",
+        desc: "Reserva florestal com serraria central, cabanas e acampamentos militares.",
+        image: "https://tarkov.dev/maps/woods-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/Woods.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "factory",
+        name: "Factory",
+        namePt: "Factory (Fábrica)",
+        desc: "Instalação industrial fechada, combate tático de curto alcance.",
+        image: "https://tarkov.dev/maps/factory-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/Factory.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "shoreline",
+        name: "Shoreline",
+        namePt: "Shoreline (Litoral)",
+        desc: "Extensa área costeira com o resort Azure Coast e usina elétrica.",
+        image: "https://tarkov.dev/maps/shoreline-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/Shoreline.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "interchange",
+        name: "Interchange",
+        namePt: "Interchange (Intercâmbio)",
+        desc: "Shopping center ULTRA com lojas IDEA, OLI, Goshan e subsolo.",
+        image: "https://tarkov.dev/maps/interchange-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/Interchange.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "reserve",
+        name: "Reserve",
+        namePt: "Reserve (Base Militar)",
+        desc: "Base militar com bunkers subterrâneos, silos e túneis secretos.",
+        image: "https://tarkov.dev/maps/reserve-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/Reserve.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "lighthouse",
+        name: "Lighthouse",
+        namePt: "Lighthouse (Farol)",
+        desc: "Cabo Dalniy, estação de tratamento de água e área dos Rogues.",
+        image: "https://assets.tarkov.dev/maps/svg/Lighthouse.svg",
+        svg: "https://assets.tarkov.dev/maps/svg/Lighthouse.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "streets",
+        name: "Streets of Tarkov",
+        namePt: "Streets of Tarkov (Ruas)",
+        desc: "Centro urbano residencial e comercial de Tarkov.",
+        image: "https://tarkov.dev/maps/streets-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/Streets.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "ground-zero",
+        name: "Ground Zero",
+        namePt: "Ground Zero (Marco Zero)",
+        desc: "Distrito financeiro com arranha-céus da TerraGroup.",
+        image: "https://tarkov.dev/maps/ground-zero-3d.jpg",
+        svg: "https://assets.tarkov.dev/maps/svg/GroundZero.svg",
+        defaultCoords: [500, 500]
+      },
+      {
+        id: "the-lab",
+        name: "The Lab",
+        namePt: "The Lab (Laboratório)",
+        desc: "Instalação de pesquisa secreta subterrânea da TerraGroup.",
+        image: "https://tarkov.dev/maps/the-lab-3d.jpg",
+        svg: "https://tarkov.dev/maps/the-lab-3d.jpg",
+        defaultCoords: [500, 500]
+      }
+    ];
+
+    /* ════════════════════════════════════════════════════════
+       MAPEAMENTO DE PONTOS DE INTERESSE / COORDENADAS DE MISSÕES
+       (Estrutura extensível para geolocalização no Leaflet)
+    ════════════════════════════════════════════════════════ */
+    const MISSION_HOTSPOTS = {
+      "task_debut":                  { mapId: "customs", coords: [450, 420], name: "Área Industrial e Bloqueios" },
+      "task_checking":               { mapId: "customs", coords: [470, 640], name: "Caminhão de Combustível (Posto Novo)" },
+      "task_operation_aquarius":     { mapId: "customs", coords: [640, 520], name: "Dormitórios 2 Andares (Quarto 206)" },
+      "task_delivery_from_the_past": { mapId: "customs", coords: [420, 220], name: "Escritório do Diretor (Big Red)" },
+      "task_golden_swag":            { mapId: "customs", coords: [660, 540], name: "Dormitórios 3 Andares (Quarto 303)" },
+      "task_the_extortionist":       { mapId: "customs", coords: [460, 310], name: "Cabine do Mensageiro (Matagal)" },
+      "task_shootout_picnic":        { mapId: "woods",   coords: [520, 500], name: "Serraria e Floresta Central" },
+      "task_spa_tour":               { mapId: "shoreline", coords: [560, 510], name: "Resort Azure Coast" },
+      "task_first_in_line":          { mapId: "ground-zero", coords: [480, 530], name: "Posto Médico de Campanha (Térreo)" }
+    };
+
+    /* ════════════════════════════════════════════════════════
+       API CONSTANTS & QUERIES (TRADUÇÃO PT-BR)
     ════════════════════════════════════════════════════════ */
     const GQL_ENDPOINT   = 'https://api.tarkov.dev/graphql';
-    const JSON_ITEMS_URL = 'https://json.tarkov.dev/regular/items';
-    const JSON_TRANS_URL = 'https://json.tarkov.dev/regular/items_en';
-    const JSON_TASKS_URL = 'https://json.tarkov.dev/regular/tasks';
-    const JSON_TASK_EN   = 'https://json.tarkov.dev/regular/tasks_en';
-    const JSON_MAPS_EN   = 'https://json.tarkov.dev/regular/maps_en';
 
-    // Query exata conforme solicitado na especificação
+    // Endpoints JSON com traduções oficiais em Português (PT)
+    const JSON_ITEMS_URL = 'https://json.tarkov.dev/regular/items';
+    const JSON_TRANS_URL = 'https://json.tarkov.dev/regular/items_pt';
+    const JSON_TASKS_URL = 'https://json.tarkov.dev/regular/tasks';
+    const JSON_TASK_PT   = 'https://json.tarkov.dev/regular/tasks_pt';
+    const JSON_MAPS_PT   = 'https://json.tarkov.dev/regular/maps_pt';
+
+    // Query GraphQL com argumento de idioma (lang: pt)
     const GQL_QUERY = `
 query {
-  items(types: [gun]) {
+  items(types: [gun], lang: pt) {
     id name iconLink
     properties { ... on ItemPropertiesWeapon { defaultRecoilVertical ergonomics fireRate caliber } }
   }
-  ammo {
+  ammo(lang: pt) {
     item { id name iconLink }
     caliber penetrationPower damage armorDamage fragmentationChance
   }
-  tasks {
+  tasks(lang: pt) {
     id name
     objectives {
       type description
@@ -882,7 +1321,7 @@ query {
 `;
 
     /* ════════════════════════════════════════════════════════
-       MAP NAME LOOKUP DICTIONARY
+       DICIONÁRIO DE NOMES DE MAPAS
     ════════════════════════════════════════════════════════ */
     const MAP_LOOKUP = {
       "56f40101d2720b2a4d8b45d6": "Customs",
@@ -902,7 +1341,7 @@ query {
     };
 
     /* ════════════════════════════════════════════════════════
-       OBJECTIVE TYPE CONFIGURATION
+       CONFIGURAÇÃO DE TIPOS DE OBJETIVO
     ════════════════════════════════════════════════════════ */
     const OBJECTIVE_CONFIG = {
       shoot:          { label: 'Eliminar',   css: 'obj-type-shoot',   icon: '🎯' },
@@ -932,25 +1371,21 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       LOCAL STORAGE HELPERS (PERSISTÊNCIA)
+       PERSISTÊNCIA EM LOCALSTORAGE
     ════════════════════════════════════════════════════════ */
     function isTaskCompleted(taskId) {
       return localStorage.getItem('task_' + taskId) === 'true';
     }
 
     function setTaskCompleted(taskId, completed) {
-      if (completed) {
-        localStorage.setItem('task_' + taskId, 'true');
-      } else {
-        localStorage.setItem('task_' + taskId, 'false');
-      }
+      localStorage.setItem('task_' + taskId, completed ? 'true' : 'false');
     }
 
     /* ════════════════════════════════════════════════════════
-       SOURCE 1: GRAPHQL API
+       SOURCE 1: GRAPHQL (COM LANG: PT)
     ════════════════════════════════════════════════════════ */
     async function fetchGraphQL() {
-      setLoadingHint('Tentando conexão GraphQL...');
+      setLoadingHint('Tentando API GraphQL em Português...');
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 9000);
 
@@ -976,23 +1411,23 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       SOURCE 2: JSON CDN API (ALTA DISPONIBILIDADE)
+       SOURCE 2: JSON CDN (COM ENDPOINTS _PT)
     ════════════════════════════════════════════════════════ */
     async function fetchJSONAPI() {
-      setLoadingHint('Conectando ao CDN de dados Tarkov...');
+      setLoadingHint('Buscando dados em Português no CDN oficial...');
 
-      const [itemsResp, transResp, tasksResp, tasksEnResp, mapsEnResp] = await Promise.all([
+      const [itemsResp, transResp, tasksResp, tasksPtResp, mapsPtResp] = await Promise.all([
         fetch(JSON_ITEMS_URL),
         fetch(JSON_TRANS_URL),
         fetch(JSON_TASKS_URL).catch(() => null),
-        fetch(JSON_TASK_EN).catch(() => null),
-        fetch(JSON_MAPS_EN).catch(() => null),
+        fetch(JSON_TASK_PT).catch(() => null),
+        fetch(JSON_MAPS_PT).catch(() => null),
       ]);
 
       if (!itemsResp.ok) throw new Error(`Items CDN: HTTP ${itemsResp.status}`);
-      if (!transResp.ok) throw new Error(`Translations CDN: HTTP ${transResp.status}`);
+      if (!transResp.ok) throw new Error(`Traduções PT CDN: HTTP ${transResp.status}`);
 
-      setLoadingHint('Processando dados do arsenal e missões...');
+      setLoadingHint('Processando dados e missões traduzidas...');
 
       const [itemsJson, transJson] = await Promise.all([
         itemsResp.json(),
@@ -1000,14 +1435,14 @@ query {
       ]);
 
       const tasksJson   = tasksResp && tasksResp.ok ? await tasksResp.json() : null;
-      const tasksEnJson = tasksEnResp && tasksEnResp.ok ? await tasksEnResp.json() : null;
-      const mapsEnJson  = mapsEnResp && mapsEnResp.ok ? await mapsEnResp.json() : null;
+      const tasksPtJson = tasksPtResp && tasksPtResp.ok ? await tasksPtResp.json() : null;
+      const mapsPtJson  = mapsPtResp && mapsPtResp.ok ? await mapsPtResp.json() : null;
 
       const allItems     = itemsJson?.data?.items || {};
       const translations = transJson?.data || {};
       const tasksMap     = tasksJson?.data?.tasks || {};
-      const tasksEn      = tasksEnJson?.data || {};
-      const mapsEn       = mapsEnJson?.data || {};
+      const tasksPt      = tasksPtJson?.data || {};
+      const mapsPt       = mapsPtJson?.data || {};
 
       const guns = [];
       const ammoList = [];
@@ -1045,15 +1480,15 @@ query {
         }
       }
 
-      // Process tasks
+      // Processamento de missões traduzidas
       const tasks = [];
       for (const [taskId, t] of Object.entries(tasksMap)) {
-        const taskName = tasksEn[t.name] || t.name || taskId;
+        const taskName = tasksPt[t.name] || t.name || taskId;
 
         const objectives = (t.objectives || []).map(obj => {
-          const desc = tasksEn[obj.description] || tasksEn[obj.id] || obj.description || 'Objetivo operacional';
+          const desc = tasksPt[obj.description] || tasksPt[obj.id] || obj.description || 'Objetivo operacional';
           const maps = (obj.maps || []).map(mapId => {
-            const mapName = mapsEn[mapId + ' Name'] || MAP_LOOKUP[mapId] || mapId;
+            const mapName = mapsPt[mapId + ' Name'] || MAP_LOOKUP[mapId] || mapId;
             return { name: mapName };
           });
           return {
@@ -1078,34 +1513,28 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       SOURCE 3: EMBEDDED FALLBACK DATA
+       SOURCE 3: EMBEDDED FALLBACK DATA (EM PORTUGUÊS)
     ════════════════════════════════════════════════════════ */
     const FALLBACK_DATA = {
       items: [
-        { id:'5447a9cd4bdc2dbd208b4567', name:'Colt M4A1 5.56x45', iconLink:'https://assets.tarkov.dev/5447a9cd4bdc2dbd208b4567-icon.webp', properties:{ defaultRecoilVertical:73, ergonomics:48, fireRate:800, caliber:'5.56x45mm NATO' }},
-        { id:'59e663da86f77411d949b252', name:'AS VAL 9x39', iconLink:'https://assets.tarkov.dev/59e663da86f77411d949b252-icon.webp', properties:{ defaultRecoilVertical:39, ergonomics:50, fireRate:900, caliber:'9x39mm' }},
-        { id:'57838ad32459774a17445393', name:'VSS Vintorez 9x39', iconLink:'https://assets.tarkov.dev/57838ad32459774a17445393-icon.webp', properties:{ defaultRecoilVertical:44, ergonomics:47, fireRate:900, caliber:'9x39mm' }},
-        { id:'5be0568b86f7746842427a30', name:'HK MP7A2 4.6x30', iconLink:'https://assets.tarkov.dev/5be0568b86f7746842427a30-icon.webp', properties:{ defaultRecoilVertical:44, ergonomics:67, fireRate:950, caliber:'4.6x30mm HK' }},
-        { id:'5cc9c20c14c02e000d0450a7', name:'FN P90 5.7x28', iconLink:'https://assets.tarkov.dev/5cc9c20c14c02e000d0450a7-icon.webp', properties:{ defaultRecoilVertical:40, ergonomics:62, fireRate:900, caliber:'5.7x28mm FN' }},
-        { id:'5448bd6b4bdc2dfc2f8b4569', name:'MP5 SD 9x19', iconLink:'https://assets.tarkov.dev/5448bd6b4bdc2dfc2f8b4569-icon.webp', properties:{ defaultRecoilVertical:52, ergonomics:55, fireRate:800, caliber:'9x19mm' }},
-        { id:'5a367e53c4a282000e49738f', name:'HK 416A5 5.56x45', iconLink:'https://assets.tarkov.dev/5a367e53c4a282000e49738f-icon.webp', properties:{ defaultRecoilVertical:69, ergonomics:50, fireRate:850, caliber:'5.56x45mm NATO' }},
-        { id:'5644bd2b4bdc2d3b4c8b4572', name:'AK-74M 5.45x39', iconLink:'https://assets.tarkov.dev/5644bd2b4bdc2d3b4c8b4572-icon.webp', properties:{ defaultRecoilVertical:78, ergonomics:44, fireRate:650, caliber:'5.45x39mm' }},
-        { id:'5a0ec13bfcdbcb001a3b002a', name:'AKM 7.62x39', iconLink:'https://assets.tarkov.dev/5a0ec13bfcdbcb001a3b002a-icon.webp', properties:{ defaultRecoilVertical:110, ergonomics:38, fireRate:600, caliber:'7.62x39mm' }},
-        { id:'5ac66d2e5acfc43b320a4226', name:'AK-103 7.62x39', iconLink:'https://assets.tarkov.dev/5ac66d2e5acfc43b320a4226-icon.webp', properties:{ defaultRecoilVertical:105, ergonomics:42, fireRate:600, caliber:'7.62x39mm' }},
-        { id:'5a7828548dc32e5a9c28b516', name:'Remington R11 RSASS', iconLink:'https://assets.tarkov.dev/5a7828548dc32e5a9c28b516-icon.webp', properties:{ defaultRecoilVertical:89, ergonomics:40, fireRate:700, caliber:'7.62x51mm NATO' }},
-        { id:'5b057d4f86f7744391143529', name:'DSA SA-58 7.62x51', iconLink:'https://assets.tarkov.dev/5b057d4f86f7744391143529-icon.webp', properties:{ defaultRecoilVertical:128, ergonomics:35, fireRate:700, caliber:'7.62x51mm NATO' }},
-        { id:'5a107d57fcdbcb001c408a8f', name:'Springfield Armory M1A', iconLink:'https://assets.tarkov.dev/5a107d57fcdbcb001c408a8f-icon.webp', properties:{ defaultRecoilVertical:114, ergonomics:39, fireRate:700, caliber:'7.62x51mm NATO' }},
-        { id:'5bf3e03b0db834001d2c4a9c', name:'Mosin-Nagant Bolt-action', iconLink:'https://assets.tarkov.dev/5bf3e03b0db834001d2c4a9c-icon.webp', properties:{ defaultRecoilVertical:150, ergonomics:30, fireRate:30, caliber:'7.62x54mmR' }},
-        { id:'5cad75e486f774498211a704', name:'KRISS Vector .45 ACP', iconLink:'https://assets.tarkov.dev/5cad75e486f774498211a704-icon.webp', properties:{ defaultRecoilVertical:35, ergonomics:68, fireRate:1100, caliber:'.45 ACP' }},
-        { id:'5fc24d79a82ee64e2a582fed', name:'KRISS Vector 9x19', iconLink:'https://assets.tarkov.dev/5fc24d79a82ee64e2a582fed-icon.webp', properties:{ defaultRecoilVertical:33, ergonomics:70, fireRate:1100, caliber:'9x19mm' }},
-        { id:'60339ab7d62f9c04eb77ca61', name:'SIG MCX .300 BLK', iconLink:'https://assets.tarkov.dev/60339ab7d62f9c04eb77ca61-icon.webp', properties:{ defaultRecoilVertical:65, ergonomics:52, fireRate:700, caliber:'.300 Blackout' }},
-        { id:'5d43021ca4b9362eab495381', name:'RPK-16 5.45x39', iconLink:'https://assets.tarkov.dev/5d43021ca4b9362eab495381-icon.webp', properties:{ defaultRecoilVertical:72, ergonomics:40, fireRate:650, caliber:'5.45x39mm' }},
-        { id:'5e8488fa988a8701445df1e4', name:'Desert Tech MDR 5.56', iconLink:'https://assets.tarkov.dev/5e8488fa988a8701445df1e4-icon.webp', properties:{ defaultRecoilVertical:68, ergonomics:57, fireRate:650, caliber:'5.56x45mm NATO' }},
-        { id:'5f9949d869e2777bed0633b5', name:'CMMG Mk47 Mutant', iconLink:'https://assets.tarkov.dev/5f9949d869e2777bed0633b5-icon.webp', properties:{ defaultRecoilVertical:100, ergonomics:46, fireRate:650, caliber:'7.62x39mm' }},
-        { id:'5bf3e0490db83400196199af', name:'HK UMP 45', iconLink:'https://assets.tarkov.dev/5bf3e0490db83400196199af-icon.webp', properties:{ defaultRecoilVertical:58, ergonomics:54, fireRate:600, caliber:'.45 ACP' }},
-        { id:'5d40428586f7743172251a37', name:'B&T MP9 9x19', iconLink:'https://assets.tarkov.dev/5d40428586f7743172251a37-icon.webp', properties:{ defaultRecoilVertical:48, ergonomics:65, fireRate:900, caliber:'9x19mm' }},
-        { id:'5c07df6f0db834001b735886', name:'ASh-12 12.7x55', iconLink:'https://assets.tarkov.dev/5c07df6f0db834001b735886-icon.webp', properties:{ defaultRecoilVertical:155, ergonomics:25, fireRate:650, caliber:'12.7x55mm' }},
-        { id:'5e8488fa988a8701445df1e5', name:'KAC SR-25 7.62x51', iconLink:'https://assets.tarkov.dev/5e8488fa988a8701445df1e5-icon.webp', properties:{ defaultRecoilVertical:85, ergonomics:42, fireRate:700, caliber:'7.62x51mm NATO' }}
+        { id:'5447a9cd4bdc2dbd208b4567', name:'Fuzil de assalto Colt M4A1 5.56x45', iconLink:'https://assets.tarkov.dev/5447a9cd4bdc2dbd208b4567-icon.webp', properties:{ defaultRecoilVertical:73, ergonomics:48, fireRate:800, caliber:'5.56x45mm NATO' }},
+        { id:'59e663da86f77411d949b252', name:'Fuzil de assalto AS VAL 9x39', iconLink:'https://assets.tarkov.dev/59e663da86f77411d949b252-icon.webp', properties:{ defaultRecoilVertical:39, ergonomics:50, fireRate:900, caliber:'9x39mm' }},
+        { id:'57838ad32459774a17445393', name:'Fuzil de atirador VSS Vintorez 9x39', iconLink:'https://assets.tarkov.dev/57838ad32459774a17445393-icon.webp', properties:{ defaultRecoilVertical:44, ergonomics:47, fireRate:900, caliber:'9x39mm' }},
+        { id:'5be0568b86f7746842427a30', name:'Submetralhadora HK MP7A2 4.6x30', iconLink:'https://assets.tarkov.dev/5be0568b86f7746842427a30-icon.webp', properties:{ defaultRecoilVertical:44, ergonomics:67, fireRate:950, caliber:'4.6x30mm HK' }},
+        { id:'5cc9c20c14c02e000d0450a7', name:'Submetralhadora FN P90 5.7x28', iconLink:'https://assets.tarkov.dev/5cc9c20c14c02e000d0450a7-icon.webp', properties:{ defaultRecoilVertical:40, ergonomics:62, fireRate:900, caliber:'5.7x28mm FN' }},
+        { id:'5448bd6b4bdc2dfc2f8b4569', name:'Submetralhadora MP5 SD 9x19', iconLink:'https://assets.tarkov.dev/5448bd6b4bdc2dfc2f8b4569-icon.webp', properties:{ defaultRecoilVertical:52, ergonomics:55, fireRate:800, caliber:'9x19mm' }},
+        { id:'5a367e53c4a282000e49738f', name:'Fuzil de assalto HK 416A5 5.56x45', iconLink:'https://assets.tarkov.dev/5a367e53c4a282000e49738f-icon.webp', properties:{ defaultRecoilVertical:69, ergonomics:50, fireRate:850, caliber:'5.56x45mm NATO' }},
+        { id:'5644bd2b4bdc2d3b4c8b4572', name:'Fuzil de assalto AK-74M 5.45x39', iconLink:'https://assets.tarkov.dev/5644bd2b4bdc2d3b4c8b4572-icon.webp', properties:{ defaultRecoilVertical:78, ergonomics:44, fireRate:650, caliber:'5.45x39mm' }},
+        { id:'5a0ec13bfcdbcb001a3b002a', name:'Fuzil de assalto AKM 7.62x39', iconLink:'https://assets.tarkov.dev/5a0ec13bfcdbcb001a3b002a-icon.webp', properties:{ defaultRecoilVertical:110, ergonomics:38, fireRate:600, caliber:'7.62x39mm' }},
+        { id:'5ac66d2e5acfc43b320a4226', name:'Fuzil de assalto AK-103 7.62x39', iconLink:'https://assets.tarkov.dev/5ac66d2e5acfc43b320a4226-icon.webp', properties:{ defaultRecoilVertical:105, ergonomics:42, fireRate:600, caliber:'7.62x39mm' }},
+        { id:'5a7828548dc32e5a9c28b516', name:'Fuzil de atirador Remington R11 RSASS', iconLink:'https://assets.tarkov.dev/5a7828548dc32e5a9c28b516-icon.webp', properties:{ defaultRecoilVertical:89, ergonomics:40, fireRate:700, caliber:'7.62x51mm NATO' }},
+        { id:'5b057d4f86f7744391143529', name:'Fuzil de batalha DSA SA-58 7.62x51', iconLink:'https://assets.tarkov.dev/5b057d4f86f7744391143529-icon.webp', properties:{ defaultRecoilVertical:128, ergonomics:35, fireRate:700, caliber:'7.62x51mm NATO' }},
+        { id:'5a107d57fcdbcb001c408a8f', name:'Fuzil Springfield Armory M1A', iconLink:'https://assets.tarkov.dev/5a107d57fcdbcb001c408a8f-icon.webp', properties:{ defaultRecoilVertical:114, ergonomics:39, fireRate:700, caliber:'7.62x51mm NATO' }},
+        { id:'5bf3e03b0db834001d2c4a9c', name:'Fuzil de ferrolho Mosin-Nagant', iconLink:'https://assets.tarkov.dev/5bf3e03b0db834001d2c4a9c-icon.webp', properties:{ defaultRecoilVertical:150, ergonomics:30, fireRate:30, caliber:'7.62x54mmR' }},
+        { id:'5cad75e486f774498211a704', name:'Submetralhadora KRISS Vector .45 ACP', iconLink:'https://assets.tarkov.dev/5cad75e486f774498211a704-icon.webp', properties:{ defaultRecoilVertical:35, ergonomics:68, fireRate:1100, caliber:'.45 ACP' }},
+        { id:'5fc24d79a82ee64e2a582fed', name:'Submetralhadora KRISS Vector 9x19', iconLink:'https://assets.tarkov.dev/5fc24d79a82ee64e2a582fed-icon.webp', properties:{ defaultRecoilVertical:33, ergonomics:70, fireRate:1100, caliber:'9x19mm' }},
+        { id:'60339ab7d62f9c04eb77ca61', name:'Fuzil de assalto SIG MCX .300 BLK', iconLink:'https://assets.tarkov.dev/60339ab7d62f9c04eb77ca61-icon.webp', properties:{ defaultRecoilVertical:65, ergonomics:52, fireRate:700, caliber:'.300 Blackout' }},
+        { id:'5d43021ca4b9362eab495381', name:'Metralhadora leve RPK-16 5.45x39', iconLink:'https://assets.tarkov.dev/5d43021ca4b9362eab495381-icon.webp', properties:{ defaultRecoilVertical:72, ergonomics:40, fireRate:650, caliber:'5.45x39mm' }}
       ],
       ammo: [
         { item:{ id:'5efb0cabfb3e451d70735af2', name:'7.62x51mm M993', iconLink:'https://assets.tarkov.dev/5efb0cabfb3e451d70735af2-icon.webp' }, caliber:'7.62x51mm NATO', penetrationPower:70, damage:72, armorDamage:52, fragmentationChance:0.03 },
@@ -1117,89 +1546,87 @@ query {
         { item:{ id:'59e6906286f7746c9f75e847', name:'5.56x45mm M855A1', iconLink:'https://assets.tarkov.dev/59e6906286f7746c9f75e847-icon.webp' }, caliber:'5.56x45mm NATO', penetrationPower:44, damage:49, armorDamage:40, fragmentationChance:0.08 },
         { item:{ id:'5c0d56a286f774246134babf', name:'9x39mm BP gs', iconLink:'https://assets.tarkov.dev/5c0d56a286f774246134babf-icon.webp' }, caliber:'9x39mm', penetrationPower:48, damage:58, armorDamage:40, fragmentationChance:0.03 },
         { item:{ id:'5ba26835d4351e0035628ff5', name:'4.6x30mm AP SX', iconLink:'https://assets.tarkov.dev/5ba26835d4351e0035628ff5-icon.webp' }, caliber:'4.6x30mm HK', penetrationPower:53, damage:35, armorDamage:44, fragmentationChance:0.02 },
-        { item:{ id:'5efb0999fb3e451d70735af0', name:'.45 ACP AP', iconLink:'https://assets.tarkov.dev/5efb0999fb3e451d70735af0-icon.webp' }, caliber:'.45 ACP', penetrationPower:38, damage:70, armorDamage:36, fragmentationChance:0.02 },
-        { id:'5ba26812d4351e003202ac1b', item:{ id:'5ba26812d4351e003202ac1b', name:'9x19mm AP 6.3', iconLink:'https://assets.tarkov.dev/5ba26812d4351e003202ac1b-icon.webp' }, caliber:'9x19mm', penetrationPower:30, damage:52, armorDamage:28, fragmentationChance:0.05 },
+        { item:{ id:'5ba26812d4351e003202ac1b', name:'9x19mm AP 6.3', iconLink:'https://assets.tarkov.dev/5ba26812d4351e003202ac1b-icon.webp' }, caliber:'9x19mm', penetrationPower:30, damage:52, armorDamage:28, fragmentationChance:0.05 },
         { item:{ id:'56d59d3ad2720bdb418b4577', name:'5.45x39mm PP gs', iconLink:'https://assets.tarkov.dev/56d59d3ad2720bdb418b4577-icon.webp' }, caliber:'5.45x39mm', penetrationPower:28, damage:46, armorDamage:24, fragmentationChance:0.25 },
-        { item:{ id:'573719df2459775a626cc000', name:'9x19mm PST gzh', iconLink:'https://assets.tarkov.dev/573719df2459775a626cc000-icon.webp' }, caliber:'9x19mm', penetrationPower:20, damage:54, armorDamage:18, fragmentationChance:0.15 },
-        { item:{ id:'5efb0cabfb3e451d70735af1', name:'.45 ACP RIP', iconLink:'https://assets.tarkov.dev/5efb0cabfb3e451d70735af1-icon.webp' }, caliber:'.45 ACP', penetrationPower:8, damage:127, armorDamage:5, fragmentationChance:1.00 }
+        { item:{ id:'573719df2459775a626cc000', name:'9x19mm PST gzh', iconLink:'https://assets.tarkov.dev/573719df2459775a626cc000-icon.webp' }, caliber:'9x19mm', penetrationPower:20, damage:54, armorDamage:18, fragmentationChance:0.15 }
       ],
       tasks: [
         {
           id: 'task_debut',
-          name: 'Debut',
+          name: 'Estreia (Debut)',
           objectives: [
-            { type: 'shoot', description: 'Eliminar 5 Scavs em qualquer lugar do mapa Customs', maps: [{ name: 'Customs' }] },
-            { type: 'giveItem', description: 'Obter e entregar 2 espingardas MP-133 12ga para Prapor', maps: [] }
+            { type: 'shoot', description: 'Elimine 5 Scavs no mapa Customs', maps: [{ name: 'Customs' }] },
+            { type: 'giveItem', description: 'Obtenha e entregue 2 espingardas MP-133 12ga para Prapor', maps: [] }
           ]
         },
         {
           id: 'task_checking',
-          name: 'Checking',
+          name: 'Inspeção (Checking)',
           objectives: [
-            { type: 'findQuestItem', description: 'Encontrar o relógio de bolso de bronze no caminhão de combustível', maps: [{ name: 'Customs' }] },
-            { type: 'giveQuestItem', description: 'Sobreviver e entregar o relógio de bolso para Prapor', maps: [{ name: 'Customs' }] }
+            { type: 'findQuestItem', description: 'Encontre o relógio de bolso de bronze no caminhão de combustível em Customs', maps: [{ name: 'Customs' }] },
+            { type: 'giveQuestItem', description: 'Sobreviva e entregue o relógio de bolso para Prapor', maps: [{ name: 'Customs' }] }
           ]
         },
         {
           id: 'task_operation_aquarius',
-          name: 'Operation Aquarius - Part 1',
+          name: 'Operação Aquarius - Parte 1',
           objectives: [
-            { type: 'visit', description: 'Localizar a reserva de água nos dormitórios de 2 andares (Quarto 206)', maps: [{ name: 'Customs' }] },
-            { type: 'extract', description: 'Sobreviver e extrair com sucesso da raid', maps: [{ name: 'Customs' }] }
+            { type: 'visit', description: 'Localize a reserva de água nos dormitórios de 2 andares (Quarto 206)', maps: [{ name: 'Customs' }] },
+            { type: 'extract', description: 'Sobreviva e extraia com sucesso de Customs', maps: [{ name: 'Customs' }] }
           ]
         },
         {
           id: 'task_delivery_from_the_past',
-          name: 'Delivery from the Past',
+          name: 'Entrega do Passado (Delivery from the Past)',
           objectives: [
-            { type: 'findQuestItem', description: 'Obter a pasta de documentos no escritório do Diretor em Customs', maps: [{ name: 'Customs' }] },
-            { type: 'plantQuestItem', description: 'Esconder a pasta de documentos na cabine de controle fabril em Factory', maps: [{ name: 'Factory' }] },
-            { type: 'extract', description: 'Sobreviver e extrair de Factory', maps: [{ name: 'Factory' }] }
+            { type: 'findQuestItem', description: 'Obtenha a pasta de documentos no escritório do Diretor em Customs', maps: [{ name: 'Customs' }] },
+            { type: 'plantQuestItem', description: 'Esconda a pasta de documentos na cabine de controle fabril em Factory', maps: [{ name: 'Factory' }] },
+            { type: 'extract', description: 'Sobreviva e extraia de Factory', maps: [{ name: 'Factory' }] }
           ]
         },
         {
           id: 'task_gunsmith_part_1',
-          name: 'Gunsmith - Part 1',
+          name: 'Armeiro - Parte 1 (Gunsmith)',
           objectives: [
-            { type: 'build', description: 'Modificar uma espingarda MP-133 de acordo com as especificações exatas de Mechanic (Ergo > 47, Recuo < 850, lanterna laser tática e pente estendido)', maps: [] }
+            { type: 'build', description: 'Modifique uma MP-133 conforme especificações de Mechanic (Ergo > 47, Recuo < 850, lanterna laser tática e pente estendido)', maps: [] }
           ]
         },
         {
           id: 'task_shootout_picnic',
-          name: 'Shootout Picnic',
+          name: 'Piquenique com Tiros (Shootout Picnic)',
           objectives: [
-            { type: 'shoot', description: 'Eliminar 14 Scavs na região arborizada de Woods', maps: [{ name: 'Woods' }] }
+            { type: 'shoot', description: 'Elimine 14 Scavs na região arborizada de Woods', maps: [{ name: 'Woods' }] }
           ]
         },
         {
           id: 'task_golden_swag',
-          name: 'Golden Swag',
+          name: 'Ostentação Dourada (Golden Swag)',
           objectives: [
-            { type: 'findQuestItem', description: 'Encontrar o isqueiro Zibbo dourado no dormitório 303 de Customs', maps: [{ name: 'Customs' }] },
-            { type: 'plantQuestItem', description: 'Guardar o isqueiro na cabine portátil no estacionamento do trailer park', maps: [{ name: 'Customs' }] }
+            { type: 'findQuestItem', description: 'Encontre o isqueiro Zibbo dourado no dormitório 303 de Customs', maps: [{ name: 'Customs' }] },
+            { type: 'plantQuestItem', description: 'Guarde o isqueiro na cabine portátil do trailer park em Customs', maps: [{ name: 'Customs' }] }
           ]
         },
         {
           id: 'task_the_extortionist',
-          name: 'The Extortionist',
+          name: 'O Extorsionista (The Extortionist)',
           objectives: [
-            { type: 'findQuestItem', description: 'Encontrar o documento secreto oculto na cabine do mensageiro em Customs', maps: [{ name: 'Customs' }] },
-            { type: 'giveQuestItem', description: 'Entregar o documento para o comerciante Skier', maps: [] }
+            { type: 'findQuestItem', description: 'Encontre o documento secreto na cabine do mensageiro em Customs', maps: [{ name: 'Customs' }] },
+            { type: 'giveQuestItem', description: 'Entregue o documento para o comerciante Skier', maps: [] }
           ]
         },
         {
           id: 'task_spa_tour',
-          name: 'Spa Tour - Part 1',
+          name: 'Excursão ao Spa - Parte 1 (Spa Tour)',
           objectives: [
-            { type: 'shoot', description: 'Eliminar 7 Scavs em Shoreline utilizando espingardas de calibre 12ga com tiros na cabeça', maps: [{ name: 'Shoreline' }] }
+            { type: 'shoot', description: 'Elimine 7 Scavs em Shoreline utilizando espingardas de calibre 12ga com tiros na cabeça', maps: [{ name: 'Shoreline' }] }
           ]
         },
         {
           id: 'task_first_in_line',
-          name: 'First in Line',
+          name: 'Primeiro da Fila (First in Line)',
           objectives: [
-            { type: 'visit', description: 'Localizar o posto médico de campanha em Ground Zero', maps: [{ name: 'Ground Zero' }] },
-            { type: 'giveItem', description: 'Entregar 3 itens médicos encontrados em raid (FIR) para Therapist', maps: [] }
+            { type: 'visit', description: 'Localize o posto médico de campanha em Ground Zero', maps: [{ name: 'Ground Zero' }] },
+            { type: 'giveItem', description: 'Entregue 3 itens médicos encontrados em raid (FIR) para Therapist', maps: [] }
           ]
         }
       ]
@@ -1209,7 +1636,7 @@ query {
        MULTI-SOURCE MASTER FETCH
     ════════════════════════════════════════════════════════ */
     async function fetchData() {
-      // Camada 1: GraphQL Oficial
+      // 1. GraphQL Oficial em Português
       try {
         const data = await fetchGraphQL();
         if (data && data.items && data.items.length) {
@@ -1217,10 +1644,10 @@ query {
           return data;
         }
       } catch (e) {
-        console.warn('[Tarkov] GraphQL indisponível, acionando Camada 2 (JSON CDN):', e.message);
+        console.warn('[Tarkov] GraphQL indisponível, acionando Camada 2 (JSON CDN PT):', e.message);
       }
 
-      // Camada 2: JSON CDN Estático Oficial
+      // 2. JSON CDN Estático Oficial com traduções PT
       try {
         const data = await fetchJSONAPI();
         if (data && data.items && data.items.length) {
@@ -1228,10 +1655,10 @@ query {
           return data;
         }
       } catch (e) {
-        console.warn('[Tarkov] JSON CDN indisponível, acionando Camada 3 (Fallback):', e.message);
+        console.warn('[Tarkov] JSON CDN indisponível, acionando Camada 3 (Fallback PT):', e.message);
       }
 
-      // Camada 3: Dados Offline
+      // 3. Fallback Offline em Português
       dataSource = 'offline';
       return FALLBACK_DATA;
     }
@@ -1269,7 +1696,7 @@ query {
           caliber:  formatCaliber(i.properties.caliber || ''),
           tier:     getGunTier(i.properties.defaultRecoilVertical),
         }))
-        .sort((a, b) => a.recoil - b.recoil); // Crescente por menor recuo
+        .sort((a, b) => a.recoil - b.recoil);
     }
 
     function processAmmo(items) {
@@ -1288,7 +1715,7 @@ query {
           caliber:       formatCaliber(i.caliber || ''),
           tier:          getAmmoTier(i.penetrationPower),
         }))
-        .sort((a, b) => b.penetration - a.penetration); // Decrescente por maior penetração
+        .sort((a, b) => b.penetration - a.penetration);
     }
 
     function processTasks(tasks) {
@@ -1304,7 +1731,7 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       RENDERIZAÇÃO DE CARDS
+       RENDERIZAÇÃO DE CARDS (ARMAS & MUNIÇÕES)
     ════════════════════════════════════════════════════════ */
     function esc(str) {
       return String(str || '')
@@ -1369,6 +1796,9 @@ query {
         </div>`;
     }
 
+    /* ════════════════════════════════════════════════════════
+       RENDERIZAÇÃO DE CARDS (MISSÕES & BOTÃO VER NO MAPA)
+    ════════════════════════════════════════════════════════ */
     function renderTaskCard(task) {
       const isDone = isTaskCompleted(task.id);
       const isExp = expandedTaskIds.has(task.id);
@@ -1394,7 +1824,7 @@ query {
           <div class="task-details">
             <div class="task-details-inner">
               <div class="objectives-heading">
-                <span>🎯</span> Objetivos da Missão
+                <span>🎯</span> Diretrizes Operacionais
               </div>
               ${task.objectives.map((obj, i) => {
                 const conf = getObjConfig(obj.type);
@@ -1408,9 +1838,16 @@ query {
                       <span class="obj-type-pill ${conf.css}">
                         ${conf.icon} ${esc(conf.label)} (${esc(obj.type)})
                       </span>
-                      <span class="obj-map-pill ${hasMaps ? 'has-map' : 'global'}">
-                        ${hasMaps ? '📍 ' + esc(mapDisplay) : '🌍 ' + esc(mapDisplay)}
-                      </span>
+                      <div class="obj-location-group">
+                        <span class="obj-map-pill ${hasMaps ? 'has-map' : 'global'}">
+                          ${hasMaps ? '📍 ' + esc(mapDisplay) : '🌍 ' + esc(mapDisplay)}
+                        </span>
+                        ${hasMaps ? `
+                          <button class="btn-view-map" onclick="viewObjectiveOnMap('${esc(task.id)}', '${esc(task.name)}', '${esc(obj.description)}', '${esc(mapNames[0])}', event)">
+                            Ver no Mapa
+                          </button>
+                        ` : ''}
+                      </div>
                     </div>
                     <div class="obj-desc">${esc(obj.description)}</div>
                   </div>
@@ -1440,29 +1877,219 @@ query {
     function handleTaskCheck(taskId, checked, event) {
       if (event) event.stopPropagation();
       setTaskCompleted(taskId, checked);
-
-      // Re-renderizar seção de missões para reordenar (concluídas ao final) e atualizar progresso
       renderSection('tasks');
+    }
+
+    /* ════════════════════════════════════════════════════════
+       REDIRECIONAMENTO: MISSÃO -> MAPA INTERATIVO (LEAFLET)
+    ════════════════════════════════════════════════════════ */
+    function viewObjectiveOnMap(taskId, taskName, objDesc, targetMapName, event) {
+      if (event) event.stopPropagation();
+
+      // 1. Alternar para a aba MAPAS
+      showSection('maps');
+
+      // 2. Identificar o mapa correspondente
+      const foundMap = findMapByNameOrAlias(targetMapName) || MAPS_DATABASE[0];
+
+      // 3. Carregar o mapa no Leaflet
+      switchMap(foundMap.id);
+
+      // 4. Injetar marcador com coordenadas da missão
+      const hotspot = MISSION_HOTSPOTS[taskId];
+      const targetCoords = hotspot ? hotspot.coords : foundMap.defaultCoords;
+      const locationNote = hotspot ? hotspot.name : (targetMapName || 'Área Operacional');
+
+      // Adicionar marcador de missão tático com popup
+      placeMissionMarker(targetCoords, taskName, objDesc, locationNote);
+
+      // 5. Exibir alerta toast amigável no topo do visualizador
+      showMapToast(`Área da missão focada: <strong>${esc(taskName)}</strong> (${esc(locationNote)})`);
+    }
+
+    function findMapByNameOrAlias(name) {
+      if (!name) return null;
+      const clean = name.toLowerCase().trim();
+      return MAPS_DATABASE.find(m =>
+        clean.includes(m.id) ||
+        clean.includes(m.name.toLowerCase()) ||
+        m.name.toLowerCase().includes(clean)
+      );
+    }
+
+    /* ════════════════════════════════════════════════════════
+       MÓDULO LEAFLET.JS (MAPAS 2D INTERATIVOS)
+    ════════════════════════════════════════════════════════ */
+    function initLeafletMap() {
+      if (leafletMap) return;
+
+      const mapContainer = document.getElementById('map');
+      if (!mapContainer) return;
+
+      // Sistema estático CRS.Simple para plantas e mapas 2D/3D de jogos
+      leafletMap = L.map('map', {
+        crs: L.CRS.Simple,
+        minZoom: -1.5,
+        maxZoom: 2.5,
+        zoomSnap: 0.25,
+        attributionControl: false
+      });
+
+      missionMarkersGroup = L.layerGroup().addTo(leafletMap);
+
+      // Renderizar botões da sidebar de mapas
+      renderMapsSidebar();
+
+      // Carregar mapa inicial (Customs)
+      switchMap('customs');
+    }
+
+    function renderMapsSidebar() {
+      const container = document.getElementById('map-btn-list');
+      if (!container) return;
+
+      container.innerHTML = MAPS_DATABASE.map(m => `
+        <button class="map-select-btn ${m.id === currentMapId ? 'active' : ''}" data-map-id="${m.id}" onclick="switchMap('${m.id}')">
+          <span>${esc(m.namePt)}</span>
+          <span class="map-select-desc">${esc(m.desc)}</span>
+        </button>
+      `).join('');
+    }
+
+    function switchMap(mapId) {
+      const mapData = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
+      currentMapId = mapData.id;
+
+      // Atualizar classe ativa na barra lateral
+      document.querySelectorAll('.map-select-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mapId === currentMapId);
+      });
+
+      // Atualizar título do mapa
+      document.getElementById('current-map-title').textContent = mapData.namePt.toUpperCase();
+
+      if (!leafletMap) initLeafletMap();
+
+      // Limpar camada de imagem anterior
+      if (currentImageOverlay) {
+        leafletMap.removeLayer(currentImageOverlay);
+      }
+
+      // Sistema de coordenadas estático: [0, 0] até [1000, 1000]
+      const bounds = [[0, 0], [1000, 1000]];
+      activeOverlayBounds = bounds;
+
+      currentImageOverlay = L.imageOverlay(mapData.image, bounds, {
+        errorOverlayUrl: mapData.svg
+      }).addTo(leafletMap);
+
+      leafletMap.fitBounds(bounds);
+      leafletMap.invalidateSize();
+    }
+
+    function resetMapView() {
+      if (leafletMap && activeOverlayBounds) {
+        leafletMap.flyToBounds(activeOverlayBounds, { duration: 0.8 });
+      }
+    }
+
+    function placeMissionMarker(coords, taskName, objDesc, locationNote) {
+      if (!leafletMap || !missionMarkersGroup) return;
+
+      missionMarkersGroup.clearLayers();
+
+      const tacticalIcon = L.divIcon({
+        className: 'tactical-map-marker',
+        html: `
+          <div class="marker-pin">
+            <div class="marker-pulse"></div>
+            <div class="marker-dot"></div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -14]
+      });
+
+      const marker = L.marker(coords, { icon: tacticalIcon }).addTo(missionMarkersGroup);
+
+      const popupContent = `
+        <strong>${esc(taskName)}</strong>
+        <div style="color:var(--accent); font-size:0.72rem; margin-bottom:4px;">📍 ${esc(locationNote)}</div>
+        <div style="color:#bbb; font-size:0.72rem;">${esc(objDesc)}</div>
+      `;
+
+      marker.bindPopup(popupContent, { maxWidth: 280 }).openPopup();
+
+      // Centralizar visualização nas coordenadas da missão com animação
+      leafletMap.setView(coords, 0.5, { animate: true, duration: 0.6 });
+    }
+
+    function showMapToast(msg) {
+      const toast = document.getElementById('map-toast');
+      const text = document.getElementById('map-toast-text');
+      if (!toast || !text) return;
+
+      text.innerHTML = msg;
+      toast.classList.remove('hidden');
+
+      if (window.toastTimer) clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 5000);
     }
 
     /* ════════════════════════════════════════════════════════
        RENDERIZAÇÃO DA SEÇÃO ATIVA
     ════════════════════════════════════════════════════════ */
     function renderSection(section) {
-      const grid       = document.getElementById('cards-grid');
-      const secTitle   = document.getElementById('section-title');
-      const secCount   = document.getElementById('section-count');
-      const legend     = document.getElementById('tier-legend');
-      const secHdr     = document.getElementById('section-header');
-      const filterBar  = document.getElementById('filter-bar');
-      const statsTiers = document.getElementById('stats-tiers');
-      const statsTasks = document.getElementById('stats-tasks-progress');
+      const grid        = document.getElementById('cards-grid');
+      const mapsSection = document.getElementById('maps-section');
+      const secTitle    = document.getElementById('section-title');
+      const secCount    = document.getElementById('section-count');
+      const legend      = document.getElementById('tier-legend');
+      const secHdr      = document.getElementById('section-header');
+      const filterBar   = document.getElementById('filter-bar');
+      const statsTiers  = document.getElementById('stats-tiers');
+      const statsTasks  = document.getElementById('stats-tasks-progress');
+      const statsMaps   = document.getElementById('stats-maps-info');
 
       const isGuns  = section === 'guns';
       const isAmmo  = section === 'ammo';
       const isTasks = section === 'tasks';
+      const isMaps  = section === 'maps';
 
-      // Ajuste de classes de layout
+      if (isMaps) {
+        // Exibir aba de Mapas
+        grid.classList.add('hidden');
+        mapsSection.classList.remove('hidden');
+        legend.classList.add('hidden');
+        filterBar.classList.add('hidden');
+        secHdr.classList.remove('hidden');
+
+        secTitle.textContent = 'Mapas Táticos';
+        secCount.textContent = `${MAPS_DATABASE.length} mapas`;
+
+        statsTiers.style.display = 'none';
+        statsTasks.style.display = 'none';
+        statsMaps.style.display  = 'flex';
+
+        // Inicializar ou reajustar tamanho do Leaflet para evitar quebra de tiles
+        initLeafletMap();
+        setTimeout(() => {
+          if (leafletMap) {
+            leafletMap.invalidateSize();
+            if (activeOverlayBounds) leafletMap.fitBounds(activeOverlayBounds);
+          }
+        }, 120);
+
+        return;
+      }
+
+      // Seções com grade (Armas, Munições, Missões)
+      mapsSection.classList.add('hidden');
+      grid.classList.remove('hidden');
+      statsMaps.style.display = 'none';
       grid.classList.toggle('tasks-grid', isTasks);
 
       let data = [];
@@ -1482,7 +2109,7 @@ query {
       }
 
       if (isTasks) {
-        // REGRA DE NEGÓCIO: Ordenar missões para que completas fiquem ao final
+        // Ordenar: tarefas pendentes primeiro, concluídas ao final
         filteredData = [...filteredData].sort((a, b) => {
           const doneA = isTaskCompleted(a.id);
           const doneB = isTaskCompleted(b.id);
@@ -1495,7 +2122,6 @@ query {
         statsTiers.style.display = 'none';
         statsTasks.style.display = 'flex';
 
-        // Atualizar contadores de tarefas
         const total = tasksData.length;
         const done = tasksData.filter(t => isTaskCompleted(t.id)).length;
         const pending = total - done;
@@ -1525,15 +2151,13 @@ query {
           ? filteredData.map(item => isGuns ? renderGunCard(item) : renderAmmoCard(item)).join('')
           : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhum item encontrado.</div>';
 
-        // Atualizar contagem por tiers
         const tiers = { S: 0, A: 0, B: 0, D: 0 };
         filteredData.forEach(i => { if (tiers[i.tier] !== undefined) tiers[i.tier]++; });
         document.getElementById('stats-count').textContent = `S:${tiers.S}  A:${tiers.A}  B:${tiers.B}  D:${tiers.D}`;
       }
 
       secCount.textContent = `${filteredData.length} ${filteredData.length === 1 ? 'item' : 'itens'}`;
-
-      [grid, secHdr, filterBar].forEach(el => el.classList.remove('hidden'));
+      [secHdr, filterBar].forEach(el => el.classList.remove('hidden'));
     }
 
     /* ════════════════════════════════════════════════════════
@@ -1542,12 +2166,12 @@ query {
     function updateSubtitle() {
       const sub = document.getElementById('subtitle');
       const labels = {
-        graphql: { text: 'Dados em tempo real via <span>api.tarkov.dev/graphql</span>', badge: 'live',    label: 'API Live' },
-        json:    { text: 'Dados via <span>json.tarkov.dev</span> (CDN Estático)',      badge: 'json',    label: 'JSON CDN' },
-        offline: { text: 'Dados offline (amostra embutida)',                           badge: 'offline', label: 'Offline' },
+        graphql: { text: 'Dados em tempo real via <span>api.tarkov.dev/graphql</span> (PT-BR)', badge: 'live',    label: 'API Live' },
+        json:    { text: 'Dados via <span>json.tarkov.dev</span> (CDN Estático PT-BR)',         badge: 'json',    label: 'JSON CDN' },
+        offline: { text: 'Dados offline (amostra embutida PT-BR)',                              badge: 'offline', label: 'Offline' },
       };
       const s = labels[dataSource] || labels.offline;
-      sub.innerHTML = `${s.text} · Classificação por Tier & Rastreador de Missões
+      sub.innerHTML = `${s.text} · Classificação por Tier & Mapas Interativos
         <br><span class="source-badge ${s.badge}"><span class="source-dot"></span>${s.label}</span>`;
     }
 
@@ -1559,6 +2183,7 @@ query {
       document.getElementById('btn-guns').disabled = on;
       document.getElementById('btn-ammo').disabled = on;
       document.getElementById('btn-tasks').disabled = on;
+      document.getElementById('btn-maps').disabled = on;
     }
 
     function setLoadingHint(msg) {
@@ -1566,7 +2191,7 @@ query {
     }
 
     function hideContentElements() {
-      ['error', 'cards-grid', 'tier-legend', 'section-header', 'filter-bar'].forEach(id =>
+      ['error', 'cards-grid', 'tier-legend', 'section-header', 'filter-bar', 'maps-section'].forEach(id =>
         document.getElementById(id).classList.add('hidden')
       );
       document.getElementById('stats-count').textContent = '';
@@ -1586,9 +2211,10 @@ query {
       document.getElementById('btn-guns').classList.toggle('active', section === 'guns');
       document.getElementById('btn-ammo').classList.toggle('active', section === 'ammo');
       document.getElementById('btn-tasks').classList.toggle('active', section === 'tasks');
+      document.getElementById('btn-maps').classList.toggle('active', section === 'maps');
 
-      // Limpar busca ao alternar aba
-      document.getElementById('search-input').value = '';
+      const searchEl = document.getElementById('search-input');
+      if (searchEl) searchEl.value = '';
       searchQuery = '';
 
       renderSection(section);
@@ -1600,7 +2226,7 @@ query {
     function loadFallback() {
       document.getElementById('error').classList.add('hidden');
       setLoadingState(true);
-      setLoadingHint('Carregando dados offline...');
+      setLoadingHint('Carregando dados offline em Português...');
 
       setTimeout(() => {
         dataSource = 'offline';
@@ -1620,7 +2246,7 @@ query {
     async function init() {
       hideContentElements();
       setLoadingState(true);
-      setLoadingHint('Verificando fontes de dados Tarkov...');
+      setLoadingHint('Conectando às fontes de dados em Português...');
 
       try {
         const data = await fetchData();
