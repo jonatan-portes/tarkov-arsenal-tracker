@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tarkov Arsenal Tracker</title>
+  <style>
+    /* =========================================================
+       RESET & BASE THEME
+    ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-main:       #0a0a0a;
+      --bg-card:       #151515;
+      --bg-card-hover: #1b1b1b;
+      --bg-nav:        #0f0f0f;
+      --bg-inner:      #101010;
+      --text-main:     #e0e0e0;
+      --text-sec:      #888888;
+      --accent:        #9a8866;
+      --accent-light:  #c2aa80;
+      --accent-dim:    rgba(154,136,102,0.18);
+      --border-card:   #222222;
+      --border-accent: rgba(154,136,102,0.35);
+
+      --tier-s: #ff9900;
+      --tier-a: #99cc00;
+      --tier-b: #3399ff;
+      --tier-d: #ff3333;
+
+      --status-done: #99cc00;
+      --status-pending: #888888;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* =========================================================
+       HEADER
+    ========================================================= */
+    header {
+      background: linear-gradient(135deg, #0e0e0e 0%, #191814 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 22px 20px 18px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(154,136,102,0.035) 39px, rgba(154,136,102,0.035) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(154,136,102,0.035) 39px, rgba(154,136,102,0.035) 40px);
+      pointer-events: none;
+    }
+
+    .header-inner { position: relative; max-width: 900px; margin: 0 auto; }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .logo-icon { width: 34px; height: 34px; fill: var(--accent); flex-shrink: 0; filter: drop-shadow(0 0 6px rgba(154,136,102,0.4)); }
+
+    header h1 {
+      font-size: clamp(1.35rem, 3.8vw, 2rem);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-light);
+      text-shadow: 0 0 20px rgba(154,136,102,0.25);
+    }
+
+    header p.subtitle {
+      font-size: 0.78rem;
+      color: var(--text-sec);
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    header p.subtitle span { color: var(--accent); font-weight: 600; }
+
+    /* =========================================================
+       NAV / TAB BAR
+    ========================================================= */
+    nav {
+      background: var(--bg-nav);
+      border-bottom: 1px solid #1f1f1f;
+      padding: 0 16px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-sec);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 14px 22px;
+      position: relative;
+      transition: color 0.2s, background-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: 80%;
+      height: 2px;
+      background: var(--accent);
+      transition: transform 0.2s ease;
+    }
+
+    .nav-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.02); }
+    .nav-btn:hover::after { transform: translateX(-50%) scaleX(0.5); }
+    .nav-btn.active { color: var(--accent-light); }
+    .nav-btn.active::after { transform: translateX(-50%) scaleX(1); }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+    .nav-icon { font-size: 0.95rem; }
+
+    /* =========================================================
+       STATS & PROGRESS BAR
+    ========================================================= */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 10px 20px;
+      background: #0d0d0d;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 0.75rem;
+      color: var(--text-sec);
+      min-height: 40px;
+    }
+
+    .stats-bar span { display: flex; align-items: center; gap: 6px; }
+    .stats-bar .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* =========================================================
+       MAIN LAYOUT
+    ========================================================= */
+    main {
+      padding: 22px 16px 48px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    /* =========================================================
+       LOADING & ERROR STATES
+    ========================================================= */
+    .loading-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 80px 20px;
+    }
+    .loading-wrapper.hidden { display: none; }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #1e1e1e;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-sec); font-size: 0.85rem; letter-spacing: 0.12em; text-transform: uppercase; animation: pulse 1.4s ease-in-out infinite; }
+    .loading-source { color: var(--accent); font-size: 0.72rem; letter-spacing: 0.06em; margin-top: -6px; }
+    @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+    .error-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .error-wrapper.hidden { display: none; }
+    .error-icon { font-size: 2.5rem; }
+    .error-wrapper h2 { color: var(--tier-d); font-size: 1rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .error-wrapper p { color: var(--text-sec); font-size: 0.82rem; max-width: 500px; }
+    .retry-btn {
+      margin-top: 8px;
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 8px 24px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      border-radius: 2px;
+    }
+    .retry-btn:hover { background: var(--accent); color: #000; }
+
+    /* =========================================================
+       SECTION CONTROLS & HEADER
+    ========================================================= */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .section-header.hidden { display: none; }
+    .section-title { font-size: 0.74rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-sec); }
+    .section-line { flex: 1; min-width: 40px; height: 1px; background: linear-gradient(to right, #242424, transparent); }
+    .section-count {
+      font-size: 0.68rem;
+      color: var(--text-sec);
+      font-weight: 600;
+      background: #151515;
+      border: 1px solid #282828;
+      padding: 3px 10px;
+      border-radius: 2px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Filter / Search Bar */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-bar.hidden { display: none; }
+    .search-input {
+      flex: 1;
+      min-width: 220px;
+      background: #111111;
+      border: 1px solid #242424;
+      border-radius: 2px;
+      color: var(--text-main);
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* Tier Legend */
+    .tier-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .tier-legend.hidden { display: none; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-sec); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    /* =========================================================
+       GRID SYSTEM
+    ========================================================= */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .cards-grid.hidden { display: none; }
+
+    @media (min-width: 480px)  { .cards-grid:not(.tasks-grid) { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 768px)  { .cards-grid:not(.tasks-grid) { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+    @media (min-width: 1100px) { .cards-grid:not(.tasks-grid) { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
+    @media (min-width: 1400px) { .cards-grid:not(.tasks-grid) { grid-template-columns: repeat(5, 1fr); } }
+
+    /* Tasks grid - 1 or 2 columns */
+    .cards-grid.tasks-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 900px) {
+      .cards-grid.tasks-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    }
+
+    /* =========================================================
+       BASE CARD (ARMAS & MUNIÇÕES)
+    ========================================================= */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-left: 3px solid var(--tier-color, var(--accent));
+      border-radius: 3px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      animation: fadeIn 0.3s ease forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(154,136,102,0.18);
+      background: var(--bg-card-hover);
+    }
+
+    .tier-s { --tier-color: var(--tier-s); }
+    .tier-a { --tier-color: var(--tier-a); }
+    .tier-b { --tier-color: var(--tier-b); }
+    .tier-d { --tier-color: var(--tier-d); }
+
+    /* Card visual row with thumbnail */
+    .card-visual-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-thumb-box {
+      width: 56px;
+      height: 56px;
+      min-width: 56px;
+      background: #0d0d0d;
+      border: 1px solid #202020;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      overflow: hidden;
+    }
+
+    .card-thumb {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+      transition: transform 0.2s ease;
+    }
+    .card:hover .card-thumb { transform: scale(1.08); }
+
+    .card-title-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .card-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+    }
+
+    .tier-badge {
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 2px 6px;
+      border-radius: 2px;
+      background: var(--tier-color);
+      color: #000;
+      flex-shrink: 0;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .chip {
+      display: inline-block;
+      font-size: 0.66rem;
+      color: var(--accent);
+      border: 1px solid rgba(154,136,102,0.28);
+      background: rgba(154,136,102,0.05);
+      padding: 1px 6px;
+      border-radius: 2px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      align-self: flex-start;
+    }
+
+    .card-divider {
+      height: 1px;
+      background: linear-gradient(to right, var(--tier-color, var(--border-card)), transparent);
+      opacity: 0.25;
+    }
+
+    .card-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-label { font-size: 0.72rem; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .stat-value { font-size: 0.8rem; font-weight: 700; color: var(--text-main); letter-spacing: 0.03em; }
+    .stat-value.highlight { color: var(--tier-color); }
+
+    /* =========================================================
+       TASK CARDS (MISSÕES)
+    ========================================================= */
+    .task-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-left: 3px solid var(--accent);
+      border-radius: 3px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.15s;
+      animation: fadeIn 0.3s ease forwards;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .task-card:hover {
+      background: var(--bg-card-hover);
+      border-color: #333;
+      transform: translateY(-1px);
+    }
+
+    /* Completed Task Styling */
+    .task-card.completed {
+      opacity: 0.62;
+      border-left-color: var(--status-done);
+      background: #101210;
+    }
+    .task-card.completed:hover { opacity: 0.85; }
+    .task-card.completed .task-name {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .task-header-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      gap: 12px;
+      user-select: none;
+    }
+
+    /* Custom Checkbox */
+    .task-check-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding: 4px;
+      margin: -4px;
+    }
+
+    .task-check-input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #444;
+      border-radius: 2px;
+      background: #0d0d0d;
+      cursor: pointer;
+      display: grid;
+      place-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .task-check-input:hover { border-color: var(--accent); }
+
+    .task-check-input:checked {
+      background: var(--status-done);
+      border-color: var(--status-done);
+    }
+
+    .task-check-input:checked::before {
+      content: '';
+      width: 9px;
+      height: 5px;
+      border-left: 2px solid #000;
+      border-bottom: 2px solid #000;
+      transform: rotate(-45deg) translate(1px, -1px);
+    }
+
+    .task-info-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .task-name {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.68rem;
+      color: var(--text-sec);
+      letter-spacing: 0.04em;
+    }
+
+    .task-right-col {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+    .status-badge.done {
+      background: rgba(153,204,0,0.15);
+      color: var(--status-done);
+      border: 1px solid rgba(153,204,0,0.3);
+    }
+    .status-badge.pending {
+      background: rgba(136,136,136,0.12);
+      color: var(--text-sec);
+      border: 1px solid #2a2a2a;
+    }
+
+    .chevron-icon {
+      font-size: 0.72rem;
+      color: var(--text-sec);
+      transition: transform 0.25s ease, color 0.2s;
+    }
+    .task-card.expanded .chevron-icon {
+      transform: rotate(180deg);
+      color: var(--accent-light);
+    }
+
+    /* Expandable details */
+    .task-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease-out;
+      background: var(--bg-inner);
+      border-top: 1px solid transparent;
+    }
+
+    .task-card.expanded .task-details {
+      max-height: 2000px;
+      border-top-color: #1f1f1f;
+    }
+
+    .task-details-inner {
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .objectives-heading {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .objective-item {
+      background: #161616;
+      border: 1px solid #242424;
+      border-left: 2px solid var(--accent);
+      border-radius: 2px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .obj-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .obj-type-pill {
+      font-size: 0.64rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .obj-type-shoot    { background: rgba(255,51,51,0.15); color: #ff6666; border: 1px solid rgba(255,51,51,0.3); }
+    .obj-type-visit    { background: rgba(51,153,255,0.15); color: #66b2ff; border: 1px solid rgba(51,153,255,0.3); }
+    .obj-type-give     { background: rgba(153,204,0,0.15); color: #b3e600; border: 1px solid rgba(153,204,0,0.3); }
+    .obj-type-find     { background: rgba(255,153,0,0.15); color: #ffb84d; border: 1px solid rgba(255,153,0,0.3); }
+    .obj-type-plant    { background: rgba(204,102,255,0.15); color: #d699ff; border: 1px solid rgba(204,102,255,0.3); }
+    .obj-type-mark     { background: rgba(255,204,0,0.15); color: #ffe066; border: 1px solid rgba(255,204,0,0.3); }
+    .obj-type-extract  { background: rgba(0,204,153,0.15); color: #33ffcc; border: 1px solid rgba(0,204,153,0.3); }
+    .obj-type-build    { background: rgba(154,136,102,0.15); color: var(--accent-light); border: 1px solid rgba(154,136,102,0.3); }
+    .obj-type-default  { background: rgba(136,136,136,0.15); color: #ccc; border: 1px solid #333; }
+
+    .obj-map-pill {
+      font-size: 0.66rem;
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+      border-radius: 2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .obj-map-pill.has-map {
+      color: var(--accent-light);
+      background: rgba(154,136,102,0.1);
+      border: 1px solid rgba(154,136,102,0.25);
+    }
+    .obj-map-pill.global {
+      color: var(--text-sec);
+      background: #121212;
+      border: 1px solid #222;
+    }
+
+    .obj-desc {
+      font-size: 0.78rem;
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    /* =========================================================
+       SOURCE BADGE
+    ========================================================= */
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-top: 6px;
+    }
+    .source-badge.live    { background: rgba(153,204,0,0.15); color: #99cc00; border: 1px solid rgba(153,204,0,0.3); }
+    .source-badge.json    { background: rgba(51,153,255,0.15); color: #3399ff; border: 1px solid rgba(51,153,255,0.3); }
+    .source-badge.offline { background: rgba(255,153,0,0.15);  color: #ff9900;  border: 1px solid rgba(255,153,0,0.3); }
+    .source-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* =========================================================
+       SCROLLBAR
+    ========================================================= */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- ======================================================
+       HEADER
+  ====================================================== -->
+  <header>
+    <div class="header-inner">
+      <div class="header-logo">
+        <svg class="logo-icon" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="18" cy="18" r="15" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <circle cx="18" cy="18" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <line x1="18" y1="2"  x2="18" y2="10" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="18" y1="26" x2="18" y2="34" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="2"  y1="18" x2="10" y2="18" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="26" y1="18" x2="34" y2="18" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="18" cy="18" r="2" fill="currentColor"/>
+        </svg>
+        <h1>Tarkov Arsenal Tracker</h1>
+      </div>
+      <p class="subtitle" id="subtitle">
+        Conectando à API · Classificação por Tier dinâmica & Rastreador de Missões
+      </p>
+    </div>
+  </header>
+
+  <!-- ======================================================
+       NAVIGATION TABS
+  ====================================================== -->
+  <nav>
+    <button class="nav-btn active" id="btn-guns" onclick="showSection('guns')">
+      <span class="nav-icon">🔫</span> Armas
+    </button>
+    <button class="nav-btn" id="btn-ammo" onclick="showSection('ammo')">
+      <span class="nav-icon">🎯</span> Munições
+    </button>
+    <button class="nav-btn" id="btn-tasks" onclick="showSection('tasks')">
+      <span class="nav-icon">📜</span> Missões
+    </button>
+  </nav>
+
+  <!-- ======================================================
+       STATS & PROGRESS BAR
+  ====================================================== -->
+  <div class="stats-bar" id="stats-bar">
+    <div id="stats-tiers" style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+      <span><span class="dot" style="background:var(--tier-s)"></span> Tier S</span>
+      <span><span class="dot" style="background:var(--tier-a)"></span> Tier A</span>
+      <span><span class="dot" style="background:var(--tier-b)"></span> Tier B</span>
+      <span><span class="dot" style="background:var(--tier-d)"></span> Tier D</span>
+      <span id="stats-count" style="margin-left:8px; color: var(--accent); font-weight:600;"></span>
+    </div>
+    <div id="stats-tasks-progress" style="display:none; align-items:center; gap:16px; flex-wrap:wrap;">
+      <span><span class="dot" style="background:var(--status-done)"></span> Concluídas: <strong id="tasks-done-count" style="color:var(--status-done); margin-left:4px;">0</strong></span>
+      <span><span class="dot" style="background:#555"></span> Pendentes: <strong id="tasks-pending-count" style="color:#aaa; margin-left:4px;">0</strong></span>
+      <span id="tasks-progress-percent" style="color:var(--accent); font-weight:600;">0% Concluído</span>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       MAIN CONTENT
+  ====================================================== -->
+  <main>
+    <!-- Loading Screen -->
+    <div class="loading-wrapper" id="loading">
+      <div class="spinner"></div>
+      <p class="loading-text">Carregando arsenal...</p>
+      <p class="loading-source" id="loading-source"></p>
+    </div>
+
+    <!-- Error Screen -->
+    <div class="error-wrapper hidden" id="error">
+      <div class="error-icon">⚠️</div>
+      <h2>Falha ao conectar com a API</h2>
+      <p id="error-msg">Verifique sua conexão e tente novamente.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+        <button class="retry-btn" onclick="init()">Tentar Novamente</button>
+        <button class="retry-btn" onclick="loadFallback()" style="border-color:#99cc00;color:#99cc00;"
+          onmouseover="this.style.background='#99cc00';this.style.color='#000'"
+          onmouseout="this.style.background='transparent';this.style.color='#99cc00'">
+          Usar Dados Offline
+        </button>
+      </div>
+    </div>
+
+    <!-- Tier Legend (Armas e Munições) -->
+    <div class="tier-legend hidden" id="tier-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tier-s)"></div><span id="legend-s">Tier S</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tier-a)"></div><span id="legend-a">Tier A</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tier-b)"></div><span id="legend-b">Tier B</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tier-d)"></div><span id="legend-d">Tier D</span></div>
+    </div>
+
+    <!-- Filter / Search input -->
+    <div class="filter-bar hidden" id="filter-bar">
+      <input type="text" class="search-input" id="search-input" placeholder="Buscar por nome ou calibre..." oninput="handleSearch(this.value)">
+    </div>
+
+    <!-- Section Header -->
+    <div class="section-header hidden" id="section-header">
+      <span class="section-title" id="section-title">Armas</span>
+      <div class="section-line"></div>
+      <span class="section-count" id="section-count">0 itens</span>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="cards-grid hidden" id="cards-grid"></div>
+  </main>
+
+  <!-- ======================================================
+       JAVASCRIPT
+  ====================================================== -->
+  <script>
+    /* ════════════════════════════════════════════════════════
+       STATE
+    ════════════════════════════════════════════════════════ */
+    let gunsData = [];
+    let ammoData = [];
+    let tasksData = [];
+    let currentSection = 'guns';
+    let dataSource = ''; // 'graphql' | 'json' | 'offline'
+    let searchQuery = '';
+    const expandedTaskIds = new Set();
+
+    /* ════════════════════════════════════════════════════════
+       API CONSTANTS & QUERIES
+    ════════════════════════════════════════════════════════ */
+    const GQL_ENDPOINT   = 'https://api.tarkov.dev/graphql';
+    const JSON_ITEMS_URL = 'https://json.tarkov.dev/regular/items';
+    const JSON_TRANS_URL = 'https://json.tarkov.dev/regular/items_en';
+    const JSON_TASKS_URL = 'https://json.tarkov.dev/regular/tasks';
+    const JSON_TASK_EN   = 'https://json.tarkov.dev/regular/tasks_en';
+    const JSON_MAPS_EN   = 'https://json.tarkov.dev/regular/maps_en';
+
+    // Query exata conforme solicitado na especificação
+    const GQL_QUERY = `
+query {
+  items(types: [gun]) {
+    id name iconLink
+    properties { ... on ItemPropertiesWeapon { defaultRecoilVertical ergonomics fireRate caliber } }
+  }
+  ammo {
+    item { id name iconLink }
+    caliber penetrationPower damage armorDamage fragmentationChance
+  }
+  tasks {
+    id name
+    objectives {
+      type description
+      maps { name }
+    }
+  }
+}
+`;
+
+    /* ════════════════════════════════════════════════════════
+       MAP NAME LOOKUP DICTIONARY
+    ════════════════════════════════════════════════════════ */
+    const MAP_LOOKUP = {
+      "56f40101d2720b2a4d8b45d6": "Customs",
+      "55f2d3fd4bdc2d5f408b4567": "Factory",
+      "5704e554d2720bac5b8b456e": "Shoreline",
+      "5704e4dad2720bb55b8b4567": "Lighthouse",
+      "5704e3c2d2720bac5b8b4567": "Woods",
+      "5714dc692459777137212e12": "Woods",
+      "5714dbc024597771384a510d": "Interchange",
+      "5714dc3e24597771383c7482": "Interchange",
+      "5b0fc42d86f7744a585f9105": "The Lab",
+      "5df8a4d79f291e1b0f038c48": "Reserve",
+      "62ae068f3a3d2e07e6004b56": "Streets of Tarkov",
+      "653e6760052c01c1c805532f": "Ground Zero",
+      "65b8d6f5cdde2479cb2a3125": "Ground Zero (21+)",
+      "68236e8153654e8c1200798a": "Ground Zero Tutorial"
+    };
+
+    /* ════════════════════════════════════════════════════════
+       OBJECTIVE TYPE CONFIGURATION
+    ════════════════════════════════════════════════════════ */
+    const OBJECTIVE_CONFIG = {
+      shoot:          { label: 'Eliminar',   css: 'obj-type-shoot',   icon: '🎯' },
+      visit:          { label: 'Explorar',   css: 'obj-type-visit',   icon: '📍' },
+      giveItem:       { label: 'Entregar',   css: 'obj-type-give',    icon: '📦' },
+      giveQuestItem:  { label: 'Entregar',   css: 'obj-type-give',    icon: '📦' },
+      findItem:       { label: 'Coletar',    css: 'obj-type-find',    icon: '🔍' },
+      findQuestItem:  { label: 'Coletar',    css: 'obj-type-find',    icon: '🔍' },
+      plantItem:      { label: 'Posicionar', css: 'obj-type-plant',   icon: '💣' },
+      plantQuestItem: { label: 'Posicionar', css: 'obj-type-plant',   icon: '💣' },
+      mark:           { label: 'Marcar',     css: 'obj-type-mark',    icon: '📡' },
+      extract:        { label: 'Extrair',    css: 'obj-type-extract', icon: '🚁' },
+      build:          { label: 'Armaria',    css: 'obj-type-build',   icon: '🔧' },
+      default:        { label: 'Objetivo',   css: 'obj-type-default', icon: '📋' }
+    };
+
+    function getObjConfig(type) {
+      return OBJECTIVE_CONFIG[type] || { label: type || 'Objetivo', css: 'obj-type-default', icon: '📋' };
+    }
+
+    function formatCaliber(cal) {
+      if (!cal) return '';
+      return cal
+        .replace(/^Caliber/, '')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .trim();
+    }
+
+    /* ════════════════════════════════════════════════════════
+       LOCAL STORAGE HELPERS (PERSISTÊNCIA)
+    ════════════════════════════════════════════════════════ */
+    function isTaskCompleted(taskId) {
+      return localStorage.getItem('task_' + taskId) === 'true';
+    }
+
+    function setTaskCompleted(taskId, completed) {
+      if (completed) {
+        localStorage.setItem('task_' + taskId, 'true');
+      } else {
+        localStorage.setItem('task_' + taskId, 'false');
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SOURCE 1: GRAPHQL API
+    ════════════════════════════════════════════════════════ */
+    async function fetchGraphQL() {
+      setLoadingHint('Tentando conexão GraphQL...');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 9000);
+
+      try {
+        const resp = await fetch(GQL_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: GQL_QUERY }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
+        if (json.errors) throw new Error(json.errors[0]?.message || 'GraphQL error');
+        if (!json.data) throw new Error('Dados vazios');
+
+        return json.data;
+      } catch (err) {
+        clearTimeout(timeout);
+        throw err;
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SOURCE 2: JSON CDN API (ALTA DISPONIBILIDADE)
+    ════════════════════════════════════════════════════════ */
+    async function fetchJSONAPI() {
+      setLoadingHint('Conectando ao CDN de dados Tarkov...');
+
+      const [itemsResp, transResp, tasksResp, tasksEnResp, mapsEnResp] = await Promise.all([
+        fetch(JSON_ITEMS_URL),
+        fetch(JSON_TRANS_URL),
+        fetch(JSON_TASKS_URL).catch(() => null),
+        fetch(JSON_TASK_EN).catch(() => null),
+        fetch(JSON_MAPS_EN).catch(() => null),
+      ]);
+
+      if (!itemsResp.ok) throw new Error(`Items CDN: HTTP ${itemsResp.status}`);
+      if (!transResp.ok) throw new Error(`Translations CDN: HTTP ${transResp.status}`);
+
+      setLoadingHint('Processando dados do arsenal e missões...');
+
+      const [itemsJson, transJson] = await Promise.all([
+        itemsResp.json(),
+        transResp.json(),
+      ]);
+
+      const tasksJson   = tasksResp && tasksResp.ok ? await tasksResp.json() : null;
+      const tasksEnJson = tasksEnResp && tasksEnResp.ok ? await tasksEnResp.json() : null;
+      const mapsEnJson  = mapsEnResp && mapsEnResp.ok ? await mapsEnResp.json() : null;
+
+      const allItems     = itemsJson?.data?.items || {};
+      const translations = transJson?.data || {};
+      const tasksMap     = tasksJson?.data?.tasks || {};
+      const tasksEn      = tasksEnJson?.data || {};
+      const mapsEn       = mapsEnJson?.data || {};
+
+      const guns = [];
+      const ammoList = [];
+
+      for (const [id, item] of Object.entries(allItems)) {
+        const props = item.properties;
+        if (!props) continue;
+
+        const name = translations[item.name] || item.normalizedName || id;
+        const icon = item.iconLink || `https://assets.tarkov.dev/${id}-icon.webp`;
+
+        if (props.propertiesType === 'ItemPropertiesWeapon') {
+          guns.push({
+            id,
+            name,
+            iconLink: icon,
+            properties: {
+              defaultRecoilVertical: props.recoilVertical ?? props.defaultRecoilVertical,
+              ergonomics: props.ergonomics ?? props.defaultErgonomics,
+              fireRate: props.fireRate,
+              caliber: props.caliber,
+            },
+          });
+        }
+
+        if (props.propertiesType === 'ItemPropertiesAmmo') {
+          ammoList.push({
+            item: { id, name, iconLink: icon },
+            caliber: props.caliber,
+            penetrationPower: props.penetrationPower,
+            damage: props.damage,
+            armorDamage: props.armorDamage,
+            fragmentationChance: props.fragmentationChance,
+          });
+        }
+      }
+
+      // Process tasks
+      const tasks = [];
+      for (const [taskId, t] of Object.entries(tasksMap)) {
+        const taskName = tasksEn[t.name] || t.name || taskId;
+
+        const objectives = (t.objectives || []).map(obj => {
+          const desc = tasksEn[obj.description] || tasksEn[obj.id] || obj.description || 'Objetivo operacional';
+          const maps = (obj.maps || []).map(mapId => {
+            const mapName = mapsEn[mapId + ' Name'] || MAP_LOOKUP[mapId] || mapId;
+            return { name: mapName };
+          });
+          return {
+            type: obj.type || 'objective',
+            description: desc,
+            maps: maps
+          };
+        });
+
+        tasks.push({
+          id: taskId,
+          name: taskName,
+          objectives: objectives
+        });
+      }
+
+      return {
+        items: guns,
+        ammo: ammoList,
+        tasks: tasks.length > 0 ? tasks : FALLBACK_DATA.tasks
+      };
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SOURCE 3: EMBEDDED FALLBACK DATA
+    ════════════════════════════════════════════════════════ */
+    const FALLBACK_DATA = {
+      items: [
+        { id:'5447a9cd4bdc2dbd208b4567', name:'Colt M4A1 5.56x45', iconLink:'https://assets.tarkov.dev/5447a9cd4bdc2dbd208b4567-icon.webp', properties:{ defaultRecoilVertical:73, ergonomics:48, fireRate:800, caliber:'5.56x45mm NATO' }},
+        { id:'59e663da86f77411d949b252', name:'AS VAL 9x39', iconLink:'https://assets.tarkov.dev/59e663da86f77411d949b252-icon.webp', properties:{ defaultRecoilVertical:39, ergonomics:50, fireRate:900, caliber:'9x39mm' }},
+        { id:'57838ad32459774a17445393', name:'VSS Vintorez 9x39', iconLink:'https://assets.tarkov.dev/57838ad32459774a17445393-icon.webp', properties:{ defaultRecoilVertical:44, ergonomics:47, fireRate:900, caliber:'9x39mm' }},
+        { id:'5be0568b86f7746842427a30', name:'HK MP7A2 4.6x30', iconLink:'https://assets.tarkov.dev/5be0568b86f7746842427a30-icon.webp', properties:{ defaultRecoilVertical:44, ergonomics:67, fireRate:950, caliber:'4.6x30mm HK' }},
+        { id:'5cc9c20c14c02e000d0450a7', name:'FN P90 5.7x28', iconLink:'https://assets.tarkov.dev/5cc9c20c14c02e000d0450a7-icon.webp', properties:{ defaultRecoilVertical:40, ergonomics:62, fireRate:900, caliber:'5.7x28mm FN' }},
+        { id:'5448bd6b4bdc2dfc2f8b4569', name:'MP5 SD 9x19', iconLink:'https://assets.tarkov.dev/5448bd6b4bdc2dfc2f8b4569-icon.webp', properties:{ defaultRecoilVertical:52, ergonomics:55, fireRate:800, caliber:'9x19mm' }},
+        { id:'5a367e53c4a282000e49738f', name:'HK 416A5 5.56x45', iconLink:'https://assets.tarkov.dev/5a367e53c4a282000e49738f-icon.webp', properties:{ defaultRecoilVertical:69, ergonomics:50, fireRate:850, caliber:'5.56x45mm NATO' }},
+        { id:'5644bd2b4bdc2d3b4c8b4572', name:'AK-74M 5.45x39', iconLink:'https://assets.tarkov.dev/5644bd2b4bdc2d3b4c8b4572-icon.webp', properties:{ defaultRecoilVertical:78, ergonomics:44, fireRate:650, caliber:'5.45x39mm' }},
+        { id:'5a0ec13bfcdbcb001a3b002a', name:'AKM 7.62x39', iconLink:'https://assets.tarkov.dev/5a0ec13bfcdbcb001a3b002a-icon.webp', properties:{ defaultRecoilVertical:110, ergonomics:38, fireRate:600, caliber:'7.62x39mm' }},
+        { id:'5ac66d2e5acfc43b320a4226', name:'AK-103 7.62x39', iconLink:'https://assets.tarkov.dev/5ac66d2e5acfc43b320a4226-icon.webp', properties:{ defaultRecoilVertical:105, ergonomics:42, fireRate:600, caliber:'7.62x39mm' }},
+        { id:'5a7828548dc32e5a9c28b516', name:'Remington R11 RSASS', iconLink:'https://assets.tarkov.dev/5a7828548dc32e5a9c28b516-icon.webp', properties:{ defaultRecoilVertical:89, ergonomics:40, fireRate:700, caliber:'7.62x51mm NATO' }},
+        { id:'5b057d4f86f7744391143529', name:'DSA SA-58 7.62x51', iconLink:'https://assets.tarkov.dev/5b057d4f86f7744391143529-icon.webp', properties:{ defaultRecoilVertical:128, ergonomics:35, fireRate:700, caliber:'7.62x51mm NATO' }},
+        { id:'5a107d57fcdbcb001c408a8f', name:'Springfield Armory M1A', iconLink:'https://assets.tarkov.dev/5a107d57fcdbcb001c408a8f-icon.webp', properties:{ defaultRecoilVertical:114, ergonomics:39, fireRate:700, caliber:'7.62x51mm NATO' }},
+        { id:'5bf3e03b0db834001d2c4a9c', name:'Mosin-Nagant Bolt-action', iconLink:'https://assets.tarkov.dev/5bf3e03b0db834001d2c4a9c-icon.webp', properties:{ defaultRecoilVertical:150, ergonomics:30, fireRate:30, caliber:'7.62x54mmR' }},
+        { id:'5cad75e486f774498211a704', name:'KRISS Vector .45 ACP', iconLink:'https://assets.tarkov.dev/5cad75e486f774498211a704-icon.webp', properties:{ defaultRecoilVertical:35, ergonomics:68, fireRate:1100, caliber:'.45 ACP' }},
+        { id:'5fc24d79a82ee64e2a582fed', name:'KRISS Vector 9x19', iconLink:'https://assets.tarkov.dev/5fc24d79a82ee64e2a582fed-icon.webp', properties:{ defaultRecoilVertical:33, ergonomics:70, fireRate:1100, caliber:'9x19mm' }},
+        { id:'60339ab7d62f9c04eb77ca61', name:'SIG MCX .300 BLK', iconLink:'https://assets.tarkov.dev/60339ab7d62f9c04eb77ca61-icon.webp', properties:{ defaultRecoilVertical:65, ergonomics:52, fireRate:700, caliber:'.300 Blackout' }},
+        { id:'5d43021ca4b9362eab495381', name:'RPK-16 5.45x39', iconLink:'https://assets.tarkov.dev/5d43021ca4b9362eab495381-icon.webp', properties:{ defaultRecoilVertical:72, ergonomics:40, fireRate:650, caliber:'5.45x39mm' }},
+        { id:'5e8488fa988a8701445df1e4', name:'Desert Tech MDR 5.56', iconLink:'https://assets.tarkov.dev/5e8488fa988a8701445df1e4-icon.webp', properties:{ defaultRecoilVertical:68, ergonomics:57, fireRate:650, caliber:'5.56x45mm NATO' }},
+        { id:'5f9949d869e2777bed0633b5', name:'CMMG Mk47 Mutant', iconLink:'https://assets.tarkov.dev/5f9949d869e2777bed0633b5-icon.webp', properties:{ defaultRecoilVertical:100, ergonomics:46, fireRate:650, caliber:'7.62x39mm' }},
+        { id:'5bf3e0490db83400196199af', name:'HK UMP 45', iconLink:'https://assets.tarkov.dev/5bf3e0490db83400196199af-icon.webp', properties:{ defaultRecoilVertical:58, ergonomics:54, fireRate:600, caliber:'.45 ACP' }},
+        { id:'5d40428586f7743172251a37', name:'B&T MP9 9x19', iconLink:'https://assets.tarkov.dev/5d40428586f7743172251a37-icon.webp', properties:{ defaultRecoilVertical:48, ergonomics:65, fireRate:900, caliber:'9x19mm' }},
+        { id:'5c07df6f0db834001b735886', name:'ASh-12 12.7x55', iconLink:'https://assets.tarkov.dev/5c07df6f0db834001b735886-icon.webp', properties:{ defaultRecoilVertical:155, ergonomics:25, fireRate:650, caliber:'12.7x55mm' }},
+        { id:'5e8488fa988a8701445df1e5', name:'KAC SR-25 7.62x51', iconLink:'https://assets.tarkov.dev/5e8488fa988a8701445df1e5-icon.webp', properties:{ defaultRecoilVertical:85, ergonomics:42, fireRate:700, caliber:'7.62x51mm NATO' }}
+      ],
+      ammo: [
+        { item:{ id:'5efb0cabfb3e451d70735af2', name:'7.62x51mm M993', iconLink:'https://assets.tarkov.dev/5efb0cabfb3e451d70735af2-icon.webp' }, caliber:'7.62x51mm NATO', penetrationPower:70, damage:72, armorDamage:52, fragmentationChance:0.03 },
+        { item:{ id:'58dd3ad986f77403051cba8f', name:'7.62x51mm M61', iconLink:'https://assets.tarkov.dev/58dd3ad986f77403051cba8f-icon.webp' }, caliber:'7.62x51mm NATO', penetrationPower:64, damage:70, armorDamage:50, fragmentationChance:0.03 },
+        { item:{ id:'5c0d688c86f77413ae3407b2', name:'5.45x39mm PPBS "Igolnik"', iconLink:'https://assets.tarkov.dev/5c0d688c86f77413ae3407b2-icon.webp' }, caliber:'5.45x39mm', penetrationPower:62, damage:37, armorDamage:47, fragmentationChance:0.02 },
+        { item:{ id:'59e690b686f7746c9f75e848', name:'5.56x45mm M995', iconLink:'https://assets.tarkov.dev/59e690b686f7746c9f75e848-icon.webp' }, caliber:'5.56x45mm NATO', penetrationPower:53, damage:40, armorDamage:45, fragmentationChance:0.03 },
+        { item:{ id:'5e023d48186a883b6e19d2b3', name:'7.62x54mmR BS', iconLink:'https://assets.tarkov.dev/5e023d48186a883b6e19d2b3-icon.webp' }, caliber:'7.62x54mmR', penetrationPower:57, damage:72, armorDamage:48, fragmentationChance:0.11 },
+        { item:{ id:'5656d7c34bdc2d9d198b4587', name:'7.62x39mm BP gzh', iconLink:'https://assets.tarkov.dev/5656d7c34bdc2d9d198b4587-icon.webp' }, caliber:'7.62x39mm', penetrationPower:47, damage:58, armorDamage:42, fragmentationChance:0.12 },
+        { item:{ id:'59e6906286f7746c9f75e847', name:'5.56x45mm M855A1', iconLink:'https://assets.tarkov.dev/59e6906286f7746c9f75e847-icon.webp' }, caliber:'5.56x45mm NATO', penetrationPower:44, damage:49, armorDamage:40, fragmentationChance:0.08 },
+        { item:{ id:'5c0d56a286f774246134babf', name:'9x39mm BP gs', iconLink:'https://assets.tarkov.dev/5c0d56a286f774246134babf-icon.webp' }, caliber:'9x39mm', penetrationPower:48, damage:58, armorDamage:40, fragmentationChance:0.03 },
+        { item:{ id:'5ba26835d4351e0035628ff5', name:'4.6x30mm AP SX', iconLink:'https://assets.tarkov.dev/5ba26835d4351e0035628ff5-icon.webp' }, caliber:'4.6x30mm HK', penetrationPower:53, damage:35, armorDamage:44, fragmentationChance:0.02 },
+        { item:{ id:'5efb0999fb3e451d70735af0', name:'.45 ACP AP', iconLink:'https://assets.tarkov.dev/5efb0999fb3e451d70735af0-icon.webp' }, caliber:'.45 ACP', penetrationPower:38, damage:70, armorDamage:36, fragmentationChance:0.02 },
+        { id:'5ba26812d4351e003202ac1b', item:{ id:'5ba26812d4351e003202ac1b', name:'9x19mm AP 6.3', iconLink:'https://assets.tarkov.dev/5ba26812d4351e003202ac1b-icon.webp' }, caliber:'9x19mm', penetrationPower:30, damage:52, armorDamage:28, fragmentationChance:0.05 },
+        { item:{ id:'56d59d3ad2720bdb418b4577', name:'5.45x39mm PP gs', iconLink:'https://assets.tarkov.dev/56d59d3ad2720bdb418b4577-icon.webp' }, caliber:'5.45x39mm', penetrationPower:28, damage:46, armorDamage:24, fragmentationChance:0.25 },
+        { item:{ id:'573719df2459775a626cc000', name:'9x19mm PST gzh', iconLink:'https://assets.tarkov.dev/573719df2459775a626cc000-icon.webp' }, caliber:'9x19mm', penetrationPower:20, damage:54, armorDamage:18, fragmentationChance:0.15 },
+        { item:{ id:'5efb0cabfb3e451d70735af1', name:'.45 ACP RIP', iconLink:'https://assets.tarkov.dev/5efb0cabfb3e451d70735af1-icon.webp' }, caliber:'.45 ACP', penetrationPower:8, damage:127, armorDamage:5, fragmentationChance:1.00 }
+      ],
+      tasks: [
+        {
+          id: 'task_debut',
+          name: 'Debut',
+          objectives: [
+            { type: 'shoot', description: 'Eliminar 5 Scavs em qualquer lugar do mapa Customs', maps: [{ name: 'Customs' }] },
+            { type: 'giveItem', description: 'Obter e entregar 2 espingardas MP-133 12ga para Prapor', maps: [] }
+          ]
+        },
+        {
+          id: 'task_checking',
+          name: 'Checking',
+          objectives: [
+            { type: 'findQuestItem', description: 'Encontrar o relógio de bolso de bronze no caminhão de combustível', maps: [{ name: 'Customs' }] },
+            { type: 'giveQuestItem', description: 'Sobreviver e entregar o relógio de bolso para Prapor', maps: [{ name: 'Customs' }] }
+          ]
+        },
+        {
+          id: 'task_operation_aquarius',
+          name: 'Operation Aquarius - Part 1',
+          objectives: [
+            { type: 'visit', description: 'Localizar a reserva de água nos dormitórios de 2 andares (Quarto 206)', maps: [{ name: 'Customs' }] },
+            { type: 'extract', description: 'Sobreviver e extrair com sucesso da raid', maps: [{ name: 'Customs' }] }
+          ]
+        },
+        {
+          id: 'task_delivery_from_the_past',
+          name: 'Delivery from the Past',
+          objectives: [
+            { type: 'findQuestItem', description: 'Obter a pasta de documentos no escritório do Diretor em Customs', maps: [{ name: 'Customs' }] },
+            { type: 'plantQuestItem', description: 'Esconder a pasta de documentos na cabine de controle fabril em Factory', maps: [{ name: 'Factory' }] },
+            { type: 'extract', description: 'Sobreviver e extrair de Factory', maps: [{ name: 'Factory' }] }
+          ]
+        },
+        {
+          id: 'task_gunsmith_part_1',
+          name: 'Gunsmith - Part 1',
+          objectives: [
+            { type: 'build', description: 'Modificar uma espingarda MP-133 de acordo com as especificações exatas de Mechanic (Ergo > 47, Recuo < 850, lanterna laser tática e pente estendido)', maps: [] }
+          ]
+        },
+        {
+          id: 'task_shootout_picnic',
+          name: 'Shootout Picnic',
+          objectives: [
+            { type: 'shoot', description: 'Eliminar 14 Scavs na região arborizada de Woods', maps: [{ name: 'Woods' }] }
+          ]
+        },
+        {
+          id: 'task_golden_swag',
+          name: 'Golden Swag',
+          objectives: [
+            { type: 'findQuestItem', description: 'Encontrar o isqueiro Zibbo dourado no dormitório 303 de Customs', maps: [{ name: 'Customs' }] },
+            { type: 'plantQuestItem', description: 'Guardar o isqueiro na cabine portátil no estacionamento do trailer park', maps: [{ name: 'Customs' }] }
+          ]
+        },
+        {
+          id: 'task_the_extortionist',
+          name: 'The Extortionist',
+          objectives: [
+            { type: 'findQuestItem', description: 'Encontrar o documento secreto oculto na cabine do mensageiro em Customs', maps: [{ name: 'Customs' }] },
+            { type: 'giveQuestItem', description: 'Entregar o documento para o comerciante Skier', maps: [] }
+          ]
+        },
+        {
+          id: 'task_spa_tour',
+          name: 'Spa Tour - Part 1',
+          objectives: [
+            { type: 'shoot', description: 'Eliminar 7 Scavs em Shoreline utilizando espingardas de calibre 12ga com tiros na cabeça', maps: [{ name: 'Shoreline' }] }
+          ]
+        },
+        {
+          id: 'task_first_in_line',
+          name: 'First in Line',
+          objectives: [
+            { type: 'visit', description: 'Localizar o posto médico de campanha em Ground Zero', maps: [{ name: 'Ground Zero' }] },
+            { type: 'giveItem', description: 'Entregar 3 itens médicos encontrados em raid (FIR) para Therapist', maps: [] }
+          ]
+        }
+      ]
+    };
+
+    /* ════════════════════════════════════════════════════════
+       MULTI-SOURCE MASTER FETCH
+    ════════════════════════════════════════════════════════ */
+    async function fetchData() {
+      // Camada 1: GraphQL Oficial
+      try {
+        const data = await fetchGraphQL();
+        if (data && data.items && data.items.length) {
+          dataSource = 'graphql';
+          return data;
+        }
+      } catch (e) {
+        console.warn('[Tarkov] GraphQL indisponível, acionando Camada 2 (JSON CDN):', e.message);
+      }
+
+      // Camada 2: JSON CDN Estático Oficial
+      try {
+        const data = await fetchJSONAPI();
+        if (data && data.items && data.items.length) {
+          dataSource = 'json';
+          return data;
+        }
+      } catch (e) {
+        console.warn('[Tarkov] JSON CDN indisponível, acionando Camada 3 (Fallback):', e.message);
+      }
+
+      // Camada 3: Dados Offline
+      dataSource = 'offline';
+      return FALLBACK_DATA;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SISTEMA DE TIERS (REGRAS DE NEGÓCIO)
+    ════════════════════════════════════════════════════════ */
+    function getAmmoTier(pen) {
+      if (pen >= 50) return 'S';
+      if (pen >= 40) return 'A';
+      if (pen >= 30) return 'B';
+      return 'D';
+    }
+
+    function getGunTier(recoil) {
+      if (recoil <= 55)  return 'S';
+      if (recoil <= 80)  return 'A';
+      if (recoil <= 120) return 'B';
+      return 'D';
+    }
+
+    /* ════════════════════════════════════════════════════════
+       PROCESSAMENTO DE DADOS
+    ════════════════════════════════════════════════════════ */
+    function processGuns(items) {
+      return items
+        .filter(i => i.properties && i.properties.defaultRecoilVertical != null)
+        .map(i => ({
+          id:       i.id,
+          name:     i.name,
+          iconLink: i.iconLink || `https://assets.tarkov.dev/${i.id}-icon.webp`,
+          recoil:   i.properties.defaultRecoilVertical,
+          ergo:     i.properties.ergonomics ?? '—',
+          fireRate: i.properties.fireRate ?? '—',
+          caliber:  formatCaliber(i.properties.caliber || ''),
+          tier:     getGunTier(i.properties.defaultRecoilVertical),
+        }))
+        .sort((a, b) => a.recoil - b.recoil); // Crescente por menor recuo
+    }
+
+    function processAmmo(items) {
+      return items
+        .filter(i => i.penetrationPower != null)
+        .map(i => ({
+          id:            i.item?.id || i.id,
+          name:          i.item?.name || i.name,
+          iconLink:      i.item?.iconLink || i.iconLink || `https://assets.tarkov.dev/${i.item?.id || i.id}-icon.webp`,
+          penetration:   i.penetrationPower,
+          damage:        i.damage ?? '—',
+          armorDamage:   i.armorDamage ?? '—',
+          fragmentation: i.fragmentationChance != null
+            ? (i.fragmentationChance * 100).toFixed(0) + '%'
+            : '—',
+          caliber:       formatCaliber(i.caliber || ''),
+          tier:          getAmmoTier(i.penetrationPower),
+        }))
+        .sort((a, b) => b.penetration - a.penetration); // Decrescente por maior penetração
+    }
+
+    function processTasks(tasks) {
+      return (tasks || []).map(t => ({
+        id: t.id,
+        name: t.name || 'Missão sem nome',
+        objectives: (t.objectives || []).map(obj => ({
+          type: obj.type || 'objective',
+          description: obj.description || 'Cumprir diretriz operacional',
+          maps: Array.isArray(obj.maps) ? obj.maps : []
+        }))
+      }));
+    }
+
+    /* ════════════════════════════════════════════════════════
+       RENDERIZAÇÃO DE CARDS
+    ════════════════════════════════════════════════════════ */
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderGunCard(g) {
+      const t = g.tier.toLowerCase();
+      return `
+        <div class="card tier-${t}">
+          <div class="card-visual-row">
+            ${g.iconLink ? `
+              <div class="card-thumb-box">
+                <img src="${esc(g.iconLink)}" alt="${esc(g.name)}" class="card-thumb" loading="lazy" onerror="this.parentElement.style.display='none'">
+              </div>
+            ` : ''}
+            <div class="card-title-col">
+              <div class="card-header">
+                <span class="card-name" title="${esc(g.name)}">${esc(g.name)}</span>
+                <span class="tier-badge">TIER ${g.tier}</span>
+              </div>
+              ${g.caliber ? `<span class="chip" title="${esc(g.caliber)}">${esc(g.caliber)}</span>` : ''}
+            </div>
+          </div>
+          <div class="card-divider"></div>
+          <div class="card-stats">
+            <div class="stat-row"><span class="stat-label">Recuo V.</span><span class="stat-value highlight">${g.recoil}</span></div>
+            <div class="stat-row"><span class="stat-label">Ergonomia</span><span class="stat-value">${g.ergo}</span></div>
+            <div class="stat-row"><span class="stat-label">Cadência</span><span class="stat-value">${g.fireRate !== '—' ? g.fireRate + ' rpm' : '—'}</span></div>
+          </div>
+        </div>`;
+    }
+
+    function renderAmmoCard(a) {
+      const t = a.tier.toLowerCase();
+      return `
+        <div class="card tier-${t}">
+          <div class="card-visual-row">
+            ${a.iconLink ? `
+              <div class="card-thumb-box">
+                <img src="${esc(a.iconLink)}" alt="${esc(a.name)}" class="card-thumb" loading="lazy" onerror="this.parentElement.style.display='none'">
+              </div>
+            ` : ''}
+            <div class="card-title-col">
+              <div class="card-header">
+                <span class="card-name" title="${esc(a.name)}">${esc(a.name)}</span>
+                <span class="tier-badge">TIER ${a.tier}</span>
+              </div>
+              ${a.caliber ? `<span class="chip" title="${esc(a.caliber)}">${esc(a.caliber)}</span>` : ''}
+            </div>
+          </div>
+          <div class="card-divider"></div>
+          <div class="card-stats">
+            <div class="stat-row"><span class="stat-label">Penetração</span><span class="stat-value highlight">${a.penetration}</span></div>
+            <div class="stat-row"><span class="stat-label">Dano</span><span class="stat-value">${a.damage}</span></div>
+            <div class="stat-row"><span class="stat-label">Dano Armadura</span><span class="stat-value">${a.armorDamage}</span></div>
+            <div class="stat-row"><span class="stat-label">Fragmentação</span><span class="stat-value">${a.fragmentation}</span></div>
+          </div>
+        </div>`;
+    }
+
+    function renderTaskCard(task) {
+      const isDone = isTaskCompleted(task.id);
+      const isExp = expandedTaskIds.has(task.id);
+
+      return `
+        <div class="task-card ${isDone ? 'completed' : ''} ${isExp ? 'expanded' : ''}" id="task-card-${task.id}" onclick="toggleTaskExpand('${task.id}', event)">
+          <div class="task-header-row">
+            <div class="task-check-wrapper" onclick="event.stopPropagation()">
+              <input type="checkbox" class="task-check-input" ${isDone ? 'checked' : ''} onchange="handleTaskCheck('${task.id}', this.checked, event)" title="Marcar como concluída">
+            </div>
+            <div class="task-info-col">
+              <span class="task-name">${esc(task.name)}</span>
+              <div class="task-meta">
+                <span>📋 ${task.objectives.length} objetivo(s)</span>
+              </div>
+            </div>
+            <div class="task-right-col">
+              <span class="status-badge ${isDone ? 'done' : 'pending'}">${isDone ? 'Concluída' : 'Pendente'}</span>
+              <span class="chevron-icon">▼</span>
+            </div>
+          </div>
+
+          <div class="task-details">
+            <div class="task-details-inner">
+              <div class="objectives-heading">
+                <span>🎯</span> Objetivos da Missão
+              </div>
+              ${task.objectives.map((obj, i) => {
+                const conf = getObjConfig(obj.type);
+                const mapNames = (obj.maps || []).map(m => m.name || m).filter(Boolean);
+                const hasMaps = mapNames.length > 0;
+                const mapDisplay = hasMaps ? mapNames.join(', ') : 'Qualquer lugar / Global';
+
+                return `
+                  <div class="objective-item">
+                    <div class="obj-meta-row">
+                      <span class="obj-type-pill ${conf.css}">
+                        ${conf.icon} ${esc(conf.label)} (${esc(obj.type)})
+                      </span>
+                      <span class="obj-map-pill ${hasMaps ? 'has-map' : 'global'}">
+                        ${hasMaps ? '📍 ' + esc(mapDisplay) : '🌍 ' + esc(mapDisplay)}
+                      </span>
+                    </div>
+                    <div class="obj-desc">${esc(obj.description)}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       INTERAÇÕES DE MISSÕES
+    ════════════════════════════════════════════════════════ */
+    function toggleTaskExpand(taskId, event) {
+      if (expandedTaskIds.has(taskId)) {
+        expandedTaskIds.delete(taskId);
+      } else {
+        expandedTaskIds.add(taskId);
+      }
+
+      const card = document.getElementById('task-card-' + taskId);
+      if (card) {
+        card.classList.toggle('expanded', expandedTaskIds.has(taskId));
+      }
+    }
+
+    function handleTaskCheck(taskId, checked, event) {
+      if (event) event.stopPropagation();
+      setTaskCompleted(taskId, checked);
+
+      // Re-renderizar seção de missões para reordenar (concluídas ao final) e atualizar progresso
+      renderSection('tasks');
+    }
+
+    /* ════════════════════════════════════════════════════════
+       RENDERIZAÇÃO DA SEÇÃO ATIVA
+    ════════════════════════════════════════════════════════ */
+    function renderSection(section) {
+      const grid       = document.getElementById('cards-grid');
+      const secTitle   = document.getElementById('section-title');
+      const secCount   = document.getElementById('section-count');
+      const legend     = document.getElementById('tier-legend');
+      const secHdr     = document.getElementById('section-header');
+      const filterBar  = document.getElementById('filter-bar');
+      const statsTiers = document.getElementById('stats-tiers');
+      const statsTasks = document.getElementById('stats-tasks-progress');
+
+      const isGuns  = section === 'guns';
+      const isAmmo  = section === 'ammo';
+      const isTasks = section === 'tasks';
+
+      // Ajuste de classes de layout
+      grid.classList.toggle('tasks-grid', isTasks);
+
+      let data = [];
+      if (isGuns)  data = gunsData;
+      if (isAmmo)  data = ammoData;
+      if (isTasks) data = tasksData;
+
+      // Filtragem por busca
+      const q = searchQuery.toLowerCase().trim();
+      let filteredData = data;
+      if (q) {
+        filteredData = data.filter(item => {
+          const nameMatch = (item.name || '').toLowerCase().includes(q);
+          const calMatch  = (item.caliber || '').toLowerCase().includes(q);
+          return nameMatch || calMatch;
+        });
+      }
+
+      if (isTasks) {
+        // REGRA DE NEGÓCIO: Ordenar missões para que completas fiquem ao final
+        filteredData = [...filteredData].sort((a, b) => {
+          const doneA = isTaskCompleted(a.id);
+          const doneB = isTaskCompleted(b.id);
+          if (doneA === doneB) return 0;
+          return doneA ? 1 : -1;
+        });
+
+        secTitle.textContent = 'Missões (Tasks)';
+        legend.classList.add('hidden');
+        statsTiers.style.display = 'none';
+        statsTasks.style.display = 'flex';
+
+        // Atualizar contadores de tarefas
+        const total = tasksData.length;
+        const done = tasksData.filter(t => isTaskCompleted(t.id)).length;
+        const pending = total - done;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        document.getElementById('tasks-done-count').textContent = done;
+        document.getElementById('tasks-pending-count').textContent = pending;
+        document.getElementById('tasks-progress-percent').textContent = `${pct}% Concluído (${done}/${total})`;
+
+        grid.innerHTML = filteredData.length
+          ? filteredData.map(renderTaskCard).join('')
+          : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhuma missão encontrada.</div>';
+
+      } else {
+        // Armas ou Munições
+        secTitle.textContent = isGuns ? 'Armas' : 'Munições';
+        legend.classList.remove('hidden');
+        statsTiers.style.display = 'flex';
+        statsTasks.style.display = 'none';
+
+        document.getElementById('legend-s').textContent = isGuns ? 'Tier S — Recuo ≤ 55'  : 'Tier S — Penetração ≥ 50';
+        document.getElementById('legend-a').textContent = isGuns ? 'Tier A — Recuo ≤ 80'  : 'Tier A — Penetração ≥ 40';
+        document.getElementById('legend-b').textContent = isGuns ? 'Tier B — Recuo ≤ 120' : 'Tier B — Penetração ≥ 30';
+        document.getElementById('legend-d').textContent = isGuns ? 'Tier D — Recuo > 120' : 'Tier D — Penetração < 30';
+
+        grid.innerHTML = filteredData.length
+          ? filteredData.map(item => isGuns ? renderGunCard(item) : renderAmmoCard(item)).join('')
+          : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhum item encontrado.</div>';
+
+        // Atualizar contagem por tiers
+        const tiers = { S: 0, A: 0, B: 0, D: 0 };
+        filteredData.forEach(i => { if (tiers[i.tier] !== undefined) tiers[i.tier]++; });
+        document.getElementById('stats-count').textContent = `S:${tiers.S}  A:${tiers.A}  B:${tiers.B}  D:${tiers.D}`;
+      }
+
+      secCount.textContent = `${filteredData.length} ${filteredData.length === 1 ? 'item' : 'itens'}`;
+
+      [grid, secHdr, filterBar].forEach(el => el.classList.remove('hidden'));
+    }
+
+    /* ════════════════════════════════════════════════════════
+       SUBTITLE & STATUS
+    ════════════════════════════════════════════════════════ */
+    function updateSubtitle() {
+      const sub = document.getElementById('subtitle');
+      const labels = {
+        graphql: { text: 'Dados em tempo real via <span>api.tarkov.dev/graphql</span>', badge: 'live',    label: 'API Live' },
+        json:    { text: 'Dados via <span>json.tarkov.dev</span> (CDN Estático)',      badge: 'json',    label: 'JSON CDN' },
+        offline: { text: 'Dados offline (amostra embutida)',                           badge: 'offline', label: 'Offline' },
+      };
+      const s = labels[dataSource] || labels.offline;
+      sub.innerHTML = `${s.text} · Classificação por Tier & Rastreador de Missões
+        <br><span class="source-badge ${s.badge}"><span class="source-dot"></span>${s.label}</span>`;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       UI STATE HELPERS
+    ════════════════════════════════════════════════════════ */
+    function setLoadingState(on) {
+      document.getElementById('loading').classList.toggle('hidden', !on);
+      document.getElementById('btn-guns').disabled = on;
+      document.getElementById('btn-ammo').disabled = on;
+      document.getElementById('btn-tasks').disabled = on;
+    }
+
+    function setLoadingHint(msg) {
+      document.getElementById('loading-source').textContent = msg;
+    }
+
+    function hideContentElements() {
+      ['error', 'cards-grid', 'tier-legend', 'section-header', 'filter-bar'].forEach(id =>
+        document.getElementById(id).classList.add('hidden')
+      );
+      document.getElementById('stats-count').textContent = '';
+      document.getElementById('cards-grid').innerHTML = '';
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      renderSection(currentSection);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       NAVEGAÇÃO ENTRE SEÇÕES
+    ════════════════════════════════════════════════════════ */
+    function showSection(section) {
+      currentSection = section;
+      document.getElementById('btn-guns').classList.toggle('active', section === 'guns');
+      document.getElementById('btn-ammo').classList.toggle('active', section === 'ammo');
+      document.getElementById('btn-tasks').classList.toggle('active', section === 'tasks');
+
+      // Limpar busca ao alternar aba
+      document.getElementById('search-input').value = '';
+      searchQuery = '';
+
+      renderSection(section);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       FALLBACK MANUAL
+    ════════════════════════════════════════════════════════ */
+    function loadFallback() {
+      document.getElementById('error').classList.add('hidden');
+      setLoadingState(true);
+      setLoadingHint('Carregando dados offline...');
+
+      setTimeout(() => {
+        dataSource = 'offline';
+        gunsData  = processGuns(FALLBACK_DATA.items);
+        ammoData  = processAmmo(FALLBACK_DATA.ammo);
+        tasksData = processTasks(FALLBACK_DATA.tasks);
+
+        setLoadingState(false);
+        updateSubtitle();
+        renderSection(currentSection);
+      }, 300);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       INICIALIZAÇÃO DA APLICAÇÃO
+    ════════════════════════════════════════════════════════ */
+    async function init() {
+      hideContentElements();
+      setLoadingState(true);
+      setLoadingHint('Verificando fontes de dados Tarkov...');
+
+      try {
+        const data = await fetchData();
+
+        gunsData  = processGuns(data.items || []);
+        ammoData  = processAmmo(data.ammo  || []);
+        tasksData = processTasks(data.tasks || []);
+
+        setLoadingState(false);
+        updateSubtitle();
+        renderSection(currentSection);
+
+      } catch (err) {
+        setLoadingState(false);
+        document.getElementById('error-msg').textContent = err.message || 'Erro inesperado ao carregar dados.';
+        document.getElementById('error').classList.remove('hidden');
+        console.error('[Tarkov Tracker] Erro fatal:', err);
+      }
+    }
+
+    // Inicialização automática
+    init();
+  </script>
+</body>
+</html>
