@@ -31,17 +31,19 @@ Uma Single Page Application (SPA) tática e responsiva para rastrear o arsenal d
 - Exibição de atributos: Penetração, Dano Base, Dano em Armadura e Chance de Fragmentação.
 
 ### 📜 3. Missões (Tasks & Quests Tracker)
-- **Checkboxes com Persistência**: Gravação instantânea do estado de conclusão no `localStorage` do navegador (`task_ID = true/false`).
-- **Reordenação Inteligente**: Missões pendentes aparecem no topo; missões concluídas ganham texto riscado e vão automaticamente para o fim da lista.
+- **Checkboxes com Persistência**: Gravação instantânea do estado de conclusão no `localStorage` do navegador (`task_done_ID = true/false`).
+- **Sistema de Missões Ativas (📌 Fixar / Ativa)**: Botão no cabeçalho de cada missão para destacar tarefas em andamento (`task_active_ID = true/false`), sincronizado com filtros rápidos (`Todas`, `📌 Ativas`, `Pendentes`, `Concluídas`).
+- **Reordenação Inteligente**: Missões pendentes e ativas aparecem no topo; missões concluídas ganham texto riscado e vão automaticamente para o fim da lista.
 - **Detalhes Expansíveis**: Ao clicar no cartão da missão, os objetivos são exibidos com etiquetas coloridas (`shoot`, `visit`, `giveItem`, `plantItem`, `extract`, `build`, etc.) e descrição em Português.
-- **Redirecionamento Missão -> Mapa**: Botão **"Ver no Mapa"** que transita para a aba de Mapas, seleciona o mapa exato da missão, foca a câmera e posiciona um marcador tático pulsante.
+- **Redirecionamento Missão -> Mapa**: Botão **"Ver no Mapa"** que transita para a aba de Mapas, seleciona o mapa exato da missão, foca a câmera e posiciona um marcador tático com anel pulsante laranja.
 
 ### 🗺️ 4. Sistema Híbrido de Mapas (Leaflet + Embed)
 - **Modo Mapa Tático (Leaflet.js)**:
   - Motor cartográfico baseado em coordenadas planas estáticas (`L.CRS.Simple`).
+  - **Seletor de Andares Multi-Nível (Floors)**: Para mapas verticais complexos (Factory, Reserve, Shoreline, The Lab, Streets), permite filtrar visualmente pontos por piso (`Todos`, `B1 / Subsolo`, `1º Andar`, `2º Andar / Telhado`).
   - **Filtro de Alto Contraste / Modo Claro**: Inverte as linhas escuras dos SVGs do Tarkov.dev (`filter: invert(0.92) hue-rotate(180deg) contrast(1.25)`), tornando todas as plantas nítidas e legíveis sobre o tema escuro.
   - **Barra de Filtros por Camadas (`L.layerGroup`)**:
-    - `[x] Missões Ativas` (Laranja `#ff9900`)
+    - `[x] Missões (Ativas/Pendentes)` (Laranja `#ff9900` com anel pulsante)
     - `[x] Extrações PMC` (Verde `#99cc00`)
     - `[x] Extrações Scav` (Azul `#3399ff`)
     - `[x] Chefes (Bosses)` (Vermelho `#ff3333`)
@@ -51,6 +53,7 @@ Uma Single Page Application (SPA) tática e responsiva para rastrear o arsenal d
   - Iframe responsivo de alta resolução integrado diretamente no app.
   - Alternador dinâmico de fonte entre **MapGenie (Embed Escuro)** e **Tarkov.dev Oficial**.
 - **The Lab Corrigido**: Endpoint de vetor oficial atualizado (`assets.tarkov.dev/maps/svg/Labs.svg`).
+- **Dataset de Fallback dos 10 Mapas**: Cobertura completa de extrações e chefes para Customs, Woods, Factory, Shoreline, Interchange, Reserve, Lighthouse, Streets, Ground Zero e The Lab.
 
 ---
 

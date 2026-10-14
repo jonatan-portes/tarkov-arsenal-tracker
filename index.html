@@ -111,7 +111,7 @@
     header p.subtitle span { color: var(--accent); font-weight: 600; }
 
     /* =========================================================
-       NAV / TAB BAR (SEM EMOJIS, APENAS OS NOMES)
+       NAV / TAB BAR (SEM EMOJIS)
     ========================================================= */
     nav {
       background: var(--bg-nav);
@@ -276,6 +276,7 @@
       gap: 10px;
       margin-bottom: 16px;
       flex-wrap: wrap;
+      align-items: center;
     }
     .filter-bar.hidden { display: none; }
     .search-input {
@@ -292,6 +293,36 @@
       transition: border-color 0.2s;
     }
     .search-input:focus { border-color: var(--accent); }
+
+    /* Filtros Rápidos de Missões */
+    .task-pill-filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .task-pill {
+      background: #161616;
+      border: 1px solid #282828;
+      color: var(--text-sec);
+      padding: 5px 12px;
+      border-radius: 2px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .task-pill:hover { background: #222; color: var(--text-main); border-color: #383838; }
+    .task-pill.active {
+      background: var(--accent);
+      color: #0a0a0a;
+      border-color: var(--accent);
+    }
+    .task-pill.pill-active.active {
+      background: var(--color-missions);
+      color: #000;
+      border-color: var(--color-missions);
+    }
 
     /* Tier Legend */
     .tier-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
@@ -465,7 +496,7 @@
     .stat-value.highlight { color: var(--tier-color); }
 
     /* =========================================================
-       TASK CARDS (MISSÕES)
+       TASK CARDS (MISSÕES COM BOTÃO ATIVAR/FIXAR)
     ========================================================= */
     .task-card {
       background: var(--bg-card);
@@ -486,6 +517,11 @@
       background: var(--bg-card-hover);
       border-color: #333;
       transform: translateY(-1px);
+    }
+
+    .task-card.active-task {
+      border-left-color: var(--color-missions);
+      background: #191612;
     }
 
     .task-card.completed {
@@ -550,8 +586,15 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       min-width: 0;
+    }
+
+    .task-title-and-active {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
     }
 
     .task-name {
@@ -562,6 +605,28 @@
       word-break: break-word;
     }
 
+    .task-active-btn {
+      background: #161616;
+      border: 1px solid #333;
+      color: var(--text-sec);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .task-active-btn:hover { background: #222; color: var(--text-main); border-color: var(--accent); }
+    .task-active-btn.active {
+      background: rgba(255, 153, 0, 0.2);
+      border-color: var(--color-missions);
+      color: var(--color-missions);
+      box-shadow: 0 0 8px rgba(255, 153, 0, 0.3);
+    }
+
     .task-meta {
       display: flex;
       align-items: center;
@@ -569,6 +634,17 @@
       font-size: 0.68rem;
       color: var(--text-sec);
       letter-spacing: 0.04em;
+    }
+
+    .task-active-indicator {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--color-missions);
+      background: rgba(255, 153, 0, 0.12);
+      border: 1px solid rgba(255, 153, 0, 0.3);
+      padding: 1px 5px;
+      border-radius: 2px;
     }
 
     .task-right-col {
@@ -668,17 +744,10 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
+      background: rgba(51,153,255,0.15);
+      color: #66b2ff;
+      border: 1px solid rgba(51,153,255,0.3);
     }
-
-    .obj-type-shoot    { background: rgba(255,51,51,0.15); color: #ff6666; border: 1px solid rgba(255,51,51,0.3); }
-    .obj-type-visit    { background: rgba(51,153,255,0.15); color: #66b2ff; border: 1px solid rgba(51,153,255,0.3); }
-    .obj-type-give     { background: rgba(153,204,0,0.15); color: #b3e600; border: 1px solid rgba(153,204,0,0.3); }
-    .obj-type-find     { background: rgba(255,153,0,0.15); color: #ffb84d; border: 1px solid rgba(255,153,0,0.3); }
-    .obj-type-plant    { background: rgba(204,102,255,0.15); color: #d699ff; border: 1px solid rgba(204,102,255,0.3); }
-    .obj-type-mark     { background: rgba(255,204,0,0.15); color: #ffe066; border: 1px solid rgba(255,204,0,0.3); }
-    .obj-type-extract  { background: rgba(0,204,153,0.15); color: #33ffcc; border: 1px solid rgba(0,204,153,0.3); }
-    .obj-type-build    { background: rgba(154,136,102,0.15); color: var(--accent-light); border: 1px solid rgba(154,136,102,0.3); }
-    .obj-type-default  { background: rgba(136,136,136,0.15); color: #ccc; border: 1px solid #333; }
 
     .obj-location-group {
       display: flex;
@@ -862,7 +931,7 @@
       text-transform: uppercase;
     }
 
-    /* Seletor de Modo (Leaflet vs Embed) */
+    /* Seletor de Modo: Leaflet vs Embed */
     .map-mode-selector {
       display: flex;
       background: #0d0d0d;
@@ -923,6 +992,51 @@
       background: rgba(154,136,102,0.2);
       border-color: var(--accent);
       color: var(--accent-light);
+    }
+
+    /* SELETOR DE ANDARES (MÚLTIPLOS NÍVEIS) */
+    .floor-selector-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0d0d0d;
+      border: 1px solid #202020;
+      padding: 8px 12px;
+      border-radius: 2px;
+      flex-wrap: wrap;
+    }
+
+    .floor-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .floor-btn-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .floor-btn {
+      background: #161616;
+      border: 1px solid #303030;
+      color: var(--text-sec);
+      padding: 4px 10px;
+      border-radius: 2px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .floor-btn:hover { background: #222; color: var(--text-main); border-color: #444; }
+    .floor-btn.active {
+      background: var(--accent);
+      color: #0a0a0a;
+      border-color: var(--accent);
     }
 
     /* BARRA DE FILTROS PRÓPRIA DO MAPA LEAFLET */
@@ -1028,12 +1142,12 @@
       z-index: 10;
     }
 
-    /* FILTRO DE ALTO CONTRASTE / MODO CLARO (INVERSÃO PARA SVGS ESCUROS) */
+    /* FILTRO DE ALTO CONTRASTE / MODO CLARO */
     .leaflet-image-layer.contrast-mode {
       filter: invert(0.92) hue-rotate(180deg) contrast(1.25) brightness(1.2) !important;
     }
 
-    /* Container do Embed (MapGenie / Tarkov.dev) */
+    /* Container do Embed */
     .embed-container-wrapper {
       display: flex;
       flex-direction: column;
@@ -1227,6 +1341,7 @@
     </div>
     <div id="stats-tasks-progress" style="display:none; align-items:center; gap:16px; flex-wrap:wrap;">
       <span><span class="dot" style="background:var(--status-done)"></span> Concluídas: <strong id="tasks-done-count" style="color:var(--status-done); margin-left:4px;">0</strong></span>
+      <span><span class="dot" style="background:var(--color-missions)"></span> Ativas: <strong id="tasks-active-count" style="color:var(--color-missions); margin-left:4px;">0</strong></span>
       <span><span class="dot" style="background:#555"></span> Pendentes: <strong id="tasks-pending-count" style="color:#aaa; margin-left:4px;">0</strong></span>
       <span id="tasks-progress-percent" style="color:var(--accent); font-weight:600;">0% Concluído</span>
     </div>
@@ -1274,6 +1389,12 @@
     <!-- Filter / Search input (Armas, Munições e Missões) -->
     <div class="filter-bar hidden" id="filter-bar">
       <input type="text" class="search-input" id="search-input" placeholder="Buscar por nome ou calibre..." oninput="handleSearch(this.value)">
+      <div class="task-pill-filters" id="task-pill-filters" style="display:none;">
+        <button class="task-pill active" onclick="setTaskQuickFilter('all', this)">Todas</button>
+        <button class="task-pill pill-active" onclick="setTaskQuickFilter('active', this)">📌 Ativas (Em Andamento)</button>
+        <button class="task-pill" onclick="setTaskQuickFilter('pending', this)">Pendentes</button>
+        <button class="task-pill" onclick="setTaskQuickFilter('completed', this)">Concluídas</button>
+      </div>
     </div>
 
     <!-- Section Header -->
@@ -1337,6 +1458,12 @@
 
           <!-- MODO 1: MAPA NATIVO LEAFLET -->
           <div id="leaflet-wrapper" style="display:flex; flex-direction:column; gap:10px;">
+            <!-- Seletor de Andares (Múltiplos Níveis) -->
+            <div class="floor-selector-bar" id="floor-selector-bar">
+              <span class="floor-label">Nível / Andar:</span>
+              <div class="floor-btn-group" id="floor-btn-group"></div>
+            </div>
+
             <!-- Barra de Filtros Própria do Leaflet (Chips de Camadas) -->
             <div class="map-filters-bar">
               <span class="filters-label">Camadas:</span>
@@ -1356,6 +1483,9 @@
                 <span class="chip-dot"></span> Locais Importantes
               </button>
             </div>
+
+            <!-- Dica sobre missões ativas -->
+            <div id="map-missions-status-hint" style="font-size:0.72rem; color:var(--text-sec); padding:2px 4px;"></div>
 
             <!-- Div do Mapa Leaflet -->
             <div id="map"></div>
@@ -1395,12 +1525,14 @@
     let currentSection = 'guns';
     let dataSource = '';
     let searchQuery = '';
+    let taskQuickFilter = 'all'; // 'all' | 'active' | 'pending' | 'completed'
     const expandedTaskIds = new Set();
 
     // Estado do Leaflet e Mapas
     let leafletMap = null;
     let currentImageOverlay = null;
     let currentMapId = 'customs';
+    let currentFloorId = 'all';
     let activeOverlayBounds = null;
     let highContrastActive = true;
     let currentViewMode = 'leaflet'; // 'leaflet' | 'embed'
@@ -1416,7 +1548,35 @@
     };
 
     /* ════════════════════════════════════════════════════════
-       DATABASE DE MAPAS DE ALTA RESOLUÇÃO (COM LABS CORRIGIDO)
+       BUG 1 FIX: CONSTANTE MISSION_HOTSPOTS RECRIADA E SEGURA
+    ════════════════════════════════════════════════════════ */
+    const MISSION_HOTSPOTS = {
+      // Customs
+      "task_debut":                  { mapId: "customs", coords: [450, 420], name: "Área Industrial e Bloqueios", floor: "1f" },
+      "task_checking":               { mapId: "customs", coords: [470, 640], name: "Caminhão de Combustível (Posto Novo)", floor: "1f" },
+      "task_operation_aquarius":     { mapId: "customs", coords: [640, 520], name: "Dormitórios 2 Andares (Quarto 206)", floor: "2f" },
+      "task_delivery_from_the_past": { mapId: "customs", coords: [420, 220], name: "Escritório do Diretor (Big Red)", floor: "2f" },
+      "task_golden_swag":            { mapId: "customs", coords: [660, 540], name: "Dormitórios 3 Andares (Quarto 303)", floor: "2f" },
+      "task_the_extortionist":       { mapId: "customs", coords: [460, 310], name: "Cabine do Mensageiro (Matagal)", floor: "1f" },
+
+      // Woods
+      "task_shootout_picnic":        { mapId: "woods",   coords: [520, 500], name: "Serraria e Floresta Central", floor: "1f" },
+
+      // Factory
+      "delivery_factory":            { mapId: "factory", coords: [580, 480], name: "Cabine de Controle Fabril", floor: "2f" },
+
+      // Shoreline
+      "task_spa_tour":               { mapId: "shoreline", coords: [600, 500], name: "Resort Azure Coast", floor: "2f" },
+
+      // Ground Zero
+      "task_first_in_line":          { mapId: "ground-zero", coords: [480, 530], name: "Posto Médico de Campanha (Térreo)", floor: "1f" },
+
+      // The Lab
+      "task_lab_sanitar":            { mapId: "the-lab", coords: [560, 450], name: "Área de Quarentena Green", floor: "2f" }
+    };
+
+    /* ════════════════════════════════════════════════════════
+       DATABASE DE MAPAS COM SUPORTE A ANDARES (FLOORS)
     ════════════════════════════════════════════════════════ */
     const MAPS_DATABASE = [
       {
@@ -1427,7 +1587,12 @@
         desc: "Parque industrial com dormitórios, armazéns e terminal alfandegário.",
         image: "https://assets.tarkov.dev/maps/svg/Customs.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Customs.svg",
-        bounds: { minX: -340, maxX: 670, minZ: -330, maxZ: 230 }
+        bounds: { minX: -340, maxX: 670, minZ: -330, maxZ: 230 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: '1f',  label: 'Térreo / Superfície' },
+          { id: '2f',  label: 'Dormitórios (2F/3F)' }
+        ]
       },
       {
         id: "woods",
@@ -1437,7 +1602,12 @@
         desc: "Reserva florestal com serraria central, cabanas e acampamentos militares.",
         image: "https://assets.tarkov.dev/maps/svg/Woods.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Woods.svg",
-        bounds: { minX: -550, maxX: 700, minZ: -600, maxZ: 650 }
+        bounds: { minX: -550, maxX: 700, minZ: -600, maxZ: 650 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Bunkers ZB-014 / ZB-016' },
+          { id: '1f',  label: 'Superfície Florestal' }
+        ]
       },
       {
         id: "factory",
@@ -1447,7 +1617,13 @@
         desc: "Instalação industrial fechada, combate tático de curto alcance.",
         image: "https://assets.tarkov.dev/maps/svg/Factory.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Factory.svg",
-        bounds: { minX: -70, maxX: 80, minZ: -60, maxZ: 70 }
+        bounds: { minX: -70, maxX: 80, minZ: -60, maxZ: 70 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Túneis Subterrâneos' },
+          { id: '1f',  label: 'Piso Fabril' },
+          { id: '2f',  label: 'Escritórios (3F)' }
+        ]
       },
       {
         id: "shoreline",
@@ -1457,7 +1633,13 @@
         desc: "Extensa área costeira com o resort Azure Coast e usina elétrica.",
         image: "https://assets.tarkov.dev/maps/svg/Shoreline.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Shoreline.svg",
-        bounds: { minX: -600, maxX: 700, minZ: -500, maxZ: 600 }
+        bounds: { minX: -600, maxX: 700, minZ: -500, maxZ: 600 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Porão / Subsolo' },
+          { id: '1f',  label: 'Costa / Térreo' },
+          { id: '2f',  label: 'Resort Superior' }
+        ]
       },
       {
         id: "interchange",
@@ -1467,7 +1649,13 @@
         desc: "Shopping center ULTRA com lojas IDEA, OLI, Goshan e subsolo.",
         image: "https://assets.tarkov.dev/maps/svg/Interchange.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Interchange.svg",
-        bounds: { minX: -500, maxX: 500, minZ: -500, maxZ: 500 }
+        bounds: { minX: -500, maxX: 500, minZ: -500, maxZ: 500 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Garagem Subterrânea' },
+          { id: '1f',  label: '1º Andar (Lojas)' },
+          { id: '2f',  label: '2º Andar (Praça)' }
+        ]
       },
       {
         id: "reserve",
@@ -1477,7 +1665,12 @@
         desc: "Base militar com bunkers subterrâneos, silos e túneis secretos.",
         image: "https://assets.tarkov.dev/maps/svg/Reserve.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Reserve.svg",
-        bounds: { minX: -400, maxX: 400, minZ: -400, maxZ: 400 }
+        bounds: { minX: -400, maxX: 400, minZ: -400, maxZ: 400 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Bunkers D-2' },
+          { id: '1f',  label: 'Superfície' }
+        ]
       },
       {
         id: "lighthouse",
@@ -1487,7 +1680,12 @@
         desc: "Cabo Dalniy, estação de tratamento de água e área dos Rogues.",
         image: "https://assets.tarkov.dev/maps/svg/Lighthouse.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Lighthouse.svg",
-        bounds: { minX: -450, maxX: 600, minZ: -700, maxZ: 600 }
+        bounds: { minX: -450, maxX: 600, minZ: -700, maxZ: 600 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: '1f',  label: 'Estrada / Praia' },
+          { id: '2f',  label: 'Chalés / Tratamento' }
+        ]
       },
       {
         id: "streets",
@@ -1497,7 +1695,13 @@
         desc: "Centro urbano residencial e comercial de Tarkov.",
         image: "https://assets.tarkov.dev/maps/svg/StreetsOfTarkov.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/StreetsOfTarkov.svg",
-        bounds: { minX: -600, maxX: 600, minZ: -600, maxZ: 600 }
+        bounds: { minX: -600, maxX: 600, minZ: -600, maxZ: 600 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Esgotos / Subsolo' },
+          { id: '1f',  label: 'Nível da Rua' },
+          { id: '2f',  label: 'Prédios / LexOs' }
+        ]
       },
       {
         id: "ground-zero",
@@ -1507,7 +1711,13 @@
         desc: "Distrito financeiro com arranha-céus da TerraGroup.",
         image: "https://assets.tarkov.dev/maps/svg/GroundZero.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/GroundZero.svg",
-        bounds: { minX: -250, maxX: 250, minZ: -250, maxZ: 250 }
+        bounds: { minX: -250, maxX: 250, minZ: -250, maxZ: 250 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Estacionamento Nakatani' },
+          { id: '1f',  label: 'Térreo da Rua' },
+          { id: '2f',  label: 'Mezanino TerraGroup' }
+        ]
       },
       {
         id: "the-lab",
@@ -1517,71 +1727,78 @@
         desc: "Instalação de pesquisa secreta subterrânea da TerraGroup.",
         image: "https://assets.tarkov.dev/maps/svg/Labs.svg",
         fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Labs.svg",
-        bounds: { minX: -200, maxX: 200, minZ: -200, maxZ: 200 }
+        bounds: { minX: -200, maxX: 200, minZ: -200, maxZ: 200 },
+        floors: [
+          { id: 'all', label: 'Todos os Andares' },
+          { id: 'b1',  label: 'Subsolo / Esgoto (B1)' },
+          { id: '1f',  label: 'Nível Principal (1F)' },
+          { id: '2f',  label: 'Cúpula Superior (2F)' }
+        ]
       }
     ];
 
     /* ════════════════════════════════════════════════════════
-       HOTSPOTS & LOCAIS IMPORTANTES
+       HOTSPOTS & LOCAIS IMPORTANTES COM ANDARES
     ════════════════════════════════════════════════════════ */
     const MAP_HOTSPOTS = {
       customs: [
-        { name: "Dormitórios 3 Andares", desc: "Quarto 303, Quarto 214 e cofre", coords: [680, 520] },
-        { name: "Dormitórios 2 Andares", desc: "Quarto 206 (Água) e Quarto 114", coords: [640, 500] },
-        { name: "Nova Gasolina", desc: "Área central de patrulha do Reshala", coords: [480, 650] },
-        { name: "Fortaleza / Stronghold", desc: "Edifício com metralhadoras e lança-granadas", coords: [430, 500] },
-        { name: "Escritório do Diretor (Big Red)", desc: "Terminal alfandegário oeste", coords: [410, 220] }
+        { name: "Dormitórios 3 Andares", desc: "Quarto 303, Quarto 214 e cofre", coords: [680, 520], floor: '2f' },
+        { name: "Dormitórios 2 Andares", desc: "Quarto 206 (Água) e Quarto 114", coords: [640, 500], floor: '2f' },
+        { name: "Nova Gasolina", desc: "Área central de patrulha do Reshala", coords: [480, 650], floor: '1f' },
+        { name: "Fortaleza / Stronghold", desc: "Edifício com metralhadoras e lança-granadas", coords: [430, 500], floor: '1f' },
+        { name: "Escritório do Diretor (Big Red)", desc: "Terminal alfandegário oeste", coords: [410, 220], floor: '2f' }
       ],
       woods: [
-        { name: "Serraria Central", desc: "Local principal de combate do Shturman", coords: [500, 500] },
-        { name: "Acampamento USEC", desc: "Tendas médicas e spawns de itens valiosos", coords: [650, 320] },
-        { name: "Acampamento Médico EMERCOM", desc: "Base militar próxima à água", coords: [350, 680] },
-        { name: "Bunker ZB-014", desc: "Bunker protegido por chave", coords: [380, 280] }
+        { name: "Serraria Central", desc: "Local principal de combate do Shturman", coords: [500, 500], floor: '1f' },
+        { name: "Acampamento USEC", desc: "Tendas médicas e spawns de itens valiosos", coords: [650, 320], floor: '1f' },
+        { name: "Acampamento Médico EMERCOM", desc: "Base militar próxima à água", coords: [350, 680], floor: '1f' },
+        { name: "Bunker ZB-014", desc: "Bunker protegido por chave", coords: [380, 280], floor: 'b1' }
       ],
       factory: [
-        { name: "Escritório dos 3 Andares", desc: "Cofre, armário de arquivos e saída de emergência", coords: [580, 480] },
-        { name: "Área de Empilhadeiras", desc: "Spawns intensos de PMC", coords: [380, 650] },
-        { name: "Subsolo / Túneis", desc: "Passagem subterrânea de escape", coords: [450, 350] }
+        { name: "Escritório dos 3 Andares", desc: "Cofre, armário de arquivos e saída de emergência", coords: [580, 480], floor: '2f' },
+        { name: "Área de Empilhadeiras", desc: "Spawns intensos de PMC", coords: [380, 650], floor: '1f' },
+        { name: "Subsolo / Túneis", desc: "Passagem subterrânea de escape", coords: [450, 350], floor: 'b1' }
       ],
       shoreline: [
-        { name: "Resort Azure Coast - Ala Leste", desc: "Quarto 226, 310 e salas de LEDX", coords: [600, 560] },
-        { name: "Resort Azure Coast - Ala Oeste", desc: "Quarto 216, 301 e armários de armas", coords: [600, 440] },
-        { name: "Pier / Marina", desc: "Prédio administrativo e extração de barco", coords: [280, 520] },
-        { name: "Estação Meteorológica", desc: "Torre de rádio e cofre", coords: [420, 680] }
+        { name: "Resort Azure Coast - Ala Leste", desc: "Quarto 226, 310 e salas de LEDX", coords: [600, 560], floor: '2f' },
+        { name: "Resort Azure Coast - Ala Oeste", desc: "Quarto 216, 301 e armários de armas", coords: [600, 440], floor: '2f' },
+        { name: "Pier / Marina", desc: "Prédio administrativo e extração de barco", coords: [280, 520], floor: '1f' },
+        { name: "Estação Meteorológica", desc: "Torre de rádio e cofre", coords: [420, 680], floor: '1f' }
       ],
       interchange: [
-        { name: "Loja TECHLIGHT & ULTRA", desc: "Spawns de placas gráficas e eletrônicos", coords: [560, 520] },
-        { name: "Loja KIBA Arms", desc: "Loja blindada com armas montadas", coords: [500, 500] },
-        { name: "Supermercado Goshan", desc: "Alimentos e caixas de ferramentas", coords: [480, 650] }
+        { name: "Loja TECHLIGHT & ULTRA", desc: "Spawns de placas gráficas e eletrônicos", coords: [560, 520], floor: '2f' },
+        { name: "Loja KIBA Arms", desc: "Loja blindada com armas montadas", coords: [500, 500], floor: '1f' },
+        { name: "Supermercado Goshan", desc: "Alimentos e caixas de ferramentas", coords: [480, 650], floor: '1f' }
       ],
       reserve: [
-        { name: "Bunker Subterrâneo Central", desc: "Alavanca de comando D-2 e área de Raiders", coords: [500, 500] },
-        { name: "Edifícios Torre / Peão", desc: "Quartos militares e armaria", coords: [480, 420] },
-        { name: "Estação de Trem", desc: "Chegada do trem blindado e Glukhar", coords: [350, 580] }
+        { name: "Bunker Subterrâneo Central", desc: "Alavanca de comando D-2 e área de Raiders", coords: [500, 500], floor: 'b1' },
+        { name: "Edifícios Torre / Peão", desc: "Quartos militares e armaria", coords: [480, 420], floor: '1f' },
+        { name: "Estação de Trem", desc: "Chegada do trem blindado e Glukhar", coords: [350, 580], floor: '1f' }
       ],
       lighthouse: [
-        { name: "Estação de Tratamento de Água", desc: "Complexo com Rogues e armamento pesado", coords: [680, 520] },
-        { name: "Chalé dos Bilionários", desc: "Mansão com spawns raros de Bitcoin", coords: [420, 450] },
-        { name: "Farol do Cabo Dalniy", desc: "Ponte minada e ilha de Lightkeeper", coords: [220, 350] }
+        { name: "Estação de Tratamento de Água", desc: "Complexo com Rogues e armamento pesado", coords: [680, 520], floor: '2f' },
+        { name: "Chalé dos Bilionários", desc: "Mansão com spawns raros de Bitcoin", coords: [420, 450], floor: '2f' },
+        { name: "Farol do Cabo Dalniy", desc: "Ponte minada e ilha de Lightkeeper", coords: [220, 350], floor: '1f' }
       ],
       streets: [
-        { name: "Concessionária LexOs", desc: "Bunker protegido do chefe Kaban", coords: [480, 520] },
-        { name: "Hotel Concordia", desc: "Complexo residencial de luxo", coords: [580, 420] },
-        { name: "Edifício Chekannaya 15", desc: "Porta marcada com loot de alto valor", coords: [520, 600] }
+        { name: "Concessionária LexOs", desc: "Bunker protegido do chefe Kaban", coords: [480, 520], floor: '1f' },
+        { name: "Hotel Concordia", desc: "Complexo residencial de luxo", coords: [580, 420], floor: '2f' },
+        { name: "Edifício Chekannaya 15", desc: "Porta marcada com loot de alto valor", coords: [520, 600], floor: '2f' }
       ],
       "ground-zero": [
-        { name: "Edifício TerraGroup", desc: "Área médica térrea e escritórios", coords: [520, 520] },
-        { name: "Agência de Notícias", desc: "Posto com chave e documentos", coords: [450, 420] }
+        { name: "Edifício TerraGroup", desc: "Área médica térrea e escritórios", coords: [520, 520], floor: '1f' },
+        { name: "Nakatani Subsolo", desc: "Garagem e extração", coords: [450, 620], floor: 'b1' }
       ],
       "the-lab": [
-        { name: "Área de Quarentena (Green Keycard)", desc: "Laboratório biológico estéril", coords: [560, 450] },
-        { name: "Escritório do Administrador (Red Keycard)", desc: "Arsenal de segurança de elite", coords: [580, 550] },
-        { name: "Cúpula Central (Violet / Blue)", desc: "Área de testes com Raiders", coords: [480, 500] }
+        { name: "Área de Quarentena (Green Keycard)", desc: "Laboratório biológico estéril", coords: [560, 450], floor: '1f' },
+        { name: "Escritório do Administrador (Red Keycard)", desc: "Arsenal de segurança de elite", coords: [580, 550], floor: '2f' },
+        { name: "Cúpula Central (Violet / Blue)", desc: "Área de testes com Raiders", coords: [480, 500], floor: '1f' },
+        { name: "Esgotos de Escape", desc: "Saída de emergência submersa", coords: [320, 520], floor: 'b1' }
       ]
     };
 
     /* ════════════════════════════════════════════════════════
-       GQL_QUERY COM SUPORTE A MAPS, EXTRACTS, BOSSES E ZONAS
+       BUG 2 FIX: GQL_QUERY COM BOSSES CORRETO { boss { name } }
     ════════════════════════════════════════════════════════ */
     const GQL_QUERY = `
 query {
@@ -1604,7 +1821,7 @@ query {
       position { x y z }
     }
     bosses {
-      name
+      boss { name }
       spawnChance
       spawnLocations { name chance }
     }
@@ -1643,7 +1860,7 @@ query {
 `;
 
     /* ════════════════════════════════════════════════════════
-       ENDPOINTS REST / JSON FALLBACK COM TRADUÇÕES PT
+       ENDPOINTS REST / JSON FALLBACK
     ════════════════════════════════════════════════════════ */
     const GQL_ENDPOINT   = 'https://api.tarkov.dev/graphql';
     const JSON_ITEMS_URL = 'https://json.tarkov.dev/regular/items';
@@ -1654,14 +1871,27 @@ query {
     const JSON_MAPS_PT   = 'https://json.tarkov.dev/regular/maps_pt';
 
     /* ════════════════════════════════════════════════════════
-       LOCALSTORAGE HELPERS
+       PERSISTÊNCIA: MISSÕES CONCLUÍDAS E ATIVAS
     ════════════════════════════════════════════════════════ */
     function isTaskCompleted(taskId) {
-      return localStorage.getItem('task_' + taskId) === 'true';
+      return localStorage.getItem('task_done_' + taskId) === 'true' || localStorage.getItem('task_' + taskId) === 'true';
     }
 
     function setTaskCompleted(taskId, completed) {
+      localStorage.setItem('task_done_' + taskId, completed ? 'true' : 'false');
       localStorage.setItem('task_' + taskId, completed ? 'true' : 'false');
+    }
+
+    function isTaskActive(taskId) {
+      return localStorage.getItem('task_active_' + taskId) === 'true';
+    }
+
+    function setTaskActive(taskId, active) {
+      if (active) {
+        localStorage.setItem('task_active_' + taskId, 'true');
+      } else {
+        localStorage.removeItem('task_active_' + taskId);
+      }
     }
 
     function formatCaliber(cal) {
@@ -1672,9 +1902,6 @@ query {
         .trim();
     }
 
-    /* ════════════════════════════════════════════════════════
-       SISTEMA DE TIERS (REGRAS DE NEGÓCIO)
-    ════════════════════════════════════════════════════════ */
     function getAmmoTier(pen) {
       if (pen >= 50) return 'S';
       if (pen >= 40) return 'A';
@@ -1689,9 +1916,6 @@ query {
       return 'D';
     }
 
-    /* ════════════════════════════════════════════════════════
-       NORMALIZAÇÃO DE COORDENADAS (API -> LEAFLET [0, 1000])
-    ════════════════════════════════════════════════════════ */
     function projectGameCoords(x, z, mapId) {
       const mapDef = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
       const bounds = mapDef.bounds || { minX: -500, maxX: 500, minZ: -500, maxZ: 500 };
@@ -1700,7 +1924,6 @@ query {
       const rangeX = (bounds.maxX - bounds.minX) || 1;
       const rangeZ = (bounds.maxZ - bounds.minZ) || 1;
 
-      // Limitar valores dentro do alcance
       const clampedX = Math.max(bounds.minX, Math.min(bounds.maxX, x));
       const clampedZ = Math.max(bounds.minZ, Math.min(bounds.maxZ, z));
 
@@ -1710,13 +1933,31 @@ query {
       return [normY, normX];
     }
 
+    function pointMatchesFloor(point, selectedFloor) {
+      if (!selectedFloor || selectedFloor === 'all') return true;
+
+      if (point.floor) {
+        if (point.floor === 'all') return true;
+        return point.floor === selectedFloor;
+      }
+
+      if (point.position && point.position.y != null) {
+        const y = point.position.y;
+        if (selectedFloor === 'b1') return y < -1.5;
+        if (selectedFloor === '1f') return y >= -1.5 && y <= 2.5;
+        if (selectedFloor === '2f') return y > 2.5;
+      }
+
+      return selectedFloor === '1f';
+    }
+
     /* ════════════════════════════════════════════════════════
-       FETCH MULTI-CAMADA (GRAPHQL -> JSON CDN -> FALLBACK)
+       FETCH MULTI-CAMADA
     ════════════════════════════════════════════════════════ */
     async function fetchData() {
       // 1. Tentar GraphQL
       try {
-        setLoadingHint('Consultando GraphQL com dados de mapas e zonas...');
+        setLoadingHint('Consultando GraphQL com mapas, zonas e bosses...');
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 9000);
 
@@ -1801,7 +2042,6 @@ query {
             }
           }
 
-          // Processar tarefas
           const tasks = [];
           for (const [taskId, t] of Object.entries(tasksMap)) {
             const taskName = tasksPt[t.name] || t.name || taskId;
@@ -1817,7 +2057,6 @@ query {
                 };
               });
 
-              // Coletar zonas com posições se houver
               const zones = (obj.zones || []).map(z => ({
                 id: z.id,
                 position: z.position || null,
@@ -1836,7 +2075,6 @@ query {
             tasks.push({ id: taskId, name: taskName, objectives });
           }
 
-          // Processar mapas brutos com extracts e bosses
           const maps = [];
           for (const [mapId, m] of Object.entries(mapsMap)) {
             maps.push({
@@ -1861,7 +2099,7 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       DADOS OFFLINE (FALLBACK COMPLETO COM MAPAS E ZONAS)
+       BUG 3 FIX: FALLBACK COMPLETO COM TODOS OS 10 MAPAS
     ════════════════════════════════════════════════════════ */
     const FALLBACK_DATA = {
       items: [
@@ -1885,7 +2123,7 @@ query {
           id: 'task_debut',
           name: 'Estreia (Debut)',
           objectives: [
-            { id:'o1', type: 'shoot', description: 'Elimine 5 Scavs no mapa Customs', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 150, z: -50 } }] },
+            { id:'o1', type: 'shoot', description: 'Elimine 5 Scavs no mapa Customs', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 150, z: -50, y: 1 } }] },
             { id:'o2', type: 'giveItem', description: 'Obtenha e entregue 2 espingardas MP-133 para Prapor', maps: [] }
           ]
         },
@@ -1893,29 +2131,29 @@ query {
           id: 'task_checking',
           name: 'Inspeção (Checking)',
           objectives: [
-            { id:'o3', type: 'findQuestItem', description: 'Encontre o relógio de bolso no caminhão tanque perto da nova gasolina', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 470, z: -80 } }] }
+            { id:'o3', type: 'findQuestItem', description: 'Encontre o relógio de bolso no caminhão tanque perto da nova gasolina', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 470, z: -80, y: 0 } }] }
           ]
         },
         {
           id: 'task_operation_aquarius',
           name: 'Operação Aquarius - Parte 1',
           objectives: [
-            { id:'o4', type: 'visit', description: 'Localize a reserva de água nos dormitórios de 2 andares (Quarto 206)', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 160, z: 120 } }] }
+            { id:'o4', type: 'visit', description: 'Localize a reserva de água nos dormitórios de 2 andares (Quarto 206)', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 160, z: 120, y: 4.5 } }] }
           ]
         },
         {
           id: 'task_delivery_from_the_past',
           name: 'Entrega do Passado (Delivery from the Past)',
           objectives: [
-            { id:'o5', type: 'findQuestItem', description: 'Obtenha a pasta de documentos no escritório do Diretor em Customs', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: -280, z: -50 } }] },
-            { id:'o6', type: 'plantQuestItem', description: 'Esconda a pasta de documentos na cabine de controle fabril em Factory', maps: [{ name: 'Factory', normalizedName:'factory' }], zones:[{ position:{ x: 20, z: 30 } }] }
+            { id:'o5', type: 'findQuestItem', description: 'Obtenha a pasta de documentos no escritório do Diretor em Customs', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: -280, z: -50, y: 3.5 } }] },
+            { id:'o6', type: 'plantQuestItem', description: 'Esconda a pasta de documentos na cabine de controle fabril em Factory', maps: [{ name: 'Factory', normalizedName:'factory' }], zones:[{ position:{ x: 20, z: 30, y: 4.0 } }] }
           ]
         },
         {
           id: 'task_shootout_picnic',
           name: 'Piquenique com Tiros (Shootout Picnic)',
           objectives: [
-            { id:'o7', type: 'shoot', description: 'Elimine 14 Scavs na região central de Woods', maps: [{ name: 'Woods', normalizedName:'woods' }], zones:[{ position:{ x: 0, z: 50 } }] }
+            { id:'o7', type: 'shoot', description: 'Elimine 14 Scavs na região central de Woods', maps: [{ name: 'Woods', normalizedName:'woods' }], zones:[{ position:{ x: 0, z: 50, y: 0 } }] }
           ]
         }
       ],
@@ -1925,22 +2163,154 @@ query {
           name: "Customs",
           normalizedName: "customs",
           extracts: [
-            { id: "e1", name: "Crossroads (Cruzamento)", faction: "pmc", position: { x: -336, z: -86 } },
-            { id: "e2", name: "RUAF Roadblock", faction: "pmc", position: { x: 50, z: -180 } },
-            { id: "e3", name: "ZB-1011 Bunker", faction: "pmc", position: { x: 620, z: -250 } },
-            { id: "e4", name: "Old Gas Station", faction: "scav", position: { x: 310, z: -175 } },
-            { id: "e5", name: "Passage Between Rocks", faction: "scav", position: { x: 180, z: 190 } },
-            { id: "e6", name: "Military Checkpoint", faction: "scav", position: { x: 490, z: 220 } }
+            { id: "c1", name: "Crossroads", faction: "pmc", position: { x: -336, z: -86, y: 0 } },
+            { id: "c2", name: "RUAF Roadblock", faction: "pmc", position: { x: 50, z: -180, y: 0 } },
+            { id: "c3", name: "ZB-1011 Bunker", faction: "pmc", position: { x: 620, z: -250, y: -4.0 } },
+            { id: "c4", name: "Smuggler's Boat", faction: "pmc", position: { x: 120, z: 15, y: 0 } },
+            { id: "c5", name: "Old Gas Station", faction: "scav", position: { x: 310, z: -175, y: 0 } },
+            { id: "c6", name: "Passage Between Rocks", faction: "scav", position: { x: 180, z: 190, y: 0 } },
+            { id: "c7", name: "Military Checkpoint", faction: "scav", position: { x: 490, z: 220, y: 0 } }
           ],
           bosses: [
             { name: "Reshala", spawnChance: 0.3, spawnLocations: [{ name: "Dormitórios & Nova Gasolina" }] }
+          ]
+        },
+        {
+          id: "woods",
+          name: "Woods",
+          normalizedName: "woods",
+          extracts: [
+            { id: "w1", name: "Outskirts", faction: "pmc", position: { x: -450, z: -400, y: 0 } },
+            { id: "w2", name: "UN Roadblock", faction: "pmc", position: { x: 550, z: 500, y: 0 } },
+            { id: "w3", name: "RUAF Roadblock", faction: "pmc", position: { x: 480, z: 420, y: 0 } },
+            { id: "w4", name: "ZB-014 Bunker", faction: "pmc", position: { x: -380, z: -280, y: -3.5 } },
+            { id: "w5", name: "Dead Man's Place", faction: "scav", position: { x: -180, z: -120, y: 0 } },
+            { id: "w6", name: "Scav House", faction: "scav", position: { x: -420, z: -320, y: 0 } }
+          ],
+          bosses: [
+            { name: "Shturman", spawnChance: 0.35, spawnLocations: [{ name: "Serraria Central" }] }
+          ]
+        },
+        {
+          id: "factory",
+          name: "Factory",
+          normalizedName: "factory",
+          extracts: [
+            { id: "f1", name: "Gate 3", faction: "pmc", position: { x: -45, z: 6, y: 0 } },
+            { id: "f2", name: "Gate 0", faction: "pmc", position: { x: 56, z: 52, y: 0 } },
+            { id: "f3", name: "Cellars (Subsolo)", faction: "pmc", position: { x: -20, z: -35, y: -4.0 } },
+            { id: "f4", name: "Office Window", faction: "scav", position: { x: 15, z: -5, y: 4.5 } },
+            { id: "f5", name: "Camera Bunker Door", faction: "scav", position: { x: -30, z: 20, y: -3.5 } }
+          ],
+          bosses: [
+            { name: "Tagilla", spawnChance: 0.3, spawnLocations: [{ name: "Piso Fabril" }] }
+          ]
+        },
+        {
+          id: "shoreline",
+          name: "Shoreline",
+          normalizedName: "shoreline",
+          extracts: [
+            { id: "s1", name: "Tunnel", faction: "pmc", position: { x: -520, z: -380, y: 0 } },
+            { id: "s2", name: "Road to Customs", faction: "pmc", position: { x: 620, z: 480, y: 0 } },
+            { id: "s3", name: "Pier Boat", faction: "pmc", position: { x: 80, z: -450, y: 0 } },
+            { id: "s4", name: "Lighthouse", faction: "scav", position: { x: 150, z: -480, y: 0 } },
+            { id: "s5", name: "Gym Entrance (Subsolo)", faction: "scav", position: { x: 50, z: 120, y: -2.5 } }
+          ],
+          bosses: [
+            { name: "Sanitar", spawnChance: 0.3, spawnLocations: [{ name: "Resort Azure Coast & Pier" }] }
+          ]
+        },
+        {
+          id: "interchange",
+          name: "Interchange",
+          normalizedName: "interchange",
+          extracts: [
+            { id: "i1", name: "Railway Exfil", faction: "pmc", position: { x: -380, z: -380, y: 0 } },
+            { id: "i2", name: "Emercom Checkpoint", faction: "pmc", position: { x: 380, z: 380, y: 0 } },
+            { id: "i3", name: "Saferoom (Subsolo)", faction: "pmc", position: { x: -20, z: 10, y: -4.5 } },
+            { id: "i4", name: "Power Station", faction: "scav", position: { x: 320, z: -250, y: 0 } }
+          ],
+          bosses: [
+            { name: "Killa", spawnChance: 0.3, spawnLocations: [{ name: "Shopping ULTRA (KIBA)" }] }
+          ]
+        },
+        {
+          id: "reserve",
+          name: "Reserve",
+          normalizedName: "reserve",
+          extracts: [
+            { id: "r1", name: "Cliff Descent", faction: "pmc", position: { x: 280, z: 320, y: 6.0 } },
+            { id: "r2", name: "D-2 Bunker", faction: "pmc", position: { x: -40, z: -20, y: -6.0 } },
+            { id: "r3", name: "Bunker Hermetic Door", faction: "pmc", position: { x: -180, z: 220, y: -4.0 } },
+            { id: "r4", name: "Hole in the Wall", faction: "scav", position: { x: -250, z: -180, y: 0 } }
+          ],
+          bosses: [
+            { name: "Glukhar", spawnChance: 0.35, spawnLocations: [{ name: "Prédios Peão & Trem" }] }
+          ]
+        },
+        {
+          id: "lighthouse",
+          name: "Lighthouse",
+          normalizedName: "lighthouse",
+          extracts: [
+            { id: "l1", name: "Southern Road", faction: "pmc", position: { x: -280, z: -520, y: 0 } },
+            { id: "l2", name: "Path to Shoreline", faction: "pmc", position: { x: 480, z: 450, y: 0 } },
+            { id: "l3", name: "Mountain Pass", faction: "pmc", position: { x: 220, z: 380, y: 5.5 } },
+            { id: "l4", name: "Hideout at Grotto", faction: "scav", position: { x: -180, z: -220, y: 0 } }
+          ],
+          bosses: [
+            { name: "Zryachiy", spawnChance: 1.0, spawnLocations: [{ name: "Ilha do Farol" }] },
+            { name: "Rogues", spawnChance: 0.8, spawnLocations: [{ name: "Tratamento de Água" }] }
+          ]
+        },
+        {
+          id: "streets",
+          name: "Streets of Tarkov",
+          normalizedName: "streets-of-tarkov",
+          extracts: [
+            { id: "st1", name: "Courtyard", faction: "pmc", position: { x: 120, z: -150, y: 0 } },
+            { id: "st2", name: "Evacuation Zone", faction: "pmc", position: { x: -320, z: 250, y: 0 } },
+            { id: "st3", name: "Sewer River (Subsolo)", faction: "pmc", position: { x: -50, z: 40, y: -3.5 } },
+            { id: "st4", name: "Basement Entrance", faction: "scav", position: { x: -150, z: -80, y: -2.0 } }
+          ],
+          bosses: [
+            { name: "Kaban", spawnChance: 0.3, spawnLocations: [{ name: "Concessionária LexOs" }] }
+          ]
+        },
+        {
+          id: "ground-zero",
+          name: "Ground Zero",
+          normalizedName: "ground-zero",
+          extracts: [
+            { id: "gz1", name: "Mira Ave", faction: "pmc", position: { x: -120, z: -110, y: 0 } },
+            { id: "gz2", name: "Nakatani Basement (Subsolo)", faction: "pmc", position: { x: 80, z: 120, y: -3.0 } },
+            { id: "gz3", name: "Emercom Medical", faction: "scav", position: { x: -60, z: 140, y: 0 } }
+          ],
+          bosses: [
+            { name: "Kollontay", spawnChance: 0.2, spawnLocations: [{ name: "Edifício TerraGroup" }] }
+          ]
+        },
+        {
+          id: "the-lab",
+          name: "The Lab",
+          normalizedName: "the-lab",
+          extracts: [
+            { id: "lab1", name: "Medical Block Elevator", faction: "all", position: { x: 80, z: -60, y: 0 } },
+            { id: "lab2", name: "Cargo Elevator (Subsolo)", faction: "all", position: { x: -70, z: 80, y: -4.0 } },
+            { id: "lab3", name: "Hangar Gate", faction: "all", position: { x: -80, z: -50, y: 0 } },
+            { id: "lab4", name: "Sewage Conduit (Subsolo)", faction: "all", position: { x: -120, z: 20, y: -5.0 } },
+            { id: "lab5", name: "Ventilation Shaft (Superior)", faction: "all", position: { x: 60, z: 90, y: 4.0 } }
+          ],
+          bosses: [
+            { name: "Raiders de Segurança", spawnChance: 0.7, spawnLocations: [{ name: "Cúpula Central & Elevadores" }] }
           ]
         }
       ]
     };
 
     /* ════════════════════════════════════════════════════════
-       SISTEMA DO LEAFLET & GERENCIAMENTO DE CAMADAS
+       SISTEMA DO LEAFLET & GERENCIAMENTO DE CAMADAS E ANDARES
     ════════════════════════════════════════════════════════ */
     function initLeafletMap() {
       if (leafletMap) return;
@@ -1979,9 +2349,36 @@ query {
       `).join('');
     }
 
+    function renderFloorSelector(mapData) {
+      const bar = document.getElementById('floor-selector-bar');
+      const group = document.getElementById('floor-btn-group');
+      if (!bar || !group) return;
+
+      const floors = mapData.floors || [{ id: 'all', label: 'Todos os Andares' }];
+      if (floors.length <= 1) {
+        bar.style.display = 'none';
+        return;
+      }
+
+      bar.style.display = 'flex';
+      group.innerHTML = floors.map(f => `
+        <button class="floor-btn ${f.id === currentFloorId ? 'active' : ''}" onclick="setMapFloor('${f.id}')">
+          ${esc(f.label)}
+        </button>
+      `).join('');
+    }
+
+    function setMapFloor(floorId) {
+      currentFloorId = floorId;
+      const mapData = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
+      renderFloorSelector(mapData);
+      populateMapLayers(currentMapId, currentFloorId);
+    }
+
     function switchMap(mapId) {
       const mapData = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
       currentMapId = mapData.id;
+      currentFloorId = 'all';
 
       // Atualizar classe ativa na barra lateral
       document.querySelectorAll('.map-select-btn').forEach(btn => {
@@ -1991,6 +2388,9 @@ query {
       // Atualizar título e links
       document.getElementById('current-map-title').textContent = mapData.namePt.toUpperCase();
       document.getElementById('btn-open-tarkovdev').href = `https://tarkov.dev/map/${mapData.slug}`;
+
+      // Renderizar seletor de andares
+      renderFloorSelector(mapData);
 
       if (currentViewMode === 'embed') {
         updateEmbedFrame(mapData);
@@ -2015,40 +2415,58 @@ query {
       leafletMap.invalidateSize();
 
       // Recarregar todas as camadas filtráveis do mapa
-      populateMapLayers(mapData.id);
+      populateMapLayers(mapData.id, currentFloorId);
     }
 
-    function populateMapLayers(mapId) {
+    function populateMapLayers(mapId, selectedFloor) {
       if (!leafletMap) return;
 
-      // Limpar todos os layers
+      // Limpar todos os layers com segurança
       Object.values(mapLayers).forEach(layer => {
         if (layer) layer.clearLayers();
       });
 
       // 1. Camada de Missões Ativas
-      populateMissionPins(mapId);
+      populateMissionPins(mapId, selectedFloor);
 
       // 2. Camadas de Extrações (PMC e Scav)
-      populateExtractPins(mapId);
+      populateExtractPins(mapId, selectedFloor);
 
       // 3. Camada de Chefes (Bosses)
-      populateBossPins(mapId);
+      populateBossPins(mapId, selectedFloor);
 
       // 4. Camada de Locais Importantes / Hotspots
-      populateHotspotPins(mapId);
+      populateHotspotPins(mapId, selectedFloor);
 
       updateLayersStats();
     }
 
-    function populateMissionPins(mapId) {
+    function populateMissionPins(mapId, selectedFloor) {
       const layer = mapLayers.missions;
       if (!layer) return;
 
       const mapDef = MAPS_DATABASE.find(m => m.id === mapId);
       const cleanName = mapDef ? mapDef.name.toLowerCase() : mapId;
 
-      tasksData.forEach(task => {
+      // Verificar se há missões marcadas como Ativas para este mapa
+      const activeTasksOnMap = tasksData.filter(task => {
+        if (!isTaskActive(task.id) || isTaskCompleted(task.id)) return false;
+        return (task.objectives || []).some(obj =>
+          (obj.maps || []).some(m =>
+            (m.name || '').toLowerCase().includes(cleanName) ||
+            (m.normalizedName || '').includes(mapDef?.slug || '')
+          )
+        );
+      });
+
+      const useOnlyActive = activeTasksOnMap.length > 0;
+      const tasksToDisplay = useOnlyActive
+        ? activeTasksOnMap
+        : tasksData.filter(t => !isTaskCompleted(t.id));
+
+      tasksToDisplay.forEach(task => {
+        const isActive = isTaskActive(task.id);
+
         (task.objectives || []).forEach(obj => {
           const relatesToMap = (obj.maps || []).some(m =>
             (m.name || '').toLowerCase().includes(cleanName) ||
@@ -2057,30 +2475,46 @@ query {
 
           if (relatesToMap) {
             let coords = null;
+            let pointFloor = '1f';
 
-            // Se a API trouxe zona com posição x, z
+            // Bug 1 Fix: Verificação segura de MISSION_HOTSPOTS
+            const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[task.id] : null;
+
             if (obj.zones && obj.zones.length && obj.zones[0].position) {
               const p = obj.zones[0].position;
               coords = projectGameCoords(p.x, p.z, mapId);
-            } else if (MISSION_HOTSPOTS[task.id] && MISSION_HOTSPOTS[task.id].mapId === mapId) {
-              coords = MISSION_HOTSPOTS[task.id].coords;
+              pointFloor = (p.y != null) ? (p.y < -1.5 ? 'b1' : (p.y > 2.5 ? '2f' : '1f')) : '1f';
+            } else if (hotspot && hotspot.mapId === mapId) {
+              coords = hotspot.coords;
+              pointFloor = hotspot.floor || '1f';
             } else {
               coords = [500, 500];
+              pointFloor = '1f';
             }
 
-            const isDone = isTaskCompleted(task.id);
+            // Filtro de Andar
+            if (!pointMatchesFloor({ floor: pointFloor }, selectedFloor)) {
+              return;
+            }
+
             const icon = L.divIcon({
               className: 'tactical-marker',
-              html: `<div class="marker-box m-mission" title="${esc(task.name)}">🎯</div>`,
-              iconSize: [26, 26],
-              iconAnchor: [13, 13]
+              html: `
+                <div class="marker-box m-mission ${isActive ? 'is-active-task' : ''}" title="${esc(task.name)}">
+                  ${isActive ? '<div class="marker-pulse-ring"></div>' : ''}
+                  🎯
+                </div>
+              `,
+              iconSize: [28, 28],
+              iconAnchor: [14, 14]
             });
 
             const marker = L.marker(coords, { icon });
             marker.bindPopup(`
               <strong>${esc(task.name)}</strong>
-              <div style="color:var(--color-missions); font-size:0.72rem; margin-bottom:4px; font-weight:700;">
-                OBJETIVO: ${esc(obj.type.toUpperCase())} ${isDone ? '(CONCLUÍDO)' : ''}
+              ${isActive ? '<div style="color:var(--color-missions); font-size:0.68rem; font-weight:800; letter-spacing:0.06em; margin-bottom:2px;">📌 MISSÃO EM ANDAMENTO</div>' : ''}
+              <div style="color:var(--accent-light); font-size:0.72rem; margin-bottom:4px; font-weight:700;">
+                OBJETIVO: ${esc(obj.type.toUpperCase())}
               </div>
               <div style="color:#bbb; font-size:0.74rem;">${esc(obj.description)}</div>
             `);
@@ -2089,9 +2523,19 @@ query {
           }
         });
       });
+
+      // Atualizar aviso sobre missões ativas
+      const hintEl = document.getElementById('map-missions-status-hint');
+      if (hintEl) {
+        if (useOnlyActive) {
+          hintEl.innerHTML = `<span style="color:var(--color-missions); font-weight:700;">📌 ${activeTasksOnMap.length} missão(ões) ativa(s) fixada(s)</span> exibida(s) no mapa`;
+        } else {
+          hintEl.innerHTML = `<span style="color:#777;">Mostrando missões pendentes. (Marque <strong>📌 Fixar</strong> na aba <strong>Missões</strong> para destacar aqui)</span>`;
+        }
+      }
     }
 
-    function populateExtractPins(mapId) {
+    function populateExtractPins(mapId, selectedFloor) {
       const mapDef = MAPS_DATABASE.find(m => m.id === mapId);
       const rawMap = mapsRawData.find(m =>
         m.id === mapId ||
@@ -2103,6 +2547,9 @@ query {
 
       rawMap.extracts.forEach(ext => {
         if (!ext.position || ext.position.x == null || ext.position.z == null) return;
+
+        // Filtro de Andar
+        if (!pointMatchesFloor(ext, selectedFloor)) return;
 
         const coords = projectGameCoords(ext.position.x, ext.position.z, mapId);
         const isPmc = ext.faction === 'pmc' || ext.faction === 'all';
@@ -2138,7 +2585,7 @@ query {
       });
     }
 
-    function populateBossPins(mapId) {
+    function populateBossPins(mapId, selectedFloor) {
       const layer = mapLayers.bosses;
       if (!layer) return;
 
@@ -2148,10 +2595,10 @@ query {
       if (!rawMap || !rawMap.bosses) return;
 
       rawMap.bosses.forEach((boss, idx) => {
-        const bossName = boss.name || 'Chefe / Boss';
+        // Bug 2 Fix: Tratamento da estrutura correta boss.boss.name vs boss.name
+        const bossName = boss.boss?.name || boss.name || 'Chefe / Boss';
         const chance = boss.spawnChance != null ? (boss.spawnChance * 100).toFixed(0) + '%' : 'Variável';
 
-        // Coordenada geral do chefe no mapa
         const coords = [480 + (idx * 40), 500 + (idx * 30)];
 
         const icon = L.divIcon({
@@ -2171,12 +2618,14 @@ query {
       });
     }
 
-    function populateHotspotPins(mapId) {
+    function populateHotspotPins(mapId, selectedFloor) {
       const layer = mapLayers.hotspots;
       if (!layer) return;
 
       const hotspots = MAP_HOTSPOTS[mapId] || [];
       hotspots.forEach(h => {
+        if (!pointMatchesFloor(h, selectedFloor)) return;
+
         const icon = L.divIcon({
           className: 'tactical-marker',
           html: `<div class="marker-box m-hotspot" title="${esc(h.name)}">⭐</div>`,
@@ -2195,7 +2644,7 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       TOGGLE DE CAMADAS (CHIPS / LAYERGROUPS)
+       TOGGLE DE CAMADAS
     ════════════════════════════════════════════════════════ */
     function toggleLayer(layerKey, btn) {
       if (!leafletMap || !mapLayers[layerKey]) return;
@@ -2224,7 +2673,7 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       SISTEMA HÍBRIDO (MODO LEAFLET VS MODO EMBED)
+       SISTEMA HÍBRIDO (LEAFLET VS EMBED)
     ════════════════════════════════════════════════════════ */
     function setMapMode(mode) {
       currentViewMode = mode;
@@ -2266,7 +2715,6 @@ query {
       const label = document.getElementById('embed-source-label');
       const directLink = document.getElementById('btn-external-direct');
 
-      // MapGenie vs Tarkov.dev
       const mapGenieUrl = `https://mapgenie.io/tarkov/maps/${mapDef.slug}?embed=dark`;
       const tarkovDevUrl = `https://tarkov.dev/map/${mapDef.slug}`;
 
@@ -2290,9 +2738,6 @@ query {
       updateEmbedFrame(mapDef);
     }
 
-    /* ════════════════════════════════════════════════════════
-       FILTRO DE ALTO CONTRASTE / MODO CLARO
-    ════════════════════════════════════════════════════════ */
     function toggleContrastMode() {
       highContrastActive = !highContrastActive;
       const btn = document.getElementById('btn-contrast');
@@ -2321,28 +2766,28 @@ query {
       // 1. Alternar para a aba MAPAS
       showSection('maps');
 
-      // 2. Garantir que estamos no modo Leaflet
+      // 2. Garantir modo Leaflet
       setMapMode('leaflet');
 
       // 3. Selecionar o mapa alvo
       const foundMap = findMapByNameOrAlias(targetMapName) || MAPS_DATABASE[0];
       switchMap(foundMap.id);
 
-      // 4. Garantir que o filtro de missões está ativado
+      // 4. Ativar filtro de missões se estiver desligado
       const missionBtn = document.querySelector('.filter-chip.chip-missions');
       if (missionBtn && !missionBtn.classList.contains('active')) {
         toggleLayer('missions', missionBtn);
       }
 
-      // 5. Coordenadas da missão
-      const hotspot = MISSION_HOTSPOTS[taskId];
+      // 5. Coordenadas da missão com fallback seguro
+      const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[taskId] : null;
       const targetCoords = hotspot ? hotspot.coords : [500, 500];
       const locationNote = hotspot ? hotspot.name : (targetMapName || 'Área Operacional');
 
-      // Adicionar marcador de foco temporário com pulso
+      // Marcador de foco temporário
       highlightMissionOnMap(targetCoords, taskName, objDesc, locationNote);
 
-      // 6. Exibir banner amigável
+      // 6. Alerta toast
       showMapToast(`Área da missão focada: <strong>${esc(taskName)}</strong> (${esc(locationNote)})`);
     }
 
@@ -2467,19 +2912,26 @@ query {
     }
 
     function renderTaskCard(task) {
-      const isDone = isTaskCompleted(task.id);
-      const isExp = expandedTaskIds.has(task.id);
+      const isDone   = isTaskCompleted(task.id);
+      const isActive = isTaskActive(task.id);
+      const isExp    = expandedTaskIds.has(task.id);
 
       return `
-        <div class="task-card ${isDone ? 'completed' : ''} ${isExp ? 'expanded' : ''}" id="task-card-${task.id}" onclick="toggleTaskExpand('${task.id}', event)">
+        <div class="task-card ${isDone ? 'completed' : ''} ${isActive ? 'active-task' : ''} ${isExp ? 'expanded' : ''}" id="task-card-${task.id}" onclick="toggleTaskExpand('${task.id}', event)">
           <div class="task-header-row">
             <div class="task-check-wrapper" onclick="event.stopPropagation()">
               <input type="checkbox" class="task-check-input" ${isDone ? 'checked' : ''} onchange="handleTaskCheck('${task.id}', this.checked, event)" title="Marcar como concluída">
             </div>
             <div class="task-info-col">
-              <span class="task-name">${esc(task.name)}</span>
+              <div class="task-title-and-active">
+                <span class="task-name">${esc(task.name)}</span>
+                <button class="task-active-btn ${isActive ? 'active' : ''}" onclick="handleTaskActiveToggle('${task.id}', event)" title="Fixar missão como Ativa / Em Andamento">
+                  📌 ${isActive ? 'Ativa' : 'Fixar / Ativa'}
+                </button>
+              </div>
               <div class="task-meta">
                 <span>📋 ${task.objectives.length} diretriz(es)</span>
+                ${isActive ? '<span class="task-active-indicator">EM ANDAMENTO</span>' : ''}
               </div>
             </div>
             <div class="task-right-col">
@@ -2501,7 +2953,7 @@ query {
                 return `
                   <div class="objective-item">
                     <div class="obj-meta-row">
-                      <span class="obj-type-pill obj-type-visit">
+                      <span class="obj-type-pill">
                         ${esc(obj.type.toUpperCase())}
                       </span>
                       <div class="obj-location-group">
@@ -2543,6 +2995,20 @@ query {
       renderSection('tasks');
     }
 
+    function handleTaskActiveToggle(taskId, event) {
+      if (event) event.stopPropagation();
+      const current = isTaskActive(taskId);
+      setTaskActive(taskId, !current);
+      renderSection('tasks');
+    }
+
+    function setTaskQuickFilter(filter, btn) {
+      taskQuickFilter = filter;
+      document.querySelectorAll('.task-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      renderSection('tasks');
+    }
+
     /* ════════════════════════════════════════════════════════
        RENDERIZAÇÃO DA SEÇÃO ATIVA
     ════════════════════════════════════════════════════════ */
@@ -2557,6 +3023,7 @@ query {
       const statsTiers  = document.getElementById('stats-tiers');
       const statsTasks  = document.getElementById('stats-tasks-progress');
       const statsMaps   = document.getElementById('stats-maps-info');
+      const taskPills   = document.getElementById('task-pill-filters');
 
       const isGuns  = section === 'guns';
       const isAmmo  = section === 'ammo';
@@ -2610,11 +3077,28 @@ query {
       }
 
       if (isTasks) {
+        taskPills.style.display = 'flex';
+
+        // Filtro rápido de missões (Todas, Ativas, Pendentes, Concluídas)
+        if (taskQuickFilter === 'active') {
+          filteredData = filteredData.filter(t => isTaskActive(t.id));
+        } else if (taskQuickFilter === 'pending') {
+          filteredData = filteredData.filter(t => !isTaskCompleted(t.id));
+        } else if (taskQuickFilter === 'completed') {
+          filteredData = filteredData.filter(t => isTaskCompleted(t.id));
+        }
+
+        // Ordenação: Ativas primeiro, depois Pendentes, Concluídas ao final
         filteredData = [...filteredData].sort((a, b) => {
           const doneA = isTaskCompleted(a.id);
           const doneB = isTaskCompleted(b.id);
-          if (doneA === doneB) return 0;
-          return doneA ? 1 : -1;
+          if (doneA !== doneB) return doneA ? 1 : -1;
+
+          const actA = isTaskActive(a.id);
+          const actB = isTaskActive(b.id);
+          if (actA !== actB) return actA ? -1 : 1;
+
+          return 0;
         });
 
         secTitle.textContent = 'Missões (Tasks)';
@@ -2622,20 +3106,23 @@ query {
         statsTiers.style.display = 'none';
         statsTasks.style.display = 'flex';
 
-        const total = tasksData.length;
-        const done = tasksData.filter(t => isTaskCompleted(t.id)).length;
-        const pending = total - done;
-        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        const total    = tasksData.length;
+        const done     = tasksData.filter(t => isTaskCompleted(t.id)).length;
+        const active   = tasksData.filter(t => isTaskActive(t.id) && !isTaskCompleted(t.id)).length;
+        const pending  = total - done;
+        const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
 
         document.getElementById('tasks-done-count').textContent = done;
+        document.getElementById('tasks-active-count').textContent = active;
         document.getElementById('tasks-pending-count').textContent = pending;
         document.getElementById('tasks-progress-percent').textContent = `${pct}% Concluído (${done}/${total})`;
 
         grid.innerHTML = filteredData.length
           ? filteredData.map(renderTaskCard).join('')
-          : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhuma missão encontrada.</div>';
+          : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhuma missão encontrada no filtro selecionado.</div>';
 
       } else {
+        taskPills.style.display = 'none';
         secTitle.textContent = isGuns ? 'Armas' : 'Munições';
         legend.classList.remove('hidden');
         statsTiers.style.display = 'flex';
@@ -2787,7 +3274,7 @@ query {
         })).sort((a, b) => b.penetration - a.penetration);
 
         tasksData   = data.tasks || [];
-        mapsRawData = data.maps || [];
+        mapsRawData = (data.maps && data.maps.length) ? data.maps : FALLBACK_DATA.maps;
 
         setLoadingState(false);
         updateSubtitle();
@@ -2801,7 +3288,7 @@ query {
       }
     }
 
-    // Inicialização
+    // Inicialização automática
     init();
   </script>
 </body>
