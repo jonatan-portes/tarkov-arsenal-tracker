@@ -36,20 +36,29 @@ Uma Single Page Application (SPA) tática e responsiva para rastrear o arsenal d
 - **Detalhes Expansíveis**: Ao clicar no cartão da missão, os objetivos são exibidos com etiquetas coloridas (`shoot`, `visit`, `giveItem`, `plantItem`, `extract`, `build`, etc.) e descrição em Português.
 - **Redirecionamento Missão -> Mapa**: Botão **"Ver no Mapa"** que transita para a aba de Mapas, seleciona o mapa exato da missão, foca a câmera e posiciona um marcador tático pulsante.
 
-### 🗺️ 4. Mapas Interativos (Leaflet.js)
-- Motor cartográfico baseado em **Leaflet.js** configurado com sistema de coordenadas planas estáticas (`CRS.Simple`).
-- Seletor lateral com os principais mapas de Tarkov: **Customs, Woods, Factory, Shoreline, Interchange, Reserve, Lighthouse, Streets of Tarkov, Ground Zero e The Lab**.
-- Renderização de plantas 2D/3D em alta resolução fornecidas pelo Tarkov.dev.
-- Marcadores com pulso tático e popups informativos com nome e diretrizes da missão.
-- Proteção com `invalidateSize()` para transição suave sem quebra de renderização entre abas.
+### 🗺️ 4. Sistema Híbrido de Mapas (Leaflet + Embed)
+- **Modo Mapa Tático (Leaflet.js)**:
+  - Motor cartográfico baseado em coordenadas planas estáticas (`L.CRS.Simple`).
+  - **Filtro de Alto Contraste / Modo Claro**: Inverte as linhas escuras dos SVGs do Tarkov.dev (`filter: invert(0.92) hue-rotate(180deg) contrast(1.25)`), tornando todas as plantas nítidas e legíveis sobre o tema escuro.
+  - **Barra de Filtros por Camadas (`L.layerGroup`)**:
+    - `[x] Missões Ativas` (Laranja `#ff9900`)
+    - `[x] Extrações PMC` (Verde `#99cc00`)
+    - `[x] Extrações Scav` (Azul `#3399ff`)
+    - `[x] Chefes (Bosses)` (Vermelho `#ff3333`)
+    - `[x] Locais Importantes / Hotspots` (Dourado `#c2aa80`)
+  - **Normalização de Coordenadas**: Converte posições tridimensionais `{ x, y, z }` retornadas pela API para a escala plana `[0, 1000]` do Leaflet.
+- **Modo Mapa Completo (Embed MapGenie / Tarkov.dev)**:
+  - Iframe responsivo de alta resolução integrado diretamente no app.
+  - Alternador dinâmico de fonte entre **MapGenie (Embed Escuro)** e **Tarkov.dev Oficial**.
+- **The Lab Corrigido**: Endpoint de vetor oficial atualizado (`assets.tarkov.dev/maps/svg/Labs.svg`).
 
 ---
 
 ## 🛡️ Arquitetura de Conectividade e Resiliência (3 Camadas)
 
-1. **Camada 1 (GraphQL Oficial em Português)**: Conexão via POST com `https://api.tarkov.dev/graphql` utilizando `items(lang: pt)`, `ammo(lang: pt)` e `tasks(lang: pt)`.
-2. **Camada 2 (JSON CDN Estático em Português)**: Conexão resiliente aos endpoints traduzidos `json.tarkov.dev/regular/items_pt`, `tasks_pt` e `maps_pt`.
-3. **Camada 3 (Fallback Offline)**: Dataset embutido 100% em Português para uso sem internet.
+1. **Camada 1 (GraphQL Oficial em Português)**: Consulta completa com `items`, `ammo`, `maps` (com `extracts` e `bosses`) e `tasks` (com `zones`).
+2. **Camada 2 (JSON CDN Estático em Português)**: Endpoints traduzidos resilientes `items_pt`, `tasks_pt` e `maps_pt`.
+3. **Camada 3 (Fallback Offline)**: Dataset embutido 100% em Português com suporte completo a armas, munições, missões clássicas, extrações e hotspots.
 
 ---
 
@@ -62,10 +71,10 @@ Uma Single Page Application (SPA) tática e responsiva para rastrear o arsenal d
 | Borda e Detalhes | Dourado / Oliva | `#9a8866` / `#c2aa80` |
 | Texto Principal | Branco Fosco | `#e0e0e0` |
 | Texto Secundário | Cinza Neutro | `#888888` |
-| Tier S | Laranja Lendário | `#ff9900` |
-| Tier A | Verde Operacional | `#99cc00` |
-| Tier B | Azul Tático | `#3399ff` |
-| Tier D | Vermelho Crítico | `#ff3333` |
+| Missões Ativas | Laranja Lendário | `#ff9900` |
+| Extrações PMC | Verde Operacional | `#99cc00` |
+| Extrações Scav | Azul Tático | `#3399ff` |
+| Chefes (Bosses) | Vermelho Alerta | `#ff3333` |
 
 ---
 
