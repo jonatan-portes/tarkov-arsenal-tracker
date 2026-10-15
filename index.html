@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tarkov Arsenal Tracker</title>
 
-  <!-- Leaflet.js CSS & JS via CDN -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
   <style>
     /* =========================================================
        RESET & BASE THEME
@@ -37,12 +33,10 @@
       --status-done: #99cc00;
       --status-pending: #888888;
 
-      /* Cores das Camadas do Mapa */
       --color-missions: #ff9900;
-      --color-pmc:      #99cc00;
-      --color-scav:     #3399ff;
-      --color-bosses:   #ff3333;
-      --color-hotspots: #c2aa80;
+      --color-flea:     #c2aa80;
+      --color-trader:   #3399ff;
+      --color-profit:   #99cc00;
     }
 
     html { scroll-behavior: smooth; }
@@ -776,723 +770,321 @@
       border: 1px solid #222;
     }
 
-    /* Botão Tático: Ver no Mapa */
-    .btn-view-map {
-      background: rgba(154,136,102,0.18);
-      border: 1px solid var(--accent);
-      color: var(--accent-light);
-      font-size: 0.66rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 3px 9px;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, transform 0.1s;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .btn-view-map:hover {
-      background: var(--accent);
-      color: #0a0a0a;
-      transform: translateY(-1px);
-    }
-
-    .obj-desc {
-      font-size: 0.78rem;
-      color: var(--text-main);
-      line-height: 1.4;
-    }
-
     /* =========================================================
-       MAPAS INTERATIVOS & SISTEMA HÍBRIDO (LEAFLET + EMBED)
+       ITEM CARDS & MERCADO DE PREÇOS (ITENS)
     ========================================================= */
-    .maps-section {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      width: 100%;
-    }
-    .maps-section.hidden { display: none; }
-
-    .maps-layout {
-      display: grid;
+    .cards-grid.items-grid {
       grid-template-columns: 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-    @media (min-width: 960px) {
-      .maps-layout {
-        grid-template-columns: 320px 1fr;
-      }
-    }
-
-    /* Coluna Esquerda: Painel de Raid (320px) */
-    .maps-sidebar.raid-panel {
-      background: #111111;
-      border: 1px solid #222;
-      border-radius: 3px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
       gap: 14px;
-      max-height: 800px;
-      overflow-y: auto;
     }
+    @media (min-width: 640px)  { .cards-grid.items-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1080px) { .cards-grid.items-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1480px) { .cards-grid.items-grid { grid-template-columns: repeat(4, 1fr); } }
 
-    .raid-panel-header {
+    .item-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-left: 3px solid var(--accent);
+      border-radius: 3px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      border-bottom: 1px solid #222;
-      padding-bottom: 12px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      animation: fadeIn 0.25s ease forwards;
+    }
+    .item-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(154,136,102,0.22);
+      border-color: #383838;
+      background: var(--bg-card-hover);
+    }
+    .item-card.has-flea-profit {
+      border-left-color: var(--color-profit);
+    }
+    .item-card.no-flea-restricted {
+      border-left-color: #666;
     }
 
-    .raid-panel-title {
+    .item-visual-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      font-size: 0.74rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-      text-transform: uppercase;
+      gap: 12px;
     }
 
-    .raid-map-badge {
-      background: rgba(194, 170, 128, 0.15);
-      border: 1px solid rgba(194, 170, 128, 0.35);
-      color: var(--accent-light);
-      padding: 2px 7px;
-      border-radius: 3px;
-      font-size: 0.68rem;
-      font-weight: 700;
-    }
-
-    .raid-map-select-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .raid-label {
-      font-size: 0.65rem;
-      color: var(--text-sec);
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .raid-map-select {
-      background: #161616;
-      border: 1px solid #333;
-      color: var(--text-main);
-      font-size: 0.78rem;
-      font-weight: 600;
-      padding: 8px 10px;
-      border-radius: 3px;
-      cursor: pointer;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .raid-map-select:focus {
-      border-color: var(--accent);
-    }
-
-    .raid-section {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .raid-section-header {
+    .item-thumb-box {
+      width: 58px;
+      height: 58px;
+      min-width: 58px;
+      background: #0d0d0d;
+      border: 1px solid #222;
+      border-radius: 2px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      padding: 4px;
+      overflow: hidden;
+      position: relative;
     }
 
-    .raid-section-title {
-      font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+    .item-thumb {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+      transition: transform 0.2s ease;
     }
-    .raid-section-title.active-title { color: var(--color-missions); }
-    .raid-section-title.general-title { color: var(--accent-light); }
+    .item-card:hover .item-thumb { transform: scale(1.1); }
 
-    .raid-section-desc {
-      font-size: 0.66rem;
-      color: #888;
-      margin: 0;
-      line-height: 1.35;
-    }
-
-    .raid-empty-box {
-      background: #151515;
-      border: 1px dashed #2a2a2a;
-      border-radius: 3px;
-      padding: 12px;
-      font-size: 0.72rem;
-      color: var(--text-sec);
-      text-align: center;
-      line-height: 1.45;
-    }
-
-    .raid-tasks-list {
+    .item-info-col {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 4px;
+      min-width: 0;
     }
 
-    .raid-task-card {
-      background: #161616;
-      border: 1px solid #262626;
-      border-left: 3px solid #383838;
-      border-radius: 3px;
-      padding: 9px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .raid-task-card.is-pinned {
-      border-left-color: var(--color-missions);
-      background: #1c1813;
-    }
-    .raid-task-card.done {
-      opacity: 0.55;
-      border-left-color: var(--status-done);
-      background: #121512;
-    }
-    .raid-task-card.raid-task-flash {
-      border-color: var(--color-missions) !important;
-      background: rgba(255, 153, 0, 0.2) !important;
-      box-shadow: 0 0 14px rgba(255, 153, 0, 0.6);
-      transition: none;
-    }
-
-    .raid-task-top {
+    .item-title-row {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 8px;
     }
 
-    .raid-task-checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      flex: 1;
-      user-select: none;
-    }
-
-    .raid-task-check {
-      accent-color: var(--status-done);
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-      margin: 0;
-      flex-shrink: 0;
-    }
-
-    .raid-task-name {
-      font-size: 0.76rem;
+    .item-name {
+      font-size: 0.84rem;
       font-weight: 700;
       color: var(--text-main);
-      line-height: 1.25;
-    }
-    .raid-task-name.text-done {
-      text-decoration: line-through;
-      color: #777;
-    }
-
-    .raid-task-actions {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
     }
 
-    .raid-pin-btn, .raid-focus-btn {
+    .item-short-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: 2px;
       background: #202020;
       border: 1px solid #333;
-      color: var(--text-sec);
-      font-size: 0.65rem;
-      border-radius: 3px;
-      padding: 3px 6px;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-    }
-    .raid-pin-btn.pinned {
-      background: rgba(255, 153, 0, 0.25);
-      border-color: var(--color-missions);
-      color: var(--color-missions);
-      font-weight: 700;
-    }
-    .raid-focus-btn:hover {
-      background: var(--accent);
-      color: #000;
-      border-color: var(--accent);
+      color: var(--accent-light);
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
-    .raid-task-objs {
+    .item-meta-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .item-cat-tag {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 2px;
+      background: rgba(154, 136, 102, 0.1);
+      border: 1px solid rgba(154, 136, 102, 0.25);
+      color: var(--accent);
+    }
+    .item-noflea-tag {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 2px;
+      background: rgba(255, 51, 51, 0.12);
+      border: 1px solid rgba(255, 51, 51, 0.3);
+      color: #ff6666;
+    }
+
+    /* Grid de Preços (Flea + Traders) */
+    .item-price-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #0f0f0f;
+      border: 1px solid #202020;
+      border-radius: 2px;
+      padding: 9px 10px;
+    }
+
+    .price-box {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      padding-left: 23px;
+      gap: 2px;
+      min-width: 0;
+    }
+    .price-box.flea-box {
+      border-right: 1px solid #1c1c1c;
+      padding-right: 8px;
+    }
+    .price-box.trader-box {
+      padding-left: 4px;
     }
 
-    .raid-obj-item {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      font-size: 0.68rem;
-      color: #aaa;
-      line-height: 1.35;
-    }
-
-    .raid-obj-badge {
-      font-size: 0.58rem;
+    .price-box-title {
+      font-size: 0.62rem;
       font-weight: 800;
-      padding: 1px 4px;
-      border-radius: 2px;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      background: #252525;
-      color: #ccc;
+      color: var(--text-sec);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .price-box-title.flea-title { color: var(--color-flea); }
+    .price-box-title.trader-title { color: var(--color-trader); }
+
+    .price-main-val {
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .price-main-val.flea-val { color: #f5eedc; }
+    .price-main-val.trader-val { color: #bde0fe; }
+    .price-main-val.unavailable { color: #555; font-size: 0.78rem; font-weight: 600; }
+
+    .price-sub-info {
+      font-size: 0.64rem;
+      color: #777;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .price-sub-info strong { color: #aaa; }
+
+    /* Barra inferior de Compra / Margem */
+    .item-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.68rem;
+      padding-top: 4px;
+      border-top: 1px solid #1a1a1a;
+      flex-wrap: wrap;
+    }
+
+    .item-buy-note {
+      color: var(--text-sec);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .item-buy-note strong { color: var(--accent-light); font-weight: 600; }
+
+    .item-margin-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+    .item-margin-badge.flea-best {
+      background: rgba(153, 204, 0, 0.12);
+      border: 1px solid rgba(153, 204, 0, 0.3);
+      color: var(--color-profit);
+    }
+    .item-margin-badge.trader-best {
+      background: rgba(51, 153, 255, 0.12);
+      border: 1px solid rgba(51, 153, 255, 0.3);
+      color: #66b2ff;
+    }
+
+    /* Controles de Itens (Categorias & Ordenação) */
+    .item-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .item-category-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .item-sort-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       flex-shrink: 0;
     }
-    .raid-obj-badge.type-shoot { background: rgba(255, 51, 51, 0.2); color: #ff6666; border: 1px solid rgba(255,51,51,0.3); }
-    .raid-obj-badge.type-visit { background: rgba(51, 153, 255, 0.2); color: #66b2ff; border: 1px solid rgba(51,153,255,0.3); }
-    .raid-obj-badge.type-giveitem { background: rgba(153, 204, 0, 0.2); color: #b3e600; border: 1px solid rgba(153,204,0,0.3); }
-    .raid-obj-badge.type-mark { background: rgba(255, 153, 0, 0.2); color: #ffaa33; border: 1px solid rgba(255,153,0,0.3); }
 
-    .raid-pending-details, .raid-completed-details {
-      border: 1px solid #222;
-      border-radius: 3px;
-      background: #131313;
-      padding: 7px 10px;
-      font-size: 0.72rem;
-    }
-    .raid-pending-summary, .raid-completed-summary {
-      cursor: pointer;
+    .item-sort-label {
+      font-size: 0.68rem;
+      color: var(--text-sec);
       font-weight: 700;
-      color: var(--text-sec);
-      outline: none;
-      user-select: none;
-    }
-    .raid-pending-summary:hover, .raid-completed-summary:hover {
-      color: var(--accent-light);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
-    .map-select-btn {
-      background: #161616;
-      border: 1px solid #252525;
-      border-left: 3px solid transparent;
-      color: var(--text-sec);
-      padding: 10px 12px;
-      border-radius: 2px;
-      text-align: left;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .map-select-btn:hover {
-      background: #1d1d1d;
-      color: var(--text-main);
-      border-color: #333;
-    }
-
-    .map-select-btn.active {
-      background: #1f1d17;
-      border-color: var(--accent);
-      border-left-color: var(--accent);
-      color: var(--accent-light);
-    }
-
-    .map-select-desc {
-      font-size: 0.66rem;
-      color: #777;
-      font-weight: 400;
-    }
-    .map-select-btn.active .map-select-desc {
-      color: #aaa;
-    }
-
-    /* Área de Visualização Principal */
-    .map-viewer-wrapper {
+    .item-sort-select {
       background: #111111;
-      border: 1px solid #222;
-      border-radius: 3px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      position: relative;
-    }
-
-    /* Barra Superior com Modos e Ações */
-    .map-toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .map-current-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .map-current-name {
-      font-size: 0.92rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: var(--accent-light);
-      text-transform: uppercase;
-    }
-
-    /* Seletor de Modo: Leaflet vs Embed */
-    .map-mode-selector {
-      display: flex;
-      background: #0d0d0d;
       border: 1px solid #282828;
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .map-mode-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-sec);
-      padding: 6px 14px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-    .map-mode-btn:hover { color: var(--text-main); }
-    .map-mode-btn.active {
-      background: var(--accent);
-      color: #0a0a0a;
-    }
-
-    /* Botões de Ações Adicionais */
-    .map-action-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .map-action-btn {
-      background: #161616;
-      border: 1px solid #333;
-      color: var(--text-sec);
-      padding: 6px 12px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .map-action-btn:hover {
-      background: #222;
       color: var(--text-main);
-      border-color: var(--accent);
-    }
-    .map-action-btn.active {
-      background: rgba(154,136,102,0.2);
-      border-color: var(--accent);
-      color: var(--accent-light);
-    }
-
-    /* SELETOR DE ANDARES (MÚLTIPLOS NÍVEIS) */
-    .floor-selector-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #0d0d0d;
-      border: 1px solid #202020;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border-radius: 2px;
-      flex-wrap: wrap;
-    }
-
-    .floor-label {
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      color: var(--accent);
-      text-transform: uppercase;
-    }
-
-    .floor-btn-group {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .floor-btn {
-      background: #161616;
-      border: 1px solid #303030;
-      color: var(--text-sec);
-      padding: 4px 10px;
-      border-radius: 2px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .floor-btn:hover { background: #222; color: var(--text-main); border-color: #444; }
-    .floor-btn.active {
-      background: var(--accent);
-      color: #0a0a0a;
-      border-color: var(--accent);
-    }
-
-    /* BARRA DE FILTROS PRÓPRIA DO MAPA LEAFLET */
-    .map-filters-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      background: #0d0d0d;
-      border: 1px solid #202020;
-      padding: 8px 12px;
-      border-radius: 2px;
-    }
-
-    .filters-label {
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      color: var(--text-sec);
-      text-transform: uppercase;
-      margin-right: 4px;
-    }
-
-    .filter-chip {
-      background: #161616;
-      border: 1px solid #2d2d2d;
-      color: var(--text-sec);
-      padding: 4px 10px;
-      border-radius: 2px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-      user-select: none;
-    }
-
-    .filter-chip .chip-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-
-    .filter-chip:hover { border-color: #444; color: var(--text-main); }
-
-    /* Cores ativas dos Chips */
-    .filter-chip.chip-missions.active {
-      background: rgba(255, 153, 0, 0.15);
-      border-color: var(--color-missions);
-      color: var(--color-missions);
-    }
-    .filter-chip.chip-pmc.active {
-      background: rgba(153, 204, 0, 0.15);
-      border-color: var(--color-pmc);
-      color: var(--color-pmc);
-    }
-    .filter-chip.chip-scav.active {
-      background: rgba(51, 153, 255, 0.15);
-      border-color: var(--color-scav);
-      color: var(--color-scav);
-    }
-    .filter-chip.chip-bosses.active {
-      background: rgba(255, 51, 51, 0.15);
-      border-color: var(--color-bosses);
-      color: var(--color-bosses);
-    }
-    .filter-chip.chip-hotspots.active {
-      background: rgba(194, 170, 128, 0.15);
-      border-color: var(--color-hotspots);
-      color: var(--color-hotspots);
-    }
-
-    /* Toast Tático de Foco de Missão */
-    .map-toast {
-      background: rgba(21, 21, 21, 0.95);
-      border: 1px solid var(--accent);
-      border-left: 4px solid var(--tier-s);
-      color: var(--text-main);
-      padding: 8px 14px;
       font-size: 0.74rem;
-      border-radius: 2px;
-      letter-spacing: 0.04em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-      animation: fadeIn 0.25s ease;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
     }
-    .map-toast.hidden { display: none; }
-    .map-toast strong { color: var(--accent-light); }
+    .item-sort-select:focus { border-color: var(--accent); }
 
-    /* Container do Leaflet */
-    #map {
-      height: 720px;
-      width: 100%;
-      background: #080808;
-      border: 1px solid #202020;
-      border-radius: 2px;
-      z-index: 10;
-    }
-
-    /* FILTRO DE ALTO CONTRASTE / MODO CLARO */
-    .leaflet-image-layer.contrast-mode {
-      filter: invert(0.92) hue-rotate(180deg) contrast(1.25) brightness(1.2) !important;
-    }
-
-    /* Container do Embed */
-    .embed-container-wrapper {
+    /* Botão Carregar Mais */
+    .load-more-wrapper {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      width: 100%;
-    }
-    .embed-container-wrapper.hidden { display: none; }
-
-    .embed-info-bar {
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-      background: #0d0d0d;
-      border: 1px solid #202020;
-      padding: 8px 12px;
-      font-size: 0.72rem;
-      color: var(--text-sec);
-      border-radius: 2px;
-      flex-wrap: wrap;
+      justify-content: center;
       gap: 8px;
-    }
-
-    .map-iframe {
+      padding: 24px 0 10px;
       width: 100%;
-      height: 720px;
-      border: 1px solid #252525;
-      border-radius: 2px;
-      background: #0a0a0a;
     }
+    .load-more-wrapper.hidden { display: none; }
 
-    /* Estilização Tática Escura dos Controles do Leaflet */
-    .leaflet-container {
-      background: #080808 !important;
-    }
-    .leaflet-bar {
-      border: 1px solid #333 !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.7) !important;
-      border-radius: 2px !important;
-      overflow: hidden;
-    }
-    .leaflet-bar a {
-      background-color: #161616 !important;
-      color: var(--accent-light) !important;
-      border-bottom: 1px solid #282828 !important;
-    }
-    .leaflet-bar a:hover {
-      background-color: #222 !important;
-      color: #fff !important;
-    }
-
-    /* Popup Tático do Leaflet */
-    .leaflet-popup-content-wrapper {
-      background: #141414 !important;
-      color: var(--text-main) !important;
-      border: 1px solid var(--accent) !important;
-      border-radius: 3px !important;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.85) !important;
-      padding: 4px !important;
-    }
-    .leaflet-popup-tip {
-      background: #141414 !important;
-      border: 1px solid var(--accent) !important;
-    }
-    .leaflet-popup-content {
-      margin: 8px 10px !important;
-      font-family: inherit !important;
-      font-size: 0.76rem !important;
-      line-height: 1.4 !important;
-    }
-    .leaflet-popup-content strong {
-      color: var(--accent-light) !important;
-      font-size: 0.8rem !important;
-      display: block;
-      margin-bottom: 4px;
+    .load-more-btn {
+      background: #151515;
+      border: 1px solid var(--accent);
+      color: var(--accent-light);
+      padding: 10px 28px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
     }
-
-    /* Marcadores Customizados */
-    .tactical-marker {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .load-more-btn:hover {
+      background: var(--accent);
+      color: #000;
+      transform: translateY(-1px);
     }
-    .marker-box {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1.5px solid #000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.8);
-      font-size: 0.8rem;
-      position: relative;
-    }
-    .marker-box.m-mission  { background: var(--color-missions); color: #000; }
-    .marker-box.m-pmc      { background: var(--color-pmc); color: #000; }
-    .marker-box.m-scav     { background: var(--color-scav); color: #000; }
-    .marker-box.m-boss     { background: var(--color-bosses); color: #fff; }
-    .marker-box.m-hotspot  { background: var(--color-hotspots); color: #000; }
-
-    /* Pulso no Marcador Focado */
-    .marker-pulse-ring {
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 2px solid var(--color-missions);
-      animation: pulseMarker 1.8s infinite;
-      pointer-events: none;
-    }
-    @keyframes pulseMarker {
-      0%   { transform: scale(0.7); opacity: 1; }
-      100% { transform: scale(2.0); opacity: 0; }
+    .load-more-info {
+      font-size: 0.68rem;
+      color: var(--text-sec);
+      letter-spacing: 0.04em;
     }
 
     /* =========================================================
@@ -1544,7 +1136,7 @@
         <h1>Tarkov Arsenal Tracker</h1>
       </div>
       <p class="subtitle" id="subtitle">
-        Conectando à API em Português (PT-BR) · Classificação por Tier & Mapas Interativos
+        Conectando à API em Português (PT-BR) · Armas, Munições, Missões e Valor de Itens
       </p>
     </div>
   </header>
@@ -1556,7 +1148,7 @@
     <button class="nav-btn active" id="btn-guns" onclick="showSection('guns')">ARMAS</button>
     <button class="nav-btn" id="btn-ammo" onclick="showSection('ammo')">MUNIÇÕES</button>
     <button class="nav-btn" id="btn-tasks" onclick="showSection('tasks')">MISSÕES</button>
-    <button class="nav-btn" id="btn-maps" onclick="showSection('maps')">MAPAS</button>
+    <button class="nav-btn" id="btn-items" onclick="showSection('items')">ITENS</button>
   </nav>
 
   <!-- ======================================================
@@ -1576,10 +1168,11 @@
       <span><span class="dot" style="background:#555"></span> Pendentes: <strong id="tasks-pending-count" style="color:#aaa; margin-left:4px;">0</strong></span>
       <span id="tasks-progress-percent" style="color:var(--accent); font-weight:600;">0% Concluído</span>
     </div>
-    <div id="stats-maps-info" style="display:none; align-items:center; gap:14px; flex-wrap:wrap; color:var(--accent-light);">
-      <span>Sistema: <strong>CRS.Simple</strong></span>
-      <span>Camadas: <strong id="active-layers-count">5 ativas</strong></span>
-      <span>Modo: <strong id="active-map-mode-label">Tático (Leaflet)</strong></span>
+    <div id="stats-items-info" style="display:none; align-items:center; gap:16px; flex-wrap:wrap;">
+      <span>Catalogados: <strong id="items-total-count" style="color:var(--accent-light);">0</strong></span>
+      <span>No Flea: <strong id="items-flea-count" style="color:var(--status-done);">0</strong></span>
+      <span>Sem Flea: <strong id="items-noflea-count" style="color:#aaa;">0</strong></span>
+      <span id="items-filter-label" style="color:var(--accent); font-weight:600;">Todos os Itens</span>
     </div>
   </div>
 
@@ -1617,14 +1210,40 @@
       <div class="legend-item"><div class="legend-dot" style="background:var(--tier-d)"></div><span id="legend-d">Tier D</span></div>
     </div>
 
-    <!-- Filter / Search input (Armas, Munições e Missões) -->
+    <!-- Filter / Search input (Armas, Munições, Missões e Itens) -->
     <div class="filter-bar hidden" id="filter-bar">
       <input type="text" class="search-input" id="search-input" placeholder="Buscar por nome ou calibre..." oninput="handleSearch(this.value)">
+
+      <!-- Filtros Rápidos de Missões -->
       <div class="task-pill-filters" id="task-pill-filters" style="display:none;">
         <button class="task-pill active" onclick="setTaskQuickFilter('all', this)">Todas</button>
         <button class="task-pill pill-active" onclick="setTaskQuickFilter('active', this)">📌 Ativas (Em Andamento)</button>
         <button class="task-pill" onclick="setTaskQuickFilter('pending', this)">Pendentes</button>
         <button class="task-pill" onclick="setTaskQuickFilter('completed', this)">Concluídas</button>
+      </div>
+
+      <!-- Controles da Aba ITENS (Categorias & Ordenação) -->
+      <div class="item-controls" id="item-controls" style="display:none;">
+        <div class="item-category-pills">
+          <button class="task-pill active" onclick="setItemCategory('all', this)">Todos</button>
+          <button class="task-pill" onclick="setItemCategory('barter', this)">Troca (Barter)</button>
+          <button class="task-pill" onclick="setItemCategory('weapons', this)">Armas & Peças</button>
+          <button class="task-pill" onclick="setItemCategory('ammo', this)">Munições</button>
+          <button class="task-pill" onclick="setItemCategory('meds', this)">Médico</button>
+          <button class="task-pill" onclick="setItemCategory('keys', this)">Chaves & Cartões</button>
+          <button class="task-pill" onclick="setItemCategory('gear', this)">Armaduras & Equip.</button>
+          <button class="task-pill" onclick="setItemCategory('provisions', this)">Provisões</button>
+        </div>
+        <div class="item-sort-wrapper">
+          <label for="item-sort-select" class="item-sort-label">Ordenar:</label>
+          <select id="item-sort-select" class="item-sort-select" onchange="handleItemSort(this.value)">
+            <option value="flea_desc">Maior Preço Flea</option>
+            <option value="flea_asc">Menor Preço Flea</option>
+            <option value="trader_sell_desc">Maior Venda Trader</option>
+            <option value="trader_buy_asc">Menor Compra Trader</option>
+            <option value="name_asc">Nome (A-Z)</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -1635,112 +1254,13 @@
       <span class="section-count" id="section-count">0 itens</span>
     </div>
 
-    <!-- Cards Grid (Armas, Munições e Missões) -->
+    <!-- Cards Grid (Armas, Munições, Missões e Itens) -->
     <div class="cards-grid hidden" id="cards-grid"></div>
 
-    <!-- ====================================================
-         MAPAS INTERATIVOS & SISTEMA HÍBRIDO
-    ==================================================== -->
-    <!-- ====================================================
-         MAPAS INTERATIVOS & SISTEMA HÍBRIDO (SPLIT-SCREEN)
-    ==================================================== -->
-    <div class="maps-section hidden" id="maps-section">
-      <div class="maps-layout">
-        <!-- Coluna Esquerda: Painel de Raid (320px) -->
-        <aside class="maps-sidebar raid-panel" id="raid-panel">
-          <!-- Renderizado dinamicamente por renderRaidPanel() -->
-        </aside>
-
-        <!-- Coluna Direita: Visualizador Principal (1fr) -->
-        <section class="map-viewer-wrapper">
-          <!-- Toolbar Superior -->
-          <div class="map-toolbar">
-            <div class="map-current-info">
-              <span class="map-current-name" id="current-map-title">CUSTOMS</span>
-            </div>
-
-            <!-- Seletor de Modo: Tarkov.dev Oficial (Principal) vs Leaflet Tático -->
-            <div class="map-mode-selector">
-              <button class="map-mode-btn active" id="btn-mode-embed" onclick="setMapMode('embed')">
-                Mapa Oficial (Tarkov.dev)
-              </button>
-              <button class="map-mode-btn" id="btn-mode-leaflet" onclick="setMapMode('leaflet')">
-                Mapa Tático (Leaflet)
-              </button>
-            </div>
-
-            <!-- Ações Rápidas -->
-            <div class="map-action-group">
-              <button class="map-action-btn" id="btn-contrast" onclick="toggleContrastMode()" style="display:none;" title="Inverte as cores das linhas para máxima visibilidade no tema escuro">
-                Alto Contraste: ATIVADO
-              </button>
-              <button class="map-action-btn" id="btn-reset-view" onclick="resetMapView()" style="display:none;">
-                Centralizar
-              </button>
-              <a class="map-action-btn" id="btn-open-tarkovdev" href="https://tarkov.dev/map/customs" target="_blank" rel="noopener" title="Abrir mapa oficial do Tarkov.dev em nova aba">
-                Tarkov.dev ↗
-              </a>
-            </div>
-          </div>
-
-          <!-- Toast Tático de Missão Focada -->
-          <div class="map-toast hidden" id="map-toast">
-            <span>📍</span>
-            <span id="map-toast-text">Área da missão focada</span>
-          </div>
-
-          <!-- MODO 1: MAPA OFICIAL COMPLETO (IFRAME EMBED - PRINCIPAL) -->
-          <div id="embed-wrapper" class="embed-container-wrapper">
-            <div class="embed-info-bar">
-              <span id="embed-source-label">Fonte: <strong>Tarkov.dev Oficial</strong> · Mapa: Customs</span>
-              <div style="display:flex; gap:8px;">
-                <button class="map-action-btn" id="btn-toggle-embed-src" onclick="toggleEmbedSource()">
-                  Alternar para MapGenie
-                </button>
-                <a class="map-action-btn" id="btn-external-direct" href="https://tarkov.dev/map/customs" target="_blank" rel="noopener">
-                  Abrir no Tarkov.dev ↗
-                </a>
-              </div>
-            </div>
-            <iframe id="map-iframe" class="map-iframe" src="https://tarkov.dev/map/customs" allowfullscreen loading="lazy"></iframe>
-          </div>
-
-          <!-- MODO 2: MAPA NATIVO LEAFLET CALIBRADO -->
-          <div id="leaflet-wrapper" class="hidden" style="display:flex; flex-direction:column; gap:10px;">
-            <!-- Seletor de Andares (Múltiplos Níveis) -->
-            <div class="floor-selector-bar" id="floor-selector-bar">
-              <span class="floor-label">Nível / Andar:</span>
-              <div class="floor-btn-group" id="floor-btn-group"></div>
-            </div>
-
-            <!-- Barra de Filtros Própria do Leaflet (Chips de Camadas) -->
-            <div class="map-filters-bar">
-              <span class="filters-label">Camadas:</span>
-              <button class="filter-chip chip-missions active" data-layer="missions" onclick="toggleLayer('missions', this)">
-                <span class="chip-dot"></span> Missões Ativas
-              </button>
-              <button class="filter-chip chip-pmc active" data-layer="pmc" onclick="toggleLayer('pmc', this)">
-                <span class="chip-dot"></span> Extrações PMC
-              </button>
-              <button class="filter-chip chip-scav active" data-layer="scav" onclick="toggleLayer('scav', this)">
-                <span class="chip-dot"></span> Extrações Scav
-              </button>
-              <button class="filter-chip chip-bosses active" data-layer="bosses" onclick="toggleLayer('bosses', this)">
-                <span class="chip-dot"></span> Chefes (Bosses)
-              </button>
-              <button class="filter-chip chip-hotspots active" data-layer="hotspots" onclick="toggleLayer('hotspots', this)">
-                <span class="chip-dot"></span> Locais Importantes
-              </button>
-            </div>
-
-            <!-- Dica sobre missões ativas -->
-            <div id="map-missions-status-hint" style="font-size:0.72rem; color:var(--text-sec); padding:2px 4px;"></div>
-
-            <!-- Div do Mapa Leaflet -->
-            <div id="map"></div>
-          </div>
-        </section>
-      </div>
+    <!-- Botão Carregar Mais (+60 Itens) -->
+    <div class="load-more-wrapper hidden" id="load-more-wrapper">
+      <button class="load-more-btn" id="btn-load-more" onclick="loadMoreItems()">Carregar Mais (+60 Itens)</button>
+      <span class="load-more-info" id="load-more-info"></span>
     </div>
   </main>
 
@@ -1754,323 +1274,56 @@
     let gunsData = [];
     let ammoData = [];
     let tasksData = [];
-    let mapsRawData = [];
+    let allItemsData = [];
     let currentSection = 'guns';
     let dataSource = '';
     let searchQuery = '';
     let taskQuickFilter = 'all'; // 'all' | 'active' | 'pending' | 'completed'
+    let itemCategoryFilter = 'all'; // 'all' | 'barter' | 'weapons' | 'ammo' | 'meds' | 'keys' | 'gear' | 'provisions'
+    let itemSortMode = 'flea_desc'; // 'flea_desc' | 'flea_asc' | 'trader_sell_desc' | 'trader_buy_asc' | 'name_asc'
+    let displayedItemsLimit = 60;
     const expandedTaskIds = new Set();
 
-    // Estado do Leaflet e Mapas
-    let leafletMap = null;
-    let currentImageOverlay = null;
-    let currentMapId = 'customs';
-    let currentFloorId = 'all';
-    let activeOverlayBounds = null;
-    let highContrastActive = true;
-    let currentViewMode = 'embed'; // 'embed' (Tarkov.dev Oficial Principal) | 'leaflet' (Tático)
-    let currentEmbedSource = 'tarkovdev'; // 'tarkovdev' | 'mapgenie'
-
-    // Layer Groups do Leaflet
-    const mapLayers = {
-      missions: null,
-      pmc:      null,
-      scav:     null,
-      bosses:   null,
-      hotspots: null
+    /* ════════════════════════════════════════════════════════
+       TRADERS & FORMATAÇÃO MONETÁRIA
+    ════════════════════════════════════════════════════════ */
+    const TRADER_NAMES = {
+      '54cb50c76803fa8b248b4571': 'Prapor',
+      '54cb57776803fa99248b456e': 'Therapist',
+      '579dc571d53a0658a154fbec': 'Fence',
+      '58330581ace78e27b8b10cee': 'Skier',
+      '5935c25fb3acc3127c3d8cd9': 'Peacekeeper',
+      '5a7c2eca46aef81a7ca2145d': 'Mechanic',
+      '5ac3b934156ae10c4430e83c': 'Ragman',
+      '5c0647fdd443bc2504c2d371': 'Jaeger',
+      '638f541a29ffd1183d187f57': 'Lightkeeper',
+      '656f0f98d80a697f855d34b1': 'BTR',
+      '6617beeaa9cfa777ca915b7c': 'Ref',
+      '68fe15910f29ba3fdbba9d54': 'Taran',
+      '688246518448b05efd61d461': 'Mr. Kerman',
+      '688246958448b05efd61d462': 'Voevoda',
+      '69e0d6cc77b63940375b9173': 'Survivor'
     };
 
-    /* ════════════════════════════════════════════════════════
-       BUG 1 FIX: CONSTANTE MISSION_HOTSPOTS RECRIADA E SEGURA
-    ════════════════════════════════════════════════════════ */
-    const MISSION_HOTSPOTS = {
-      // Customs
-      "task_debut":                  { mapId: "customs", coords: [450, 420], name: "Área Industrial e Bloqueios", floor: "1f" },
-      "task_checking":               { mapId: "customs", coords: [470, 640], name: "Caminhão de Combustível (Posto Novo)", floor: "1f" },
-      "task_operation_aquarius":     { mapId: "customs", coords: [640, 520], name: "Dormitórios 2 Andares (Quarto 206)", floor: "2f" },
-      "task_delivery_from_the_past": { mapId: "customs", coords: [420, 220], name: "Escritório do Diretor (Big Red)", floor: "2f" },
-      "task_golden_swag":            { mapId: "customs", coords: [660, 540], name: "Dormitórios 3 Andares (Quarto 303)", floor: "2f" },
-      "task_the_extortionist":       { mapId: "customs", coords: [460, 310], name: "Cabine do Mensageiro (Matagal)", floor: "1f" },
+    function formatPrice(val, currency = 'RUB') {
+      if (val == null || val === 0 || isNaN(val)) return '—';
+      const numStr = Math.round(Number(val)).toLocaleString('pt-BR');
+      if (currency === 'USD') return `$ ${numStr}`;
+      if (currency === 'EUR') return `€ ${numStr}`;
+      return `${numStr} ₽`;
+    }
 
-      // Woods
-      "task_shootout_picnic":        { mapId: "woods",   coords: [520, 500], name: "Serraria e Floresta Central", floor: "1f" },
-
-      // Factory
-      "delivery_factory":            { mapId: "factory", coords: [580, 480], name: "Cabine de Controle Fabril", floor: "2f" },
-
-      // Shoreline
-      "task_spa_tour":               { mapId: "shoreline", coords: [600, 500], name: "Resort Azure Coast", floor: "2f" },
-
-      // Ground Zero
-      "task_first_in_line":          { mapId: "ground-zero", coords: [480, 530], name: "Posto Médico de Campanha (Térreo)", floor: "1f" },
-
-      // The Lab
-      "task_lab_sanitar":            { mapId: "the-lab", coords: [560, 450], name: "Área de Quarentena Green", floor: "2f" }
-    };
-
-    /* ════════════════════════════════════════════════════════
-       DATABASE DE MAPAS COM SUPORTE A ANDARES (FLOORS)
-    ════════════════════════════════════════════════════════ */
-    const MAPS_DATABASE = [
-      {
-        id: "customs",
-        name: "Customs",
-        namePt: "Customs (Alfândega)",
-        slug: "customs",
-        desc: "Parque industrial com dormitórios, armazéns e terminal alfandegário.",
-        image: "https://assets.tarkov.dev/maps/svg/Customs.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Customs.svg",
-        bounds: { minX: -340, maxX: 670, minZ: -330, maxZ: 230 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: '1f',  label: 'Térreo / Superfície' },
-          { id: '2f',  label: 'Dormitórios (2F/3F)' }
-        ]
-      },
-      {
-        id: "woods",
-        name: "Woods",
-        namePt: "Woods (Bosques)",
-        slug: "woods",
-        desc: "Reserva florestal com serraria central, cabanas e acampamentos militares.",
-        image: "https://assets.tarkov.dev/maps/svg/Woods.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Woods.svg",
-        bounds: { minX: -550, maxX: 700, minZ: -600, maxZ: 650 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Bunkers ZB-014 / ZB-016' },
-          { id: '1f',  label: 'Superfície Florestal' }
-        ]
-      },
-      {
-        id: "factory",
-        name: "Factory",
-        namePt: "Factory (Fábrica)",
-        slug: "factory",
-        desc: "Instalação industrial fechada, combate tático de curto alcance.",
-        image: "https://assets.tarkov.dev/maps/svg/Factory.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Factory.svg",
-        bounds: { minX: -70, maxX: 80, minZ: -60, maxZ: 70 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Túneis Subterrâneos' },
-          { id: '1f',  label: 'Piso Fabril' },
-          { id: '2f',  label: 'Escritórios (3F)' }
-        ]
-      },
-      {
-        id: "shoreline",
-        name: "Shoreline",
-        namePt: "Shoreline (Litoral)",
-        slug: "shoreline",
-        desc: "Extensa área costeira com o resort Azure Coast e usina elétrica.",
-        image: "https://assets.tarkov.dev/maps/svg/Shoreline.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Shoreline.svg",
-        bounds: { minX: -600, maxX: 700, minZ: -500, maxZ: 600 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Porão / Subsolo' },
-          { id: '1f',  label: 'Costa / Térreo' },
-          { id: '2f',  label: 'Resort Superior' }
-        ]
-      },
-      {
-        id: "interchange",
-        name: "Interchange",
-        namePt: "Interchange (Intercâmbio)",
-        slug: "interchange",
-        desc: "Shopping center ULTRA com lojas IDEA, OLI, Goshan e subsolo.",
-        image: "https://assets.tarkov.dev/maps/svg/Interchange.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Interchange.svg",
-        bounds: { minX: -500, maxX: 500, minZ: -500, maxZ: 500 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Garagem Subterrânea' },
-          { id: '1f',  label: '1º Andar (Lojas)' },
-          { id: '2f',  label: '2º Andar (Praça)' }
-        ]
-      },
-      {
-        id: "reserve",
-        name: "Reserve",
-        namePt: "Reserve (Base Militar)",
-        slug: "reserve",
-        desc: "Base militar com bunkers subterrâneos, silos e túneis secretos.",
-        image: "https://assets.tarkov.dev/maps/svg/Reserve.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Reserve.svg",
-        bounds: { minX: -400, maxX: 400, minZ: -400, maxZ: 400 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Bunkers D-2' },
-          { id: '1f',  label: 'Superfície' }
-        ]
-      },
-      {
-        id: "lighthouse",
-        name: "Lighthouse",
-        namePt: "Lighthouse (Farol)",
-        slug: "lighthouse",
-        desc: "Cabo Dalniy, estação de tratamento de água e área dos Rogues.",
-        image: "https://assets.tarkov.dev/maps/svg/Lighthouse.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Lighthouse.svg",
-        bounds: { minX: -450, maxX: 600, minZ: -700, maxZ: 600 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: '1f',  label: 'Estrada / Praia' },
-          { id: '2f',  label: 'Chalés / Tratamento' }
-        ]
-      },
-      {
-        id: "streets",
-        name: "Streets of Tarkov",
-        namePt: "Streets of Tarkov (Ruas)",
-        slug: "streets-of-tarkov",
-        desc: "Centro urbano residencial e comercial de Tarkov.",
-        image: "https://assets.tarkov.dev/maps/svg/StreetsOfTarkov.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/StreetsOfTarkov.svg",
-        bounds: { minX: -600, maxX: 600, minZ: -600, maxZ: 600 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Esgotos / Subsolo' },
-          { id: '1f',  label: 'Nível da Rua' },
-          { id: '2f',  label: 'Prédios / LexOs' }
-        ]
-      },
-      {
-        id: "ground-zero",
-        name: "Ground Zero",
-        namePt: "Ground Zero (Marco Zero)",
-        slug: "ground-zero",
-        desc: "Distrito financeiro com arranha-céus da TerraGroup.",
-        image: "https://assets.tarkov.dev/maps/svg/GroundZero.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/GroundZero.svg",
-        bounds: { minX: -250, maxX: 250, minZ: -250, maxZ: 250 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Estacionamento Nakatani' },
-          { id: '1f',  label: 'Térreo da Rua' },
-          { id: '2f',  label: 'Mezanino TerraGroup' }
-        ]
-      },
-      {
-        id: "the-lab",
-        name: "The Lab",
-        namePt: "The Lab (Laboratório)",
-        slug: "the-lab",
-        desc: "Instalação de pesquisa secreta subterrânea da TerraGroup.",
-        image: "https://assets.tarkov.dev/maps/svg/Labs.svg",
-        fallback: "https://raw.githubusercontent.com/the-hideout/tarkov-dev-svg-maps/main/Labs.svg",
-        bounds: { minX: -200, maxX: 200, minZ: -200, maxZ: 200 },
-        floors: [
-          { id: 'all', label: 'Todos os Andares' },
-          { id: 'b1',  label: 'Subsolo / Esgoto (B1)' },
-          { id: '1f',  label: 'Nível Principal (1F)' },
-          { id: '2f',  label: 'Cúpula Superior (2F)' }
-        ]
-      }
-    ];
-
-    /* ════════════════════════════════════════════════════════
-       HOTSPOTS & LOCAIS IMPORTANTES COM ANDARES
-    ════════════════════════════════════════════════════════ */
-    const MAP_HOTSPOTS = {
-      customs: [
-        { name: "Dormitórios 3 Andares", desc: "Quarto 303, Quarto 214 e cofre", coords: [680, 520], floor: '2f' },
-        { name: "Dormitórios 2 Andares", desc: "Quarto 206 (Água) e Quarto 114", coords: [640, 500], floor: '2f' },
-        { name: "Nova Gasolina", desc: "Área central de patrulha do Reshala", coords: [480, 650], floor: '1f' },
-        { name: "Fortaleza / Stronghold", desc: "Edifício com metralhadoras e lança-granadas", coords: [430, 500], floor: '1f' },
-        { name: "Escritório do Diretor (Big Red)", desc: "Terminal alfandegário oeste", coords: [410, 220], floor: '2f' }
-      ],
-      woods: [
-        { name: "Serraria Central", desc: "Local principal de combate do Shturman", coords: [500, 500], floor: '1f' },
-        { name: "Acampamento USEC", desc: "Tendas médicas e spawns de itens valiosos", coords: [650, 320], floor: '1f' },
-        { name: "Acampamento Médico EMERCOM", desc: "Base militar próxima à água", coords: [350, 680], floor: '1f' },
-        { name: "Bunker ZB-014", desc: "Bunker protegido por chave", coords: [380, 280], floor: 'b1' }
-      ],
-      factory: [
-        { name: "Escritório dos 3 Andares", desc: "Cofre, armário de arquivos e saída de emergência", coords: [580, 480], floor: '2f' },
-        { name: "Área de Empilhadeiras", desc: "Spawns intensos de PMC", coords: [380, 650], floor: '1f' },
-        { name: "Subsolo / Túneis", desc: "Passagem subterrânea de escape", coords: [450, 350], floor: 'b1' }
-      ],
-      shoreline: [
-        { name: "Resort Azure Coast - Ala Leste", desc: "Quarto 226, 310 e salas de LEDX", coords: [600, 560], floor: '2f' },
-        { name: "Resort Azure Coast - Ala Oeste", desc: "Quarto 216, 301 e armários de armas", coords: [600, 440], floor: '2f' },
-        { name: "Pier / Marina", desc: "Prédio administrativo e extração de barco", coords: [280, 520], floor: '1f' },
-        { name: "Estação Meteorológica", desc: "Torre de rádio e cofre", coords: [420, 680], floor: '1f' }
-      ],
-      interchange: [
-        { name: "Loja TECHLIGHT & ULTRA", desc: "Spawns de placas gráficas e eletrônicos", coords: [560, 520], floor: '2f' },
-        { name: "Loja KIBA Arms", desc: "Loja blindada com armas montadas", coords: [500, 500], floor: '1f' },
-        { name: "Supermercado Goshan", desc: "Alimentos e caixas de ferramentas", coords: [480, 650], floor: '1f' }
-      ],
-      reserve: [
-        { name: "Bunker Subterrâneo Central", desc: "Alavanca de comando D-2 e área de Raiders", coords: [500, 500], floor: 'b1' },
-        { name: "Edifícios Torre / Peão", desc: "Quartos militares e armaria", coords: [480, 420], floor: '1f' },
-        { name: "Estação de Trem", desc: "Chegada do trem blindado e Glukhar", coords: [350, 580], floor: '1f' }
-      ],
-      lighthouse: [
-        { name: "Estação de Tratamento de Água", desc: "Complexo com Rogues e armamento pesado", coords: [680, 520], floor: '2f' },
-        { name: "Chalé dos Bilionários", desc: "Mansão com spawns raros de Bitcoin", coords: [420, 450], floor: '2f' },
-        { name: "Farol do Cabo Dalniy", desc: "Ponte minada e ilha de Lightkeeper", coords: [220, 350], floor: '1f' }
-      ],
-      streets: [
-        { name: "Concessionária LexOs", desc: "Bunker protegido do chefe Kaban", coords: [480, 520], floor: '1f' },
-        { name: "Hotel Concordia", desc: "Complexo residencial de luxo", coords: [580, 420], floor: '2f' },
-        { name: "Edifício Chekannaya 15", desc: "Porta marcada com loot de alto valor", coords: [520, 600], floor: '2f' }
-      ],
-      "ground-zero": [
-        { name: "Edifício TerraGroup", desc: "Área médica térrea e escritórios", coords: [520, 520], floor: '1f' },
-        { name: "Nakatani Subsolo", desc: "Garagem e extração", coords: [450, 620], floor: 'b1' }
-      ],
-      "the-lab": [
-        { name: "Área de Quarentena (Green Keycard)", desc: "Laboratório biológico estéril", coords: [560, 450], floor: '1f' },
-        { name: "Escritório do Administrador (Red Keycard)", desc: "Arsenal de segurança de elite", coords: [580, 550], floor: '2f' },
-        { name: "Cúpula Central (Violet / Blue)", desc: "Área de testes com Raiders", coords: [480, 500], floor: '1f' },
-        { name: "Esgotos de Escape", desc: "Saída de emergência submersa", coords: [320, 520], floor: 'b1' }
-      ]
-    };
-
-    /* ════════════════════════════════════════════════════════
-       BOSS_HOTSPOTS: SPAWNS REAIS DE CHEFES POR MAPA
-    ════════════════════════════════════════════════════════ */
-    const BOSS_HOTSPOTS = {
-      customs: [
-        { bossName: "Reshala", locationName: "Dormitórios (2F/3F)", coords: [680, 520], floor: '2f', chance: '30%' },
-        { bossName: "Reshala", locationName: "Nova Gasolina", coords: [480, 650], floor: '1f', chance: '30%' },
-        { bossName: "Reshala", locationName: "Fortaleza / Stronghold", coords: [430, 500], floor: '1f', chance: '30%' }
-      ],
-      woods: [
-        { bossName: "Shturman", locationName: "Serraria Central", coords: [500, 500], floor: '1f', chance: '35%' }
-      ],
-      factory: [
-        { bossName: "Tagilla", locationName: "Piso Fabril / Empilhadeiras", coords: [380, 650], floor: '1f', chance: '30%' }
-      ],
-      interchange: [
-        { bossName: "Killa", locationName: "Shopping ULTRA / KIBA", coords: [500, 500], floor: '1f', chance: '30%' }
-      ],
-      shoreline: [
-        { bossName: "Sanitar", locationName: "Resort Azure Coast", coords: [600, 500], floor: '2f', chance: '30%' },
-        { bossName: "Sanitar", locationName: "Pier / Marina", coords: [280, 520], floor: '1f', chance: '30%' }
-      ],
-      reserve: [
-        { bossName: "Glukhar", locationName: "Edifícios Torre / Peão", coords: [480, 420], floor: '1f', chance: '35%' },
-        { bossName: "Glukhar", locationName: "Estação de Trem Blindado", coords: [350, 580], floor: '1f', chance: '35%' }
-      ],
-      lighthouse: [
-        { bossName: "Zryachiy", locationName: "Farol do Cabo Dalniy", coords: [220, 350], floor: '1f', chance: '100%' },
-        { bossName: "Rogues", locationName: "Estação de Tratamento de Água", coords: [680, 520], floor: '2f', chance: '80%' }
-      ],
-      streets: [
-        { bossName: "Kaban", locationName: "Concessionária LexOs", coords: [480, 520], floor: '1f', chance: '30%' },
-        { bossName: "Kollontay", locationName: "Hotel Concordia", coords: [580, 420], floor: '2f', chance: '25%' }
-      ],
-      "ground-zero": [
-        { bossName: "Kollontay", locationName: "Edifício TerraGroup", coords: [520, 520], floor: '1f', chance: '20%' }
-      ],
-      "the-lab": [
-        { bossName: "Raiders de Segurança", locationName: "Cúpula Central & Elevadores", coords: [480, 500], floor: '1f', chance: '70%' }
-      ]
-    };
+    function getItemCategory(item) {
+      const types = item.types || [];
+      if (types.includes('barter')) return { id: 'barter', label: 'Troca' };
+      if (types.includes('gun') || types.includes('mods') || types.includes('suppressor') || types.includes('pistolGrip')) return { id: 'weapons', label: 'Arma/Peça' };
+      if (types.includes('ammo') || types.includes('ammoBox')) return { id: 'ammo', label: 'Munição' };
+      if (types.includes('meds') || types.includes('injectors')) return { id: 'meds', label: 'Médico' };
+      if (types.includes('keys') || types.includes('markedOnly')) return { id: 'keys', label: 'Chave' };
+      if (types.includes('armor') || types.includes('helmet') || types.includes('armorPlate') || types.includes('backpack') || types.includes('rig') || types.includes('headphones') || types.includes('glasses') || types.includes('wearable')) return { id: 'gear', label: 'Equipamento' };
+      if (types.includes('provisions')) return { id: 'provisions', label: 'Provisão' };
+      return { id: 'other', label: 'Item' };
+    }
 
     /* ════════════════════════════════════════════════════════
        GQL_QUERY COM BOSSES E TASK OBJECTIVE SHOOT
@@ -2085,22 +1338,6 @@ query {
     item { id name iconLink }
     caliber penetrationPower damage armorDamage fragmentationChance
   }
-  maps(lang: pt) {
-    id
-    name
-    normalizedName
-    extracts {
-      id
-      name
-      faction
-      position { x y z }
-    }
-    bosses {
-      boss { name }
-      spawnChance
-      spawnLocations { name chance }
-    }
-  }
   tasks(lang: pt) {
     id name
     objectives {
@@ -2108,34 +1345,6 @@ query {
       type
       description
       maps { id name normalizedName }
-      ... on TaskObjectiveBasic {
-        zones {
-          id
-          map { name normalizedName }
-          position { x y z }
-        }
-      }
-      ... on TaskObjectiveQuestItem {
-        zones {
-          id
-          map { name normalizedName }
-          position { x y z }
-        }
-      }
-      ... on TaskObjectiveMark {
-        zones {
-          id
-          map { name normalizedName }
-          position { x y z }
-        }
-      }
-      ... on TaskObjectiveShoot {
-        zones {
-          id
-          map { id name normalizedName }
-          position { x y z }
-        }
-      }
     }
   }
 }
@@ -2149,8 +1358,6 @@ query {
     const JSON_TRANS_URL = 'https://json.tarkov.dev/regular/items_pt';
     const JSON_TASKS_URL = 'https://json.tarkov.dev/regular/tasks';
     const JSON_TASK_PT   = 'https://json.tarkov.dev/regular/tasks_pt';
-    const JSON_MAPS_URL  = 'https://json.tarkov.dev/regular/maps';
-    const JSON_MAPS_PT   = 'https://json.tarkov.dev/regular/maps_pt';
 
     /* ════════════════════════════════════════════════════════
        PERSISTÊNCIA: MISSÕES CONCLUÍDAS E ATIVAS
@@ -2199,181 +1406,6 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       CALIBRAÇÃO MATEMÁTICA OFICIAL DO TARKOV.DEV
-       Matriz de Rotação (0, 90, 180, 270) & Limites (bounds)
-    ════════════════════════════════════════════════════════ */
-    let MAP_CALIBRATIONS = {
-      "customs": {
-        slug: "customs",
-        coordinateRotation: 180,
-        rawBounds: [[698, -307], [-372, 237]],
-        rotatedBounds: { minX: -698, maxX: 372, minY: -237, maxY: 307 }
-      },
-      "woods": {
-        slug: "woods",
-        coordinateRotation: 180,
-        rawBounds: [[646, -914], [-761, 442]],
-        rotatedBounds: { minX: -646, maxX: 761, minY: -442, maxY: 914 }
-      },
-      "factory": {
-        slug: "factory",
-        coordinateRotation: 90,
-        rawBounds: [[77, -64.5], [-65.5, 67.4]],
-        rotatedBounds: { minX: -67.4, maxX: 64.5, minY: -65.5, maxY: 77 }
-      },
-      "shoreline": {
-        slug: "shoreline",
-        coordinateRotation: 180,
-        rawBounds: [[504, -415], [-1056, 618]],
-        rotatedBounds: { minX: -504, maxX: 1056, minY: -618, maxY: 415 }
-      },
-      "interchange": {
-        slug: "interchange",
-        coordinateRotation: 180,
-        rawBounds: [[598, -442], [-433, 426]],
-        rotatedBounds: { minX: -598, maxX: 433, minY: -426, maxY: 442 }
-      },
-      "reserve": {
-        slug: "reserve",
-        coordinateRotation: 180,
-        rawBounds: [[289, -293], [-303, 244]],
-        rotatedBounds: { minX: -289, maxX: 303, minY: -244, maxY: 293 }
-      },
-      "lighthouse": {
-        slug: "lighthouse",
-        coordinateRotation: 180,
-        rawBounds: [[515, -998], [-545, 725]],
-        rotatedBounds: { minX: -515, maxX: 545, minY: -725, maxY: 998 }
-      },
-      "streets": {
-        slug: "streets-of-tarkov",
-        coordinateRotation: 180,
-        rawBounds: [[323, -295], [-280, 532]],
-        rotatedBounds: { minX: -323, maxX: 280, minY: -532, maxY: 295 }
-      },
-      "streets-of-tarkov": {
-        slug: "streets-of-tarkov",
-        coordinateRotation: 180,
-        rawBounds: [[323, -295], [-280, 532]],
-        rotatedBounds: { minX: -323, maxX: 280, minY: -532, maxY: 295 }
-      },
-      "ground-zero": {
-        slug: "ground-zero",
-        coordinateRotation: 180,
-        rawBounds: [[249, -124], [-99, 364]],
-        rotatedBounds: { minX: -249, maxX: 99, minY: -364, maxY: 124 }
-      },
-      "the-lab": {
-        slug: "the-lab",
-        coordinateRotation: 270,
-        rawBounds: [[-80, -477], [-287, -193]],
-        rotatedBounds: { minX: -477, maxX: -193, minY: 80, maxY: 287 }
-      }
-    };
-
-    function applyOfficialMapsJson(data) {
-      if (!Array.isArray(data)) return;
-      data.forEach(m => {
-        const sub = (m.maps || []).find(s => s.projection === 'interactive' || (s.bounds && s.coordinateRotation !== undefined));
-        if (sub && sub.bounds) {
-          const rot = sub.coordinateRotation || 0;
-          const rad = (rot * Math.PI) / 180;
-          const cos = Math.cos(rad);
-          const sin = Math.sin(rad);
-
-          function rotate(x, z) {
-            return {
-              x: x * cos - z * sin,
-              y: x * sin + z * cos
-            };
-          }
-
-          const p0 = rotate(sub.bounds[0][0], sub.bounds[0][1]);
-          const p1 = rotate(sub.bounds[1][0], sub.bounds[1][1]);
-
-          const calibObj = {
-            slug: m.normalizedName,
-            coordinateRotation: rot,
-            rawBounds: sub.bounds,
-            rotatedBounds: {
-              minX: Math.min(p0.x, p1.x),
-              maxX: Math.max(p0.x, p1.x),
-              minY: Math.min(p0.y, p1.y),
-              maxY: Math.max(p0.y, p1.y)
-            }
-          };
-
-          MAP_CALIBRATIONS[m.normalizedName] = calibObj;
-          if (m.normalizedName === 'streets-of-tarkov') {
-            MAP_CALIBRATIONS['streets'] = calibObj;
-          }
-        }
-      });
-    }
-
-    async function fetchMapsCalibration() {
-      try {
-        const res = await fetch('https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json');
-        if (res.ok) {
-          const data = await res.json();
-          applyOfficialMapsJson(data);
-          console.log('[Tarkov Tracker] Calibração de mapas oficial do Tarkov.dev aplicada.');
-        }
-      } catch (err) {
-        console.warn('[Tarkov Tracker] Usando calibração oficial pré-calculada embutida:', err);
-      }
-    }
-
-    function projectGameCoords(x, z, mapId) {
-      const mapDef = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
-      const calib = MAP_CALIBRATIONS[mapDef.slug] || MAP_CALIBRATIONS[mapDef.id] || MAP_CALIBRATIONS['customs'];
-
-      const rot = calib.coordinateRotation || 0;
-      const rad = (rot * Math.PI) / 180;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-
-      // 1. Matriz de rotação oficial
-      const rotX = x * cos - z * sin;
-      const rotY = x * sin + z * cos;
-
-      // 2. Normalização proporcional aos limites reais rotacionados
-      const bounds = calib.rotatedBounds;
-      const rangeX = (bounds.maxX - bounds.minX) || 1;
-      const rangeY = (bounds.maxY - bounds.minY) || 1;
-
-      // No SVG do Tarkov.dev:
-      // Horizontal (X no Leaflet):
-      const normX = ((bounds.maxX - rotX) / rangeX) * 1000;
-      // Vertical (Y no Leaflet):
-      const normY = ((rotY - bounds.minY) / rangeY) * 1000;
-
-      // Limites de segurança na viewport
-      const clampedX = Math.max(15, Math.min(985, normX));
-      const clampedY = Math.max(15, Math.min(985, normY));
-
-      return [clampedY, clampedX];
-    }
-
-    function pointMatchesFloor(point, selectedFloor) {
-      if (!selectedFloor || selectedFloor === 'all') return true;
-
-      if (point.floor) {
-        if (point.floor === 'all') return true;
-        return point.floor === selectedFloor;
-      }
-
-      if (point.position && point.position.y != null) {
-        const y = point.position.y;
-        if (selectedFloor === 'b1') return y < -1.5;
-        if (selectedFloor === '1f') return y >= -1.5 && y <= 2.5;
-        if (selectedFloor === '2f') return y > 2.5;
-      }
-
-      return selectedFloor === '1f';
-    }
-
-    /* ════════════════════════════════════════════════════════
        FETCH MULTI-CAMADA
     ════════════════════════════════════════════════════════ */
     async function fetchData() {
@@ -2405,38 +1437,78 @@ query {
       // 2. Tentar JSON CDN Oficial
       try {
         setLoadingHint('Buscando dados no CDN oficial Tarkov (PT-BR)...');
-        const [itemsResp, transResp, tasksResp, tasksPtResp, mapsResp, mapsPtResp] = await Promise.all([
+        const [itemsResp, transResp, tasksResp, tasksPtResp] = await Promise.all([
           fetch(JSON_ITEMS_URL),
           fetch(JSON_TRANS_URL),
           fetch(JSON_TASKS_URL).catch(() => null),
           fetch(JSON_TASK_PT).catch(() => null),
-          fetch(JSON_MAPS_URL).catch(() => null),
-          fetch(JSON_MAPS_PT).catch(() => null),
         ]);
 
         if (itemsResp.ok && transResp.ok) {
           const [itemsJson, transJson] = await Promise.all([itemsResp.json(), transResp.json()]);
           const tasksJson   = tasksResp && tasksResp.ok ? await tasksResp.json() : null;
           const tasksPtJson = tasksPtResp && tasksPtResp.ok ? await tasksPtResp.json() : null;
-          const mapsJson    = mapsResp && mapsResp.ok ? await mapsResp.json() : null;
-          const mapsPtJson  = mapsPtResp && mapsPtResp.ok ? await mapsPtResp.json() : null;
 
           const allItems     = itemsJson?.data?.items || {};
           const translations = transJson?.data || {};
           const tasksMap     = tasksJson?.data?.tasks || {};
           const tasksPt      = tasksPtJson?.data || {};
-          const mapsMap      = mapsJson?.data?.maps || {};
-          const mapsPt       = mapsPtJson?.data || {};
 
           const guns = [];
           const ammoList = [];
+          const catalogItems = [];
 
           for (const [id, item] of Object.entries(allItems)) {
+            const name = translations[item.name] || item.normalizedName || id;
+            const shortName = translations[item.shortName] || item.shortName || '';
+            const icon = item.iconLink || `https://assets.tarkov.dev/${id}-icon.webp`;
+            const fleaPrice = item.lastLowPrice || item.avg24hPrice || 0;
+
+            // Melhor preço de venda para traders (maior valor em RUB)
+            let bestSell = null;
+            if (item.sellToTrader && item.sellToTrader.length) {
+              for (const s of item.sellToTrader) {
+                if (!bestSell || (s.priceRUB || 0) > (bestSell.priceRUB || 0)) {
+                  bestSell = {
+                    trader: TRADER_NAMES[s.trader] || s.trader,
+                    price: s.price,
+                    priceRUB: s.priceRUB || s.price,
+                    currency: s.currency || 'RUB'
+                  };
+                }
+              }
+            }
+
+            // Melhor preço de compra de traders (menor valor em RUB)
+            let bestBuy = null;
+            if (item.buyFromTrader && item.buyFromTrader.length) {
+              for (const b of item.buyFromTrader) {
+                if (!bestBuy || (b.priceRUB || Infinity) < (bestBuy.priceRUB || Infinity)) {
+                  bestBuy = {
+                    trader: TRADER_NAMES[b.trader] || b.trader,
+                    price: b.price,
+                    priceRUB: b.priceRUB || b.price,
+                    currency: b.currency || 'RUB',
+                    level: b.minTraderLevel || 1
+                  };
+                }
+              }
+            }
+
+            catalogItems.push({
+              id,
+              name,
+              shortName,
+              iconLink: icon,
+              types: item.types || [],
+              fleaPrice,
+              basePrice: item.basePrice || 0,
+              bestSell,
+              bestBuy
+            });
+
             const props = item.properties;
             if (!props) continue;
-
-            const name = translations[item.name] || item.normalizedName || id;
-            const icon = item.iconLink || `https://assets.tarkov.dev/${id}-icon.webp`;
 
             if (props.propertiesType === 'ItemPropertiesWeapon') {
               guns.push({
@@ -2470,46 +1542,24 @@ query {
 
             const objectives = (t.objectives || []).map(obj => {
               const desc = tasksPt[obj.description] || tasksPt[obj.id] || obj.description || 'Objetivo operacional';
-              const maps = (obj.maps || []).map(mapId => {
-                const mapObj = mapsMap[mapId];
-                return {
-                  id: mapId,
-                  name: mapsPt[mapId + ' Name'] || mapObj?.name || mapId,
-                  normalizedName: mapObj?.normalizedName || ''
-                };
-              });
-
-              const zones = (obj.zones || []).map(z => ({
-                id: z.id,
-                position: z.position || null,
-                mapId: z.map || null
+              const maps = (obj.maps || []).map(mapId => ({
+                id: mapId,
+                name: tasksPt[mapId + ' Name'] || mapId
               }));
 
               return {
                 id: obj.id,
                 type: obj.type || 'objective',
                 description: desc,
-                maps: maps,
-                zones: zones
+                maps: maps
               };
             });
 
             tasks.push({ id: taskId, name: taskName, objectives });
           }
 
-          const maps = [];
-          for (const [mapId, m] of Object.entries(mapsMap)) {
-            maps.push({
-              id: mapId,
-              name: mapsPt[mapId + ' Name'] || m.name,
-              normalizedName: m.normalizedName,
-              extracts: m.extracts || [],
-              bosses: m.bosses || []
-            });
-          }
-
           dataSource = 'json';
-          return { items: guns, ammo: ammoList, tasks, maps };
+          return { items: guns, ammo: ammoList, tasks, allItems: catalogItems };
         }
       } catch (e) {
         console.warn('[Tarkov] JSON CDN falhou, usando Fallback:', e.message);
@@ -2521,7 +1571,7 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       BUG 3 FIX: FALLBACK COMPLETO COM TODOS OS 10 MAPAS
+       DADOS OFFLINE (FALLBACK RESILIENTE)
     ════════════════════════════════════════════════════════ */
     const FALLBACK_DATA = {
       items: [
@@ -2545,7 +1595,7 @@ query {
           id: 'task_debut',
           name: 'Estreia (Debut)',
           objectives: [
-            { id:'o1', type: 'shoot', description: 'Elimine 5 Scavs no mapa Customs', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 150, z: -50, y: 1 } }] },
+            { id:'o1', type: 'shoot', description: 'Elimine 5 Scavs no mapa Customs', maps: [{ name: 'Customs' }] },
             { id:'o2', type: 'giveItem', description: 'Obtenha e entregue 2 espingardas MP-133 para Prapor', maps: [] }
           ]
         },
@@ -2553,1021 +1603,239 @@ query {
           id: 'task_checking',
           name: 'Inspeção (Checking)',
           objectives: [
-            { id:'o3', type: 'findQuestItem', description: 'Encontre o relógio de bolso no caminhão tanque perto da nova gasolina', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 470, z: -80, y: 0 } }] }
+            { id:'o3', type: 'findQuestItem', description: 'Encontre o relógio de bolso no caminhão tanque perto da nova gasolina', maps: [{ name: 'Customs' }] }
           ]
         },
         {
           id: 'task_operation_aquarius',
           name: 'Operação Aquarius - Parte 1',
           objectives: [
-            { id:'o4', type: 'visit', description: 'Localize a reserva de água nos dormitórios de 2 andares (Quarto 206)', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: 160, z: 120, y: 4.5 } }] }
+            { id:'o4', type: 'visit', description: 'Localize a reserva de água nos dormitórios de 2 andares (Quarto 206)', maps: [{ name: 'Customs' }] }
           ]
         },
         {
           id: 'task_delivery_from_the_past',
           name: 'Entrega do Passado (Delivery from the Past)',
           objectives: [
-            { id:'o5', type: 'findQuestItem', description: 'Obtenha a pasta de documentos no escritório do Diretor em Customs', maps: [{ name: 'Customs', normalizedName:'customs' }], zones:[{ position:{ x: -280, z: -50, y: 3.5 } }] },
-            { id:'o6', type: 'plantQuestItem', description: 'Esconda a pasta de documentos na cabine de controle fabril em Factory', maps: [{ name: 'Factory', normalizedName:'factory' }], zones:[{ position:{ x: 20, z: 30, y: 4.0 } }] }
+            { id:'o5', type: 'findQuestItem', description: 'Obtenha a pasta de documentos no escritório do Diretor em Customs', maps: [{ name: 'Customs' }] },
+            { id:'o6', type: 'plantQuestItem', description: 'Esconda a pasta de documentos na cabine de controle fabril em Factory', maps: [{ name: 'Factory' }] }
           ]
         },
         {
           id: 'task_shootout_picnic',
           name: 'Piquenique com Tiros (Shootout Picnic)',
           objectives: [
-            { id:'o7', type: 'shoot', description: 'Elimine 14 Scavs na região central de Woods', maps: [{ name: 'Woods', normalizedName:'woods' }], zones:[{ position:{ x: 0, z: 50, y: 0 } }] }
+            { id:'o7', type: 'shoot', description: 'Elimine 14 Scavs na região central de Woods', maps: [{ name: 'Woods' }] }
           ]
         }
       ],
-      maps: [
+      allItems: [
         {
-          id: "customs",
-          name: "Customs",
-          normalizedName: "customs",
-          extracts: [
-            { id: "c1", name: "Crossroads", faction: "pmc", position: { x: -336, z: -86, y: 0 } },
-            { id: "c2", name: "RUAF Roadblock", faction: "pmc", position: { x: 50, z: -180, y: 0 } },
-            { id: "c3", name: "ZB-1011 Bunker", faction: "pmc", position: { x: 620, z: -250, y: -4.0 } },
-            { id: "c4", name: "Smuggler's Boat", faction: "pmc", position: { x: 120, z: 15, y: 0 } },
-            { id: "c5", name: "Old Gas Station", faction: "scav", position: { x: 310, z: -175, y: 0 } },
-            { id: "c6", name: "Passage Between Rocks", faction: "scav", position: { x: 180, z: 190, y: 0 } },
-            { id: "c7", name: "Military Checkpoint", faction: "scav", position: { x: 490, z: 220, y: 0 } }
-          ],
-          bosses: [
-            { name: "Reshala", spawnChance: 0.3, spawnLocations: [{ name: "Dormitórios & Nova Gasolina" }] }
-          ]
+          id: '5c0530ee86f774697952d952',
+          name: 'Transiluminador de pele LEDX',
+          shortName: 'LEDX',
+          iconLink: 'https://assets.tarkov.dev/5c0530ee86f774697952d952-icon.webp',
+          types: ['barter', 'meds'],
+          fleaPrice: 530000,
+          basePrice: 970000,
+          bestSell: { trader: 'Therapist', price: 494700, priceRUB: 494700, currency: 'RUB' },
+          bestBuy: null
         },
         {
-          id: "woods",
-          name: "Woods",
-          normalizedName: "woods",
-          extracts: [
-            { id: "w1", name: "Outskirts", faction: "pmc", position: { x: -450, z: -400, y: 0 } },
-            { id: "w2", name: "UN Roadblock", faction: "pmc", position: { x: 550, z: 500, y: 0 } },
-            { id: "w3", name: "RUAF Roadblock", faction: "pmc", position: { x: 480, z: 420, y: 0 } },
-            { id: "w4", name: "ZB-014 Bunker", faction: "pmc", position: { x: -380, z: -280, y: -3.5 } },
-            { id: "w5", name: "Dead Man's Place", faction: "scav", position: { x: -180, z: -120, y: 0 } },
-            { id: "w6", name: "Scav House", faction: "scav", position: { x: -420, z: -320, y: 0 } }
-          ],
-          bosses: [
-            { name: "Shturman", spawnChance: 0.35, spawnLocations: [{ name: "Serraria Central" }] }
-          ]
+          id: '57347ca924597744596b4e71',
+          name: 'Placa Gráfica (GPU)',
+          shortName: 'GPU',
+          iconLink: 'https://assets.tarkov.dev/57347ca924597744596b4e71-icon.webp',
+          types: ['barter'],
+          fleaPrice: 380000,
+          basePrice: 160000,
+          bestSell: { trader: 'Therapist', price: 124416, priceRUB: 124416, currency: 'RUB' },
+          bestBuy: null
         },
         {
-          id: "factory",
-          name: "Factory",
-          normalizedName: "factory",
-          extracts: [
-            { id: "f1", name: "Gate 3", faction: "pmc", position: { x: -45, z: 6, y: 0 } },
-            { id: "f2", name: "Gate 0", faction: "pmc", position: { x: 56, z: 52, y: 0 } },
-            { id: "f3", name: "Cellars (Subsolo)", faction: "pmc", position: { x: -20, z: -35, y: -4.0 } },
-            { id: "f4", name: "Office Window", faction: "scav", position: { x: 15, z: -5, y: 4.5 } },
-            { id: "f5", name: "Camera Bunker Door", faction: "scav", position: { x: -30, z: 20, y: -3.5 } }
-          ],
-          bosses: [
-            { name: "Tagilla", spawnChance: 0.3, spawnLocations: [{ name: "Piso Fabril" }] }
-          ]
+          id: '59faff1d86f7746c51718c9c',
+          name: 'Bitcoin Físico 0.2 BTC',
+          shortName: '0.2BTC',
+          iconLink: 'https://assets.tarkov.dev/59faff1d86f7746c51718c9c-icon.webp',
+          types: ['barter', 'noFlea'],
+          fleaPrice: 0,
+          basePrice: 420000,
+          bestSell: { trader: 'Therapist', price: 615000, priceRUB: 615000, currency: 'RUB' },
+          bestBuy: null
         },
         {
-          id: "shoreline",
-          name: "Shoreline",
-          normalizedName: "shoreline",
-          extracts: [
-            { id: "s1", name: "Tunnel", faction: "pmc", position: { x: -520, z: -380, y: 0 } },
-            { id: "s2", name: "Road to Customs", faction: "pmc", position: { x: 620, z: 480, y: 0 } },
-            { id: "s3", name: "Pier Boat", faction: "pmc", position: { x: 80, z: -450, y: 0 } },
-            { id: "s4", name: "Lighthouse", faction: "scav", position: { x: 150, z: -480, y: 0 } },
-            { id: "s5", name: "Gym Entrance (Subsolo)", faction: "scav", position: { x: 50, z: 120, y: -2.5 } }
-          ],
-          bosses: [
-            { name: "Sanitar", spawnChance: 0.3, spawnLocations: [{ name: "Resort Azure Coast & Pier" }] }
-          ]
+          id: '5c0a840b86f77429db4d1f24',
+          name: 'Cartão de Acesso do Laboratório TerraGroup (Red)',
+          shortName: 'Red',
+          iconLink: 'https://assets.tarkov.dev/5c0a840b86f77429db4d1f24-icon.webp',
+          types: ['keys'],
+          fleaPrice: 48000000,
+          basePrice: 2500000,
+          bestSell: { trader: 'Therapist', price: 850000, priceRUB: 850000, currency: 'RUB' },
+          bestBuy: null
         },
         {
-          id: "interchange",
-          name: "Interchange",
-          normalizedName: "interchange",
-          extracts: [
-            { id: "i1", name: "Railway Exfil", faction: "pmc", position: { x: -380, z: -380, y: 0 } },
-            { id: "i2", name: "Emercom Checkpoint", faction: "pmc", position: { x: 380, z: 380, y: 0 } },
-            { id: "i3", name: "Saferoom (Subsolo)", faction: "pmc", position: { x: -20, z: 10, y: -4.5 } },
-            { id: "i4", name: "Power Station", faction: "scav", position: { x: 320, z: -250, y: 0 } }
-          ],
-          bosses: [
-            { name: "Killa", spawnChance: 0.3, spawnLocations: [{ name: "Shopping ULTRA (KIBA)" }] }
-          ]
+          id: '544fb5454bdc2df8738b456a',
+          name: 'Kit de Primeiros Socorros Salewa',
+          shortName: 'Salewa',
+          iconLink: 'https://assets.tarkov.dev/544fb5454bdc2df8738b456a-icon.webp',
+          types: ['meds'],
+          fleaPrice: 34000,
+          basePrice: 19500,
+          bestSell: { trader: 'Therapist', price: 13650, priceRUB: 13650, currency: 'RUB' },
+          bestBuy: { trader: 'Therapist', price: 38200, priceRUB: 38200, currency: 'RUB', level: 2 }
         },
         {
-          id: "reserve",
-          name: "Reserve",
-          normalizedName: "reserve",
-          extracts: [
-            { id: "r1", name: "Cliff Descent", faction: "pmc", position: { x: 280, z: 320, y: 6.0 } },
-            { id: "r2", name: "D-2 Bunker", faction: "pmc", position: { x: -40, z: -20, y: -6.0 } },
-            { id: "r3", name: "Bunker Hermetic Door", faction: "pmc", position: { x: -180, z: 220, y: -4.0 } },
-            { id: "r4", name: "Hole in the Wall", faction: "scav", position: { x: -250, z: -180, y: 0 } }
-          ],
-          bosses: [
-            { name: "Glukhar", spawnChance: 0.35, spawnLocations: [{ name: "Prédios Peão & Trem" }] }
-          ]
+          id: '5780cf7f2459777de4559322',
+          name: 'Chave Marcada dos Dormitórios (Customs)',
+          shortName: 'Marcada',
+          iconLink: 'https://assets.tarkov.dev/5780cf7f2459777de4559322-icon.webp',
+          types: ['keys', 'markedOnly'],
+          fleaPrice: 2200000,
+          basePrice: 120000,
+          bestSell: { trader: 'Therapist', price: 61200, priceRUB: 61200, currency: 'RUB' },
+          bestBuy: null
         },
         {
-          id: "lighthouse",
-          name: "Lighthouse",
-          normalizedName: "lighthouse",
-          extracts: [
-            { id: "l1", name: "Southern Road", faction: "pmc", position: { x: -280, z: -520, y: 0 } },
-            { id: "l2", name: "Path to Shoreline", faction: "pmc", position: { x: 480, z: 450, y: 0 } },
-            { id: "l3", name: "Mountain Pass", faction: "pmc", position: { x: 220, z: 380, y: 5.5 } },
-            { id: "l4", name: "Hideout at Grotto", faction: "scav", position: { x: -180, z: -220, y: 0 } }
-          ],
-          bosses: [
-            { name: "Zryachiy", spawnChance: 1.0, spawnLocations: [{ name: "Ilha do Farol" }] },
-            { name: "Rogues", spawnChance: 0.8, spawnLocations: [{ name: "Tratamento de Água" }] }
-          ]
+          id: '590c678286f77426c9660122',
+          name: 'Pen Drive USB Seguro (Flash Drive)',
+          shortName: 'FlashDrive',
+          iconLink: 'https://assets.tarkov.dev/590c678286f77426c9660122-icon.webp',
+          types: ['barter'],
+          fleaPrice: 75000,
+          basePrice: 32000,
+          bestSell: { trader: 'Peacekeeper', price: 350, priceRUB: 43750, currency: 'USD' },
+          bestBuy: null
         },
         {
-          id: "streets",
-          name: "Streets of Tarkov",
-          normalizedName: "streets-of-tarkov",
-          extracts: [
-            { id: "st1", name: "Courtyard", faction: "pmc", position: { x: 120, z: -150, y: 0 } },
-            { id: "st2", name: "Evacuation Zone", faction: "pmc", position: { x: -320, z: 250, y: 0 } },
-            { id: "st3", name: "Sewer River (Subsolo)", faction: "pmc", position: { x: -50, z: 40, y: -3.5 } },
-            { id: "st4", name: "Basement Entrance", faction: "scav", position: { x: -150, z: -80, y: -2.0 } }
-          ],
-          bosses: [
-            { name: "Kaban", spawnChance: 0.3, spawnLocations: [{ name: "Concessionária LexOs" }] }
-          ]
+          id: '5751496424597720a27126da',
+          name: 'Desfibrilador Portátil',
+          shortName: 'Defib',
+          iconLink: 'https://assets.tarkov.dev/5751496424597720a27126da-icon.webp',
+          types: ['barter', 'meds'],
+          fleaPrice: 185000,
+          basePrice: 120000,
+          bestSell: { trader: 'Therapist', price: 92400, priceRUB: 92400, currency: 'RUB' },
+          bestBuy: null
         },
         {
-          id: "ground-zero",
-          name: "Ground Zero",
-          normalizedName: "ground-zero",
-          extracts: [
-            { id: "gz1", name: "Mira Ave", faction: "pmc", position: { x: -120, z: -110, y: 0 } },
-            { id: "gz2", name: "Nakatani Basement (Subsolo)", faction: "pmc", position: { x: 80, z: 120, y: -3.0 } },
-            { id: "gz3", name: "Emercom Medical", faction: "scav", position: { x: -60, z: 140, y: 0 } }
-          ],
-          bosses: [
-            { name: "Kollontay", spawnChance: 0.2, spawnLocations: [{ name: "Edifício TerraGroup" }] }
-          ]
+          id: '5d1b376e86f774252519444e',
+          name: 'Garrafa de Álcool Moonshine "Fierce Hatchling"',
+          shortName: 'Moonshine',
+          iconLink: 'https://assets.tarkov.dev/5d1b376e86f774252519444e-icon.webp',
+          types: ['provisions', 'barter'],
+          fleaPrice: 275000,
+          basePrice: 110000,
+          bestSell: { trader: 'Therapist', price: 82500, priceRUB: 82500, currency: 'RUB' },
+          bestBuy: null
         },
         {
-          id: "the-lab",
-          name: "The Lab",
-          normalizedName: "the-lab",
-          extracts: [
-            { id: "lab1", name: "Medical Block Elevator", faction: "all", position: { x: 80, z: -60, y: 0 } },
-            { id: "lab2", name: "Cargo Elevator (Subsolo)", faction: "all", position: { x: -70, z: 80, y: -4.0 } },
-            { id: "lab3", name: "Hangar Gate", faction: "all", position: { x: -80, z: -50, y: 0 } },
-            { id: "lab4", name: "Sewage Conduit (Subsolo)", faction: "all", position: { x: -120, z: 20, y: -5.0 } },
-            { id: "lab5", name: "Ventilation Shaft (Superior)", faction: "all", position: { x: 60, z: 90, y: 4.0 } }
-          ],
-          bosses: [
-            { name: "Raiders de Segurança", spawnChance: 0.7, spawnLocations: [{ name: "Cúpula Central & Elevadores" }] }
-          ]
+          id: '5447a9cd4bdc2dbd208b4567',
+          name: 'Carabina de Assalto Colt M4A1 5.56x45',
+          shortName: 'M4A1',
+          iconLink: 'https://assets.tarkov.dev/5447a9cd4bdc2dbd208b4567-icon.webp',
+          types: ['gun', 'weapon'],
+          fleaPrice: 62000,
+          basePrice: 42000,
+          bestSell: { trader: 'Mechanic', price: 28400, priceRUB: 28400, currency: 'RUB' },
+          bestBuy: { trader: 'Peacekeeper', price: 620, priceRUB: 77500, currency: 'USD', level: 2 }
         }
       ]
     };
 
-    /* ════════════════════════════════════════════════════════
-       SISTEMA DO LEAFLET & GERENCIAMENTO DE CAMADAS E ANDARES
-    ════════════════════════════════════════════════════════ */
-    function initLeafletMap() {
-      if (leafletMap) return;
 
-      const mapContainer = document.getElementById('map');
-      if (!mapContainer) return;
-
-      leafletMap = L.map('map', {
-        crs: L.CRS.Simple,
-        minZoom: -1.5,
-        maxZoom: 2.5,
-        zoomSnap: 0.25,
-        attributionControl: false
-      });
-
-      // Inicializar Layer Groups
-      mapLayers.missions = L.layerGroup().addTo(leafletMap);
-      mapLayers.pmc      = L.layerGroup().addTo(leafletMap);
-      mapLayers.scav     = L.layerGroup().addTo(leafletMap);
-      mapLayers.bosses   = L.layerGroup().addTo(leafletMap);
-      mapLayers.hotspots = L.layerGroup().addTo(leafletMap);
-
-      renderRaidPanel('customs');
-      switchMap('customs');
-    }
-
-    function renderFloorSelector(mapData) {
-      const bar = document.getElementById('floor-selector-bar');
-      const group = document.getElementById('floor-btn-group');
-      if (!bar || !group) return;
-
-      const floors = mapData.floors || [{ id: 'all', label: 'Todos os Andares' }];
-      if (floors.length <= 1) {
-        bar.style.display = 'none';
-        return;
-      }
-
-      bar.style.display = 'flex';
-      group.innerHTML = floors.map(f => `
-        <button class="floor-btn ${f.id === currentFloorId ? 'active' : ''}" onclick="setMapFloor('${f.id}')">
-          ${esc(f.label)}
-        </button>
-      `).join('');
-    }
-
-    function setMapFloor(floorId) {
-      currentFloorId = floorId;
-      const mapData = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
-      renderFloorSelector(mapData);
-      populateMapLayers(currentMapId, currentFloorId);
-    }
-
-    function switchMap(mapId) {
-      const mapData = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
-      currentMapId = mapData.id;
-      currentFloorId = 'all';
-
-      // Atualizar título e links
-      const titleEl = document.getElementById('current-map-title');
-      if (titleEl) titleEl.textContent = mapData.namePt.toUpperCase();
-
-      const tarkovLinkEl = document.getElementById('btn-open-tarkovdev');
-      if (tarkovLinkEl) tarkovLinkEl.href = `https://tarkov.dev/map/${mapData.slug}`;
-
-      // Renderizar controles do mapa e Painel de Raid (320px)
-      renderFloorSelector(mapData);
-      renderRaidPanel(currentMapId);
-
-      if (currentViewMode === 'embed') {
-        updateEmbedFrame(mapData);
-        return;
-      }
-
-      if (!leafletMap) initLeafletMap();
-
-      if (currentImageOverlay) {
-        leafletMap.removeLayer(currentImageOverlay);
-      }
-
-      const bounds = [[0, 0], [1000, 1000]];
-      activeOverlayBounds = bounds;
-
-      currentImageOverlay = L.imageOverlay(mapData.image, bounds, {
-        errorOverlayUrl: mapData.fallback,
-        className: highContrastActive ? 'contrast-mode' : ''
-      }).addTo(leafletMap);
-
-      leafletMap.fitBounds(bounds);
-      leafletMap.invalidateSize();
-
-      // Recarregar todas as camadas filtráveis do mapa
-      populateMapLayers(mapData.id, currentFloorId);
-    }
-
-    function populateMapLayers(mapId, selectedFloor) {
-      if (!leafletMap) return;
-
-      // Limpar todos os layers com segurança
-      Object.values(mapLayers).forEach(layer => {
-        if (layer) layer.clearLayers();
-      });
-
-      // 1. Camada de Missões Ativas
-      populateMissionPins(mapId, selectedFloor);
-
-      // 2. Camadas de Extrações (PMC e Scav)
-      populateExtractPins(mapId, selectedFloor);
-
-      // 3. Camada de Chefes (Bosses)
-      populateBossPins(mapId, selectedFloor);
-
-      // 4. Camada de Locais Importantes / Hotspots
-      populateHotspotPins(mapId, selectedFloor);
-
-      updateLayersStats();
-    }
-
-    function populateMissionPins(mapId, selectedFloor) {
-      const layer = mapLayers.missions;
-      if (!layer) return;
-
-      const mapDef = MAPS_DATABASE.find(m => m.id === mapId);
-      const cleanName = mapDef ? mapDef.name.toLowerCase() : mapId;
-
-      // Verificar se há missões marcadas como Ativas para este mapa
-      const activeTasksOnMap = tasksData.filter(task => {
-        if (!isTaskActive(task.id) || isTaskCompleted(task.id)) return false;
-        return (task.objectives || []).some(obj =>
-          (obj.maps || []).some(m =>
-            (m.name || '').toLowerCase().includes(cleanName) ||
-            (m.normalizedName || '').includes(mapDef?.slug || '')
-          )
-        );
-      });
-
-      const useOnlyActive = activeTasksOnMap.length > 0;
-      const tasksToDisplay = useOnlyActive
-        ? activeTasksOnMap
-        : tasksData.filter(t => !isTaskCompleted(t.id));
-
-      tasksToDisplay.forEach(task => {
-        const isActive = isTaskActive(task.id);
-
-        (task.objectives || []).forEach(obj => {
-          const relatesToMap = (obj.maps || []).some(m =>
-            (m.name || '').toLowerCase().includes(cleanName) ||
-            (m.normalizedName || '').includes(mapDef?.slug || '')
-          );
-
-          if (relatesToMap) {
-            let coords = null;
-            let pointFloor = '1f';
-
-            // Bug 1 Fix: Verificação segura de MISSION_HOTSPOTS
-            const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[task.id] : null;
-
-            if (obj.zones && obj.zones.length && obj.zones[0].position) {
-              const p = obj.zones[0].position;
-              coords = projectGameCoords(p.x, p.z, mapId);
-              pointFloor = (p.y != null) ? (p.y < -1.5 ? 'b1' : (p.y > 2.5 ? '2f' : '1f')) : '1f';
-            } else if (hotspot && hotspot.mapId === mapId) {
-              coords = hotspot.coords;
-              pointFloor = hotspot.floor || '1f';
-            } else {
-              // NUNCA cria pino falso [500, 500]! Objetivos sem coordenadas são listados no Painel de Raid.
-              coords = null;
-            }
-
-            // Ignorar sem coordenadas (evita pino falso no centro)
-            if (!coords) return;
-
-            // Filtro de Andar
-            if (!pointMatchesFloor({ floor: pointFloor }, selectedFloor)) {
-              return;
-            }
-
-            const icon = L.divIcon({
-              className: 'tactical-marker',
-              html: `
-                <div class="marker-box m-mission ${isActive ? 'is-active-task' : ''}" title="${esc(task.name)}">
-                  ${isActive ? '<div class="marker-pulse-ring"></div>' : ''}
-                  🎯
-                </div>
-              `,
-              iconSize: [28, 28],
-              iconAnchor: [14, 14]
-            });
-
-            const marker = L.marker(coords, { icon });
-            marker.bindPopup(`
-              <strong>${esc(task.name)}</strong>
-              ${isActive ? '<div style="color:var(--color-missions); font-size:0.68rem; font-weight:800; letter-spacing:0.06em; margin-bottom:2px;">📌 MISSÃO EM ANDAMENTO</div>' : ''}
-              <div style="color:var(--accent-light); font-size:0.72rem; margin-bottom:4px; font-weight:700;">
-                OBJETIVO: ${esc(obj.type.toUpperCase())}
-              </div>
-              <div style="color:#bbb; font-size:0.74rem;">${esc(obj.description)}</div>
-            `);
-
-            layer.addLayer(marker);
-          }
-        });
-      });
-
-      // Atualizar aviso sobre missões ativas
-      const hintEl = document.getElementById('map-missions-status-hint');
-      if (hintEl) {
-        if (useOnlyActive) {
-          hintEl.innerHTML = `<span style="color:var(--color-missions); font-weight:700;">📌 ${activeTasksOnMap.length} missão(ões) ativa(s) fixada(s)</span> exibida(s) no mapa`;
-        } else {
-          hintEl.innerHTML = `<span style="color:#777;">Mostrando missões pendentes. (Marque <strong>📌 Fixar</strong> na aba <strong>Missões</strong> para destacar aqui)</span>`;
-        }
-      }
-    }
-
-    function populateExtractPins(mapId, selectedFloor) {
-      const mapDef = MAPS_DATABASE.find(m => m.id === mapId);
-      const rawMap = mapsRawData.find(m =>
-        m.id === mapId ||
-        (m.normalizedName && m.normalizedName.includes(mapDef?.slug || '')) ||
-        (m.name && m.name.toLowerCase().includes(mapDef?.name.toLowerCase() || ''))
-      );
-
-      if (!rawMap || !rawMap.extracts) return;
-
-      rawMap.extracts.forEach(ext => {
-        if (!ext.position || ext.position.x == null || ext.position.z == null) return;
-
-        // Filtro de Andar
-        if (!pointMatchesFloor(ext, selectedFloor)) return;
-
-        const coords = projectGameCoords(ext.position.x, ext.position.z, mapId);
-        const isPmc = ext.faction === 'pmc' || ext.faction === 'all';
-        const isScav = ext.faction === 'scav' || ext.faction === 'all';
-
-        if (isPmc && mapLayers.pmc) {
-          const iconPmc = L.divIcon({
-            className: 'tactical-marker',
-            html: `<div class="marker-box m-pmc" title="Extração PMC">🚁</div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
-          });
-          const m = L.marker(coords, { icon: iconPmc }).bindPopup(`
-            <strong>EXTRAÇÃO PMC</strong>
-            <div style="color:var(--color-pmc); font-size:0.74rem; font-weight:700;">${esc(ext.name)}</div>
-          `);
-          mapLayers.pmc.addLayer(m);
-        }
-
-        if (isScav && mapLayers.scav) {
-          const iconScav = L.divIcon({
-            className: 'tactical-marker',
-            html: `<div class="marker-box m-scav" title="Extração Scav">🏃</div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
-          });
-          const m = L.marker(coords, { icon: iconScav }).bindPopup(`
-            <strong>EXTRAÇÃO SCAV</strong>
-            <div style="color:var(--color-scav); font-size:0.74rem; font-weight:700;">${esc(ext.name)}</div>
-          `);
-          mapLayers.scav.addLayer(m);
-        }
-      });
-    }
-
-    function populateBossPins(mapId, selectedFloor) {
-      const layer = mapLayers.bosses;
-      if (!layer) return;
-
-      const mapDef = MAPS_DATABASE.find(m => m.id === mapId);
-      const rawMap = mapsRawData.find(m =>
-        m.id === mapId ||
-        (m.normalizedName && m.normalizedName.includes(mapDef?.slug || '')) ||
-        (m.name && m.name.toLowerCase().includes(mapDef?.name.toLowerCase() || ''))
-      );
-
-      let placedAnyBoss = false;
-
-      if (rawMap && rawMap.bosses) {
-        rawMap.bosses.forEach(boss => {
-          const bossName = boss.boss?.name || boss.name || 'Chefe / Boss';
-          const chance = boss.spawnChance != null ? (boss.spawnChance * 100).toFixed(0) + '%' : 'Variável';
-
-          (boss.spawnLocations || []).forEach(loc => {
-            if (loc.positions && loc.positions.length > 0) {
-              loc.positions.forEach(pos => {
-                if (!pointMatchesFloor({ position: pos }, selectedFloor)) return;
-                placedAnyBoss = true;
-                const coords = projectGameCoords(pos.x, pos.z, mapId);
-                createBossMarker(coords, bossName, loc.name || loc.spawnKey, chance, layer);
-              });
-            }
-          });
-        });
-      }
-
-      // Se a API não trouxer posições pontuais, usar BOSS_HOTSPOTS (verificados nos mapas)
-      if (!placedAnyBoss && BOSS_HOTSPOTS[mapId]) {
-        BOSS_HOTSPOTS[mapId].forEach(b => {
-          if (!pointMatchesFloor(b, selectedFloor)) return;
-          createBossMarker(b.coords, b.bossName, b.locationName, b.chance, layer);
-        });
-      }
-    }
-
-    function createBossMarker(coords, bossName, locationName, chance, layer) {
-      const icon = L.divIcon({
-        className: 'tactical-marker',
-        html: `<div class="marker-box m-boss" title="Chefe: ${esc(bossName)}">💀</div>`,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
-      });
-
-      const m = L.marker(coords, { icon }).bindPopup(`
-        <strong>CHEFE DE ÁREA</strong>
-        <div style="color:var(--color-bosses); font-size:0.78rem; font-weight:800; margin-top:2px;">${esc(bossName)}</div>
-        ${locationName ? `<div style="color:var(--accent-light); font-size:0.72rem; margin-top:2px;">📍 ${esc(locationName)}</div>` : ''}
-        <div style="color:#aaa; font-size:0.72rem; margin-top:2px;">Chance de Encontro: ${chance}</div>
-      `);
-
-      layer.addLayer(m);
-    }
-
-    function populateHotspotPins(mapId, selectedFloor) {
-      const layer = mapLayers.hotspots;
-      if (!layer) return;
-
-      const hotspots = MAP_HOTSPOTS[mapId] || [];
-      hotspots.forEach(h => {
-        if (!pointMatchesFloor(h, selectedFloor)) return;
-
-        const icon = L.divIcon({
-          className: 'tactical-marker',
-          html: `<div class="marker-box m-hotspot" title="${esc(h.name)}">⭐</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
-
-        const m = L.marker(h.coords, { icon }).bindPopup(`
-          <strong>PONTO DE INTERESSE</strong>
-          <div style="color:var(--color-hotspots); font-size:0.75rem; font-weight:700;">${esc(h.name)}</div>
-          <div style="color:#aaa; font-size:0.72rem; margin-top:2px;">${esc(h.desc)}</div>
-        `);
-
-        layer.addLayer(m);
-      });
-    }
 
     /* ════════════════════════════════════════════════════════
-       TOGGLE DE CAMADAS
+       FUNÇÕES DA ABA ITENS (MERCADO & PREÇOS)
     ════════════════════════════════════════════════════════ */
-    function toggleLayer(layerKey, btn) {
-      if (!leafletMap || !mapLayers[layerKey]) return;
+    function renderItemCard(item) {
+      const cat = getItemCategory(item);
+      const isNoFlea = (item.types || []).includes('noFlea') || !item.fleaPrice;
+      const fleaFormatted = isNoFlea ? 'Sem Flea / Indisp.' : formatPrice(item.fleaPrice, 'RUB');
 
-      const grp = mapLayers[layerKey];
-      const isVisible = leafletMap.hasLayer(grp);
+      const bestSell = item.bestSell;
+      const sellPriceStr = bestSell ? formatPrice(bestSell.price, bestSell.currency) : '—';
+      const sellTraderStr = bestSell ? bestSell.trader : 'Nenhum';
 
-      if (isVisible) {
-        leafletMap.removeLayer(grp);
-        btn.classList.remove('active');
-      } else {
-        leafletMap.addLayer(grp);
-        btn.classList.add('active');
+      const bestBuy = item.bestBuy;
+      const buyPriceStr = bestBuy ? `${formatPrice(bestBuy.price, bestBuy.currency)}` : 'Apenas Loot';
+      const buyTraderStr = bestBuy ? `${bestBuy.trader} (Nv. ${bestBuy.level || 1})` : '';
+
+      // Margem Flea vs Trader
+      let marginBadge = '';
+      let profitCardClass = '';
+      if (!isNoFlea && bestSell && item.fleaPrice > (bestSell.priceRUB || 0)) {
+        const diff = item.fleaPrice - bestSell.priceRUB;
+        marginBadge = `<span class="item-margin-badge flea-best">+${formatPrice(diff)} no Flea</span>`;
+        if (diff >= 30000) profitCardClass = 'has-flea-profit';
+      } else if (!isNoFlea && bestSell && (bestSell.priceRUB || 0) >= item.fleaPrice && item.fleaPrice > 0) {
+        const diff = bestSell.priceRUB - item.fleaPrice;
+        marginBadge = `<span class="item-margin-badge trader-best">Venda no Trader (+${formatPrice(diff)})</span>`;
+      } else if (isNoFlea) {
+        profitCardClass = 'no-flea-restricted';
+        marginBadge = `<span class="item-margin-badge" style="background:#222; color:#888;">Sem Flea</span>`;
       }
-
-      updateLayersStats();
-    }
-
-    function updateLayersStats() {
-      let count = 0;
-      Object.keys(mapLayers).forEach(k => {
-        if (leafletMap && mapLayers[k] && leafletMap.hasLayer(mapLayers[k])) count++;
-      });
-      const el = document.getElementById('active-layers-count');
-      if (el) el.textContent = `${count} ativas`;
-    }
-
-    /* ════════════════════════════════════════════════════════
-       SISTEMA HÍBRIDO (TARKOV.DEV OFICIAL VS LEAFLET TÁTICO)
-    ════════════════════════════════════════════════════════ */
-    function setMapMode(mode) {
-      currentViewMode = mode;
-      const btnEmbed = document.getElementById('btn-mode-embed');
-      const btnLeaf  = document.getElementById('btn-mode-leaflet');
-      if (btnEmbed) btnEmbed.classList.toggle('active', mode === 'embed');
-      if (btnLeaf)  btnLeaf.classList.toggle('active', mode === 'leaflet');
-
-      const leafletWrap = document.getElementById('leaflet-wrapper');
-      const embedWrap   = document.getElementById('embed-wrapper');
-      const btnContrast = document.getElementById('btn-contrast');
-      const btnReset    = document.getElementById('btn-reset-view');
-
-      if (mode === 'leaflet') {
-        if (leafletWrap) leafletWrap.classList.remove('hidden');
-        if (embedWrap)   embedWrap.classList.add('hidden');
-        if (btnContrast) btnContrast.style.display = 'inline-flex';
-        if (btnReset)    btnReset.style.display    = 'inline-flex';
-        const modeLabel = document.getElementById('active-map-mode-label');
-        if (modeLabel) modeLabel.textContent = 'Tático (Leaflet Calibrado)';
-
-        if (!leafletMap) initLeafletMap();
-
-        setTimeout(() => {
-          if (leafletMap) {
-            leafletMap.invalidateSize();
-            if (activeOverlayBounds) leafletMap.fitBounds(activeOverlayBounds);
-          }
-        }, 80);
-      } else {
-        if (leafletWrap) leafletWrap.classList.add('hidden');
-        if (embedWrap)   embedWrap.classList.remove('hidden');
-        if (btnContrast) btnContrast.style.display = 'none';
-        if (btnReset)    btnReset.style.display    = 'none';
-        const modeLabel = document.getElementById('active-map-mode-label');
-        if (modeLabel) modeLabel.textContent = 'Oficial (Tarkov.dev Embed)';
-
-        const mapDef = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
-        updateEmbedFrame(mapDef);
-      }
-    }
-
-    function updateEmbedFrame(mapDef) {
-      const iframe = document.getElementById('map-iframe');
-      const label = document.getElementById('embed-source-label');
-      const directLink = document.getElementById('btn-external-direct');
-      const openTarkovBtn = document.getElementById('btn-open-tarkovdev');
-
-      const mapGenieUrl = `https://mapgenie.io/tarkov/maps/${mapDef.slug}?embed=dark`;
-      const tarkovDevUrl = `https://tarkov.dev/map/${mapDef.slug}`;
-
-      if (openTarkovBtn) openTarkovBtn.href = tarkovDevUrl;
-
-      if (!iframe) return;
-
-      if (currentEmbedSource === 'mapgenie') {
-        iframe.src = mapGenieUrl;
-        if (label) label.innerHTML = `Fonte: <strong>MapGenie (Embed Escuro)</strong> · Mapa: ${esc(mapDef.namePt)}`;
-        if (directLink) {
-          directLink.href = mapGenieUrl;
-          directLink.textContent = 'Abrir no MapGenie ↗';
-        }
-      } else {
-        iframe.src = tarkovDevUrl;
-        if (label) label.innerHTML = `Fonte: <strong>Tarkov.dev Oficial</strong> · Mapa: ${esc(mapDef.namePt)}`;
-        if (directLink) {
-          directLink.href = tarkovDevUrl;
-          directLink.textContent = 'Abrir no Tarkov.dev ↗';
-        }
-      }
-    }
-
-    function toggleEmbedSource() {
-      currentEmbedSource = (currentEmbedSource === 'mapgenie') ? 'tarkovdev' : 'mapgenie';
-      const btn = document.getElementById('btn-toggle-embed-src');
-      if (btn) {
-        btn.textContent = (currentEmbedSource === 'mapgenie') ? 'Alternar para Tarkov.dev' : 'Alternar para MapGenie';
-      }
-
-      const mapDef = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
-      updateEmbedFrame(mapDef);
-    }
-
-    function toggleContrastMode() {
-      highContrastActive = !highContrastActive;
-      const btn = document.getElementById('btn-contrast');
-      if (btn) {
-        btn.classList.toggle('active', highContrastActive);
-        btn.textContent = highContrastActive ? 'Alto Contraste: ATIVADO' : 'Alto Contraste: DESLIGADO';
-      }
-
-      const overlayImg = document.querySelector('.leaflet-image-layer');
-      if (overlayImg) {
-        overlayImg.classList.toggle('contrast-mode', highContrastActive);
-      }
-    }
-
-    function resetMapView() {
-      if (leafletMap && activeOverlayBounds) {
-        leafletMap.flyToBounds(activeOverlayBounds, { duration: 0.7 });
-      }
-    }
-
-    /* ════════════════════════════════════════════════════════
-       PAINEL DE RAID TÁTICO (COLUNA ESQUERDA - 320PX)
-    ════════════════════════════════════════════════════════ */
-    function taskRelatesToMap(task, cleanName, slug) {
-      return (task.objectives || []).some(obj =>
-        (obj.maps || []).some(m =>
-          (m.name || '').toLowerCase().includes(cleanName) ||
-          (m.normalizedName || '').includes(slug || '')
-        )
-      );
-    }
-
-    function renderRaidPanel(mapId) {
-      const panel = document.getElementById('raid-panel');
-      if (!panel) return;
-
-      const mapDef = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
-      const cleanName = mapDef.name.toLowerCase();
-      const slug = mapDef.slug;
-
-      const allMapTasks = tasksData.filter(t => taskRelatesToMap(t, cleanName, slug));
-      const activeTasks = allMapTasks.filter(t => isTaskActive(t.id) && !isTaskCompleted(t.id));
-      const pendingTasks = allMapTasks.filter(t => !isTaskActive(t.id) && !isTaskCompleted(t.id));
-      const completedTasks = allMapTasks.filter(t => isTaskCompleted(t.id));
-
-      // Missões gerais sem coordenadas nem hotspots
-      const generalTasks = allMapTasks.filter(t => {
-        if (isTaskCompleted(t.id)) return false;
-        const hasZone = (t.objectives || []).some(obj => obj.zones && obj.zones.length && obj.zones[0].position);
-        const hasHotspot = (typeof MISSION_HOTSPOTS !== 'undefined') && MISSION_HOTSPOTS[t.id];
-        return !hasZone && !hasHotspot;
-      });
-
-      let html = `
-        <div class="raid-panel-header">
-          <div class="raid-panel-title">
-            <span>PAINEL DE RAID</span>
-            <span class="raid-map-badge">${esc(mapDef.namePt)}</span>
-          </div>
-          <div class="raid-map-select-wrapper">
-            <label for="raid-map-select" class="raid-label">Selecionar Mapa de Infiltração:</label>
-            <select id="raid-map-select" class="raid-map-select" onchange="switchMap(this.value)">
-              ${MAPS_DATABASE.map(m => {
-                const mClean = m.name.toLowerCase();
-                const actCount = tasksData.filter(t => isTaskActive(t.id) && !isTaskCompleted(t.id) && taskRelatesToMap(t, mClean, m.slug)).length;
-                const badge = actCount > 0 ? ` [${actCount} 📌]` : '';
-                return `<option value="${m.id}" ${m.id === mapId ? 'selected' : ''}>${esc(m.namePt)}${badge}</option>`;
-              }).join('')}
-            </select>
-          </div>
-        </div>
-
-        <!-- 1. Missões Ativas neste Mapa -->
-        <div class="raid-section">
-          <div class="raid-section-header">
-            <span class="raid-section-title active-title">📌 MISSÕES ATIVAS NESTE MAPA (${activeTasks.length})</span>
-          </div>
-      `;
-
-      if (activeTasks.length === 0) {
-        html += `
-          <div class="raid-empty-box">
-            Nenhuma missão fixada para <strong>${esc(mapDef.namePt)}</strong>.<br>
-            <span style="color:#777; font-size:0.68rem; display:block; margin-top:4px;">
-              Vá na aba <strong>MISSÕES</strong> e clique em <strong>📌 Fixar</strong> nas suas tarefas em andamento para monitorá-las aqui.
-            </span>
-          </div>
-        `;
-      } else {
-        html += `<div class="raid-tasks-list">`;
-        activeTasks.forEach(task => {
-          html += renderRaidTaskCard(task, mapId, cleanName, slug, true);
-        });
-        html += `</div>`;
-      }
-      html += `</div>`;
-
-      // 2. Missões Gerais do Mapa (Sem local fixo)
-      if (generalTasks.length > 0) {
-        html += `
-          <div class="raid-section">
-            <div class="raid-section-header">
-              <span class="raid-section-title general-title">📍 MISSÕES GERAIS (SEM LOCAL FIXO) (${generalTasks.length})</span>
-            </div>
-            <p class="raid-section-desc">Objetivos válidos em qualquer setor deste mapa (eliminações, coletas gerais):</p>
-            <div class="raid-tasks-list">
-        `;
-        generalTasks.forEach(task => {
-          html += renderRaidTaskCard(task, mapId, cleanName, slug, isTaskActive(task.id));
-        });
-        html += `</div></div>`;
-      }
-
-      // 3. Outras Missões Pendentes
-      const otherPending = pendingTasks.filter(t => !generalTasks.includes(t));
-      if (otherPending.length > 0) {
-        html += `
-          <details class="raid-pending-details">
-            <summary class="raid-pending-summary">Outras Missões Pendentes (${otherPending.length})</summary>
-            <div class="raid-tasks-list" style="margin-top:8px;">
-        `;
-        otherPending.forEach(task => {
-          html += renderRaidTaskCard(task, mapId, cleanName, slug, false);
-        });
-        html += `</div></details>`;
-      }
-
-      // 4. Missões Concluídas
-      if (completedTasks.length > 0) {
-        html += `
-          <details class="raid-completed-details">
-            <summary class="raid-completed-summary">Missões Concluídas (${completedTasks.length})</summary>
-            <div class="raid-tasks-list" style="margin-top:8px; opacity:0.65;">
-        `;
-        completedTasks.forEach(task => {
-          html += renderRaidTaskCard(task, mapId, cleanName, slug, false);
-        });
-        html += `</div></details>`;
-      }
-
-      panel.innerHTML = html;
-    }
-
-    function renderRaidTaskCard(task, mapId, cleanName, slug, isPinned) {
-      const isDone = isTaskCompleted(task.id);
-      const mapObjs = (task.objectives || []).filter(obj =>
-        (obj.maps || []).some(m =>
-          (m.name || '').toLowerCase().includes(cleanName) ||
-          (m.normalizedName || '').includes(slug || '')
-        )
-      );
-      const displayObjs = mapObjs.length ? mapObjs : (task.objectives || []);
-
-      const hasCoords = displayObjs.some(obj =>
-        obj.zones && obj.zones.length && obj.zones[0].position
-      ) || ((typeof MISSION_HOTSPOTS !== 'undefined') && MISSION_HOTSPOTS[task.id]?.mapId === mapId);
 
       return `
-        <div class="raid-task-card ${isDone ? 'done' : ''} ${isPinned ? 'is-pinned' : ''}" id="raid-task-${task.id}">
-          <div class="raid-task-top">
-            <label class="raid-task-checkbox-label">
-              <input type="checkbox" class="raid-task-check" ${isDone ? 'checked' : ''}
-                onchange="toggleTaskDoneFromRaid('${task.id}', this.checked)">
-              <span class="raid-task-name ${isDone ? 'text-done' : ''}">${esc(task.name)}</span>
-            </label>
-            <div class="raid-task-actions">
-              <button class="raid-pin-btn ${isPinned ? 'pinned' : ''}"
-                onclick="toggleTaskActiveFromRaid('${task.id}')"
-                title="${isPinned ? 'Desafixar missão ativa' : 'Fixar missão como Ativa na Raid'}">
-                📌
-              </button>
-              ${hasCoords ? `
-                <button class="raid-focus-btn" onclick="focusTaskFromRaid('${task.id}', '${mapId}')" title="Focar marcador no mapa Leaflet">
-                  🎯
-                </button>
-              ` : ''}
+        <div class="card item-card ${profitCardClass}">
+          <div class="item-visual-row">
+            <div class="item-thumb-box">
+              <img src="${esc(item.iconLink)}" alt="${esc(item.name)}" class="item-thumb" loading="lazy" onerror="this.parentElement.style.display='none'">
+            </div>
+            <div class="item-info-col">
+              <div class="item-title-row">
+                <span class="item-name" title="${esc(item.name)}">${esc(item.name)}</span>
+                ${item.shortName ? `<span class="item-short-badge" title="${esc(item.shortName)}">${esc(item.shortName)}</span>` : ''}
+              </div>
+              <div class="item-meta-badges">
+                <span class="item-cat-tag">${esc(cat.label)}</span>
+                ${isNoFlea ? `<span class="item-noflea-tag">Restrito</span>` : ''}
+              </div>
             </div>
           </div>
-          <div class="raid-task-objs">
-            ${displayObjs.map(obj => `
-              <div class="raid-obj-item">
-                <span class="raid-obj-badge type-${esc(obj.type || 'info')}">${esc((obj.type || '').toUpperCase())}</span>
-                <span class="raid-obj-desc">${esc(obj.description)}</span>
-              </div>
-            `).join('')}
+
+          <div class="item-price-grid">
+            <div class="price-box flea-box">
+              <span class="price-box-title flea-title">🏷️ Flea Market</span>
+              <span class="price-main-val flea-val ${isNoFlea ? 'unavailable' : ''}">${fleaFormatted}</span>
+              <span class="price-sub-info">${isNoFlea ? 'Não comercializável' : 'Menor oferta atual'}</span>
+            </div>
+            <div class="price-box trader-box">
+              <span class="price-box-title trader-title">💰 Venda Trader</span>
+              <span class="price-main-val trader-val ${!bestSell ? 'unavailable' : ''}">${sellPriceStr}</span>
+              <span class="price-sub-info">Melhor: <strong>${esc(sellTraderStr)}</strong></span>
+            </div>
+          </div>
+
+          <div class="item-footer-row">
+            <div class="item-buy-note">
+              <span>Compra:</span>
+              <strong>${buyPriceStr}</strong>
+              ${buyTraderStr ? `<span style="color:#777;">· ${esc(buyTraderStr)}</span>` : ''}
+            </div>
+            ${marginBadge}
           </div>
         </div>
       `;
     }
 
-    function toggleTaskDoneFromRaid(taskId, checked) {
-      setTaskCompleted(taskId, checked);
-      renderRaidPanel(currentMapId);
-      updateTasksProgressStats();
-      if (currentViewMode === 'leaflet') {
-        populateMapLayers(currentMapId, currentFloorId);
-      }
+    function setItemCategory(cat, btn) {
+      itemCategoryFilter = cat;
+      displayedItemsLimit = 60;
+      document.querySelectorAll('#item-controls .task-pill').forEach(p => p.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderSection('items');
     }
 
-    function toggleTaskActiveFromRaid(taskId) {
-      const current = isTaskActive(taskId);
-      setTaskActive(taskId, !current);
-      renderRaidPanel(currentMapId);
-      updateTasksProgressStats();
-      if (currentViewMode === 'leaflet') {
-        populateMapLayers(currentMapId, currentFloorId);
-      }
+    function handleItemSort(mode) {
+      itemSortMode = mode;
+      displayedItemsLimit = 60;
+      renderSection('items');
     }
 
-    function focusTaskFromRaid(taskId, mapId) {
-      const task = tasksData.find(t => t.id === taskId);
-      if (!task) return;
-
-      setMapMode('leaflet');
-      const missionBtn = document.querySelector('.filter-chip.chip-missions');
-      if (missionBtn && !missionBtn.classList.contains('active')) {
-        toggleLayer('missions', missionBtn);
-      }
-
-      let coords = null;
-      let pointFloor = '1f';
-      const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[taskId] : null;
-
-      (task.objectives || []).forEach(obj => {
-        if (obj.zones && obj.zones.length && obj.zones[0].position && !coords) {
-          const p = obj.zones[0].position;
-          coords = projectGameCoords(p.x, p.z, mapId);
-          pointFloor = (p.y != null) ? (p.y < -1.5 ? 'b1' : (p.y > 2.5 ? '2f' : '1f')) : '1f';
-        }
-      });
-
-      if (!coords && hotspot && hotspot.mapId === mapId) {
-        coords = hotspot.coords;
-        pointFloor = hotspot.floor || '1f';
-      }
-
-      if (coords) {
-        setMapFloor(pointFloor);
-        highlightMissionOnMap(coords, task.name, '', hotspot ? hotspot.name : '');
-        showMapToast(`Área da missão focada: <strong>${esc(task.name)}</strong>`);
-      }
-    }
-
-    function updateTasksProgressStats() {
-      const total    = tasksData.length;
-      const done     = tasksData.filter(t => isTaskCompleted(t.id)).length;
-      const active   = tasksData.filter(t => isTaskActive(t.id) && !isTaskCompleted(t.id)).length;
-      const pending  = total - done;
-      const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
-
-      const doneEl   = document.getElementById('tasks-done-count');
-      const activeEl = document.getElementById('tasks-active-count');
-      const pendEl   = document.getElementById('tasks-pending-count');
-      const pctEl    = document.getElementById('tasks-progress-percent');
-
-      if (doneEl)   doneEl.textContent = done;
-      if (activeEl) activeEl.textContent = active;
-      if (pendEl)   pendEl.textContent = pending;
-      if (pctEl)    pctEl.textContent = `${pct}% Concluído (${done}/${total})`;
-    }
-
-    /* ════════════════════════════════════════════════════════
-       REDIRECIONAMENTO: MISSÃO -> MAPA (SEM PINOS FALSOS)
-    ════════════════════════════════════════════════════════ */
-    function viewObjectiveOnMap(taskId, taskName, objDesc, targetMapName, event) {
-      if (event) event.stopPropagation();
-
-      // 1. Alternar para a aba MAPAS
-      showSection('maps');
-
-      // 2. Encontrar o mapa alvo
-      const foundMap = findMapByNameOrAlias(targetMapName) || MAPS_DATABASE[0];
-      switchMap(foundMap.id);
-
-      // 3. Verificar se há coordenadas reais ou hotspot
-      const task = tasksData.find(t => t.id === taskId);
-      let targetCoords = null;
-      let targetFloor = '1f';
-      const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[taskId] : null;
-
-      if (task && task.objectives) {
-        for (const obj of task.objectives) {
-          if (obj.zones && obj.zones.length && obj.zones[0].position) {
-            const p = obj.zones[0].position;
-            targetCoords = projectGameCoords(p.x, p.z, foundMap.id);
-            targetFloor = (p.y != null) ? (p.y < -1.5 ? 'b1' : (p.y > 2.5 ? '2f' : '1f')) : '1f';
-            break;
-          }
-        }
-      }
-
-      if (!targetCoords && hotspot && hotspot.mapId === foundMap.id) {
-        targetCoords = hotspot.coords;
-        targetFloor = hotspot.floor || '1f';
-      }
-
-      if (targetCoords) {
-        // Alternar para Leaflet tático para focar o pino
-        setMapMode('leaflet');
-        setMapFloor(targetFloor);
-
-        const missionBtn = document.querySelector('.filter-chip.chip-missions');
-        if (missionBtn && !missionBtn.classList.contains('active')) {
-          toggleLayer('missions', missionBtn);
-        }
-
-        const locationNote = hotspot ? hotspot.name : (targetMapName || 'Área Operacional');
-        highlightMissionOnMap(targetCoords, taskName, objDesc, locationNote);
-        showMapToast(`Área da missão focada: <strong>${esc(taskName)}</strong> (${esc(locationNote)})`);
-      } else {
-        // NUNCA gera pino falso em [500, 500]!
-        // Destacar o card da missão no Painel de Raid (320px)
-        const raidItem = document.getElementById('raid-task-' + taskId);
-        if (raidItem) {
-          raidItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          raidItem.classList.add('raid-task-flash');
-          setTimeout(() => raidItem.classList.remove('raid-task-flash'), 2500);
-        }
-        showMapToast(`Missão geral no mapa: <strong>${esc(taskName)}</strong> (Sem local fixo)`);
-      }
-    }
-
-    function highlightMissionOnMap(coords, taskName, objDesc, locationNote) {
-      if (!leafletMap || !mapLayers.missions) return;
-
-      const tacticalIcon = L.divIcon({
-        className: 'tactical-marker',
-        html: `
-          <div class="marker-box m-mission" style="transform: scale(1.3);">
-            <div class="marker-pulse-ring"></div>
-            🎯
-          </div>
-        `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16]
-      });
-
-      const marker = L.marker(coords, { icon: tacticalIcon, zIndexOffset: 1000 }).addTo(mapLayers.missions);
-
-      marker.bindPopup(`
-        <strong>${esc(taskName)}</strong>
-        <div style="color:var(--color-missions); font-size:0.72rem; margin-bottom:4px; font-weight:700;">
-          📍 ${esc(locationNote)}
-        </div>
-        <div style="color:#ccc; font-size:0.74rem;">${esc(objDesc)}</div>
-      `, { maxWidth: 280 }).openPopup();
-
-      leafletMap.setView(coords, 0.75, { animate: true, duration: 0.6 });
-    }
-
-    function showMapToast(msg) {
-      const toast = document.getElementById('map-toast');
-      const text = document.getElementById('map-toast-text');
-      if (!toast || !text) return;
-
-      text.innerHTML = msg;
-      toast.classList.remove('hidden');
-
-      if (window.toastTimer) clearTimeout(window.toastTimer);
-      window.toastTimer = setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 5000);
-    }
-
-    function findMapByNameOrAlias(name) {
-      if (!name) return null;
-      const clean = name.toLowerCase().trim();
-      return MAPS_DATABASE.find(m =>
-        clean.includes(m.id) ||
-        clean.includes(m.name.toLowerCase()) ||
-        m.name.toLowerCase().includes(clean) ||
-        clean.includes(m.slug)
-      );
+    function loadMoreItems() {
+      displayedItemsLimit += 60;
+      renderSection('items');
     }
 
     /* ════════════════════════════════════════════════════════
@@ -3681,16 +1949,9 @@ query {
                       <span class="obj-type-pill">
                         ${esc(obj.type.toUpperCase())}
                       </span>
-                      <div class="obj-location-group">
-                        <span class="obj-map-pill ${hasMaps ? 'has-map' : 'global'}">
-                          ${hasMaps ? '📍 ' + esc(mapDisplay) : '🌍 ' + esc(mapDisplay)}
-                        </span>
-                        ${hasMaps ? `
-                          <button class="btn-view-map" onclick="viewObjectiveOnMap('${esc(task.id)}', '${esc(task.name)}', '${esc(obj.description)}', '${esc(mapNames[0])}', event)">
-                            Ver no Mapa
-                          </button>
-                        ` : ''}
-                      </div>
+                      <span class="obj-map-pill ${hasMaps ? 'has-map' : 'global'}">
+                        ${hasMaps ? '📍 ' + esc(mapDisplay) : '🌍 ' + esc(mapDisplay)}
+                      </span>
                     </div>
                     <div class="obj-desc">${esc(obj.description)}</div>
                   </div>
@@ -3738,62 +1999,148 @@ query {
        RENDERIZAÇÃO DA SEÇÃO ATIVA
     ════════════════════════════════════════════════════════ */
     function renderSection(section) {
-      const grid        = document.getElementById('cards-grid');
-      const mapsSection = document.getElementById('maps-section');
-      const secTitle    = document.getElementById('section-title');
-      const secCount    = document.getElementById('section-count');
-      const legend      = document.getElementById('tier-legend');
-      const secHdr      = document.getElementById('section-header');
-      const filterBar   = document.getElementById('filter-bar');
-      const statsTiers  = document.getElementById('stats-tiers');
-      const statsTasks  = document.getElementById('stats-tasks-progress');
-      const statsMaps   = document.getElementById('stats-maps-info');
-      const taskPills   = document.getElementById('task-pill-filters');
+      const grid         = document.getElementById('cards-grid');
+      const secTitle     = document.getElementById('section-title');
+      const secCount     = document.getElementById('section-count');
+      const legend       = document.getElementById('tier-legend');
+      const secHdr       = document.getElementById('section-header');
+      const filterBar    = document.getElementById('filter-bar');
+      const statsTiers   = document.getElementById('stats-tiers');
+      const statsTasks   = document.getElementById('stats-tasks-progress');
+      const statsItems   = document.getElementById('stats-items-info');
+      const taskPills    = document.getElementById('task-pill-filters');
+      const itemCtrls    = document.getElementById('item-controls');
+      const searchInput  = document.getElementById('search-input');
+      const loadMoreWrap = document.getElementById('load-more-wrapper');
 
       const isGuns  = section === 'guns';
       const isAmmo  = section === 'ammo';
       const isTasks = section === 'tasks';
-      const isMaps  = section === 'maps';
+      const isItems = section === 'items';
 
-      if (isMaps) {
-        grid.classList.add('hidden');
-        mapsSection.classList.remove('hidden');
+      grid.classList.remove('hidden');
+      grid.classList.toggle('tasks-grid', isTasks);
+      grid.classList.toggle('items-grid', isItems);
+
+      // Atualiza placeholder de busca conforme a aba ativa
+      if (searchInput) {
+        if (isItems) {
+          searchInput.placeholder = 'Buscar por nome ou sigla do item (ex: LEDX, GPU, Bitcoin)...';
+        } else if (isTasks) {
+          searchInput.placeholder = 'Buscar missão por nome ou diretriz...';
+        } else {
+          searchInput.placeholder = 'Buscar por nome ou calibre...';
+        }
+      }
+
+      /* ──────────────────────────────────────────────────────────
+         ABA ITENS: CATÁLOGO, VALOR FLEA MARKET E TRADERS
+      ────────────────────────────────────────────────────────── */
+      if (isItems) {
+        taskPills.style.display  = 'none';
+        itemCtrls.style.display  = 'flex';
         legend.classList.add('hidden');
-        filterBar.classList.add('hidden');
-        secHdr.classList.remove('hidden');
-
-        secTitle.textContent = 'Mapas & Painel de Raid';
-        secCount.textContent = `${MAPS_DATABASE.length} mapas`;
-
         statsTiers.style.display = 'none';
         statsTasks.style.display = 'none';
-        statsMaps.style.display  = 'flex';
+        statsItems.style.display = 'flex';
 
-        // Renderizar Painel de Raid (320px)
-        renderRaidPanel(currentMapId);
+        secTitle.textContent = 'Mercado de Itens (Flea & Traders)';
 
-        // Modo Embed Oficial (Principal) vs Leaflet
-        if (currentViewMode === 'embed') {
-          const mapDef = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
-          updateEmbedFrame(mapDef);
-        } else {
-          initLeafletMap();
-          setTimeout(() => {
-            if (leafletMap) {
-              leafletMap.invalidateSize();
-              if (activeOverlayBounds) leafletMap.fitBounds(activeOverlayBounds);
-            }
-          }, 120);
+        const q = searchQuery.toLowerCase().trim();
+        let filtered = allItemsData;
+
+        // Filtro por Categoria de Item
+        if (itemCategoryFilter !== 'all') {
+          filtered = filtered.filter(item => {
+            const cat = getItemCategory(item);
+            return cat.id === itemCategoryFilter;
+          });
         }
 
+        // Filtro por Busca (nome e sigla)
+        if (q) {
+          filtered = filtered.filter(item => {
+            const nameMatch  = (item.name || '').toLowerCase().includes(q);
+            const shortMatch = (item.shortName || '').toLowerCase().includes(q);
+            return nameMatch || shortMatch;
+          });
+        }
+
+        // Ordenação
+        filtered = [...filtered].sort((a, b) => {
+          if (itemSortMode === 'flea_desc') {
+            return (b.fleaPrice || 0) - (a.fleaPrice || 0);
+          }
+          if (itemSortMode === 'flea_asc') {
+            const priceA = a.fleaPrice > 0 ? a.fleaPrice : Infinity;
+            const priceB = b.fleaPrice > 0 ? b.fleaPrice : Infinity;
+            return priceA - priceB;
+          }
+          if (itemSortMode === 'trader_sell_desc') {
+            return ((b.bestSell?.priceRUB) || 0) - ((a.bestSell?.priceRUB) || 0);
+          }
+          if (itemSortMode === 'trader_buy_asc') {
+            const buyA = a.bestBuy?.priceRUB || Infinity;
+            const buyB = b.bestBuy?.priceRUB || Infinity;
+            return buyA - buyB;
+          }
+          if (itemSortMode === 'name_asc') {
+            return (a.name || '').localeCompare(b.name || '');
+          }
+          return 0;
+        });
+
+        // Contadores da Barra de Status
+        const totalItems  = allItemsData.length;
+        const fleaCount   = allItemsData.filter(i => (i.fleaPrice || 0) > 0 && !(i.types || []).includes('noFlea')).length;
+        const noFleaCount = totalItems - fleaCount;
+
+        document.getElementById('items-total-count').textContent  = totalItems.toLocaleString('pt-BR');
+        document.getElementById('items-flea-count').textContent   = fleaCount.toLocaleString('pt-BR');
+        document.getElementById('items-noflea-count').textContent = noFleaCount.toLocaleString('pt-BR');
+
+        const catNames = {
+          all: 'Todos os Itens',
+          barter: 'Itens de Troca (Barter)',
+          weapons: 'Armas & Peças',
+          ammo: 'Munições',
+          meds: 'Médico',
+          keys: 'Chaves & Cartões',
+          gear: 'Equipamentos',
+          provisions: 'Provisões'
+        };
+        document.getElementById('items-filter-label').textContent = catNames[itemCategoryFilter] || 'Filtrado';
+
+        // Renderização com Paginação / Virtual Batching
+        const itemsToRender = filtered.slice(0, displayedItemsLimit);
+
+        grid.innerHTML = itemsToRender.length
+          ? itemsToRender.map(renderItemCard).join('')
+          : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhum item encontrado no filtro selecionado.</div>';
+
+        secCount.textContent = `${filtered.length.toLocaleString('pt-BR')} itens encontrados`;
+
+        // Controle do botão "Carregar Mais"
+        if (filtered.length > displayedItemsLimit) {
+          loadMoreWrap.classList.remove('hidden');
+          const remaining = filtered.length - displayedItemsLimit;
+          const nextCount = Math.min(60, remaining);
+          document.getElementById('btn-load-more').textContent = `Carregar Mais (+${nextCount} Itens)`;
+          document.getElementById('load-more-info').textContent = `Exibindo ${itemsToRender.length} de ${filtered.length.toLocaleString('pt-BR')} itens catalogados`;
+        } else {
+          loadMoreWrap.classList.add('hidden');
+        }
+
+        [secHdr, filterBar].forEach(el => el.classList.remove('hidden'));
         return;
       }
 
-      // Seções de Armas, Munições e Missões
-      mapsSection.classList.add('hidden');
-      grid.classList.remove('hidden');
-      statsMaps.style.display = 'none';
-      grid.classList.toggle('tasks-grid', isTasks);
+      /* ──────────────────────────────────────────────────────────
+         SEÇÕES: ARMAS, MUNIÇÕES E MISSÕES
+      ────────────────────────────────────────────────────────── */
+      loadMoreWrap.classList.add('hidden');
+      itemCtrls.style.display  = 'none';
+      statsItems.style.display = 'none';
 
       let data = [];
       if (isGuns)  data = gunsData;
@@ -3806,7 +2153,8 @@ query {
         filteredData = data.filter(item => {
           const nameMatch = (item.name || '').toLowerCase().includes(q);
           const calMatch  = (item.caliber || '').toLowerCase().includes(q);
-          return nameMatch || calMatch;
+          const descMatch = (item.objectives || []).some(o => (o.description || '').toLowerCase().includes(q));
+          return nameMatch || calMatch || descMatch;
         });
       }
 
@@ -3891,7 +2239,7 @@ query {
         offline: { text: 'Dados offline (amostra embutida PT-BR)',                              badge: 'offline', label: 'Offline' },
       };
       const s = labels[dataSource] || labels.offline;
-      sub.innerHTML = `${s.text} · Classificação por Tier & Mapas Interativos
+      sub.innerHTML = `${s.text} · Classificação por Tier & Mercado de Itens
         <br><span class="source-badge ${s.badge}"><span class="source-dot"></span>${s.label}</span>`;
     }
 
@@ -3900,7 +2248,7 @@ query {
       document.getElementById('btn-guns').disabled = on;
       document.getElementById('btn-ammo').disabled = on;
       document.getElementById('btn-tasks').disabled = on;
-      document.getElementById('btn-maps').disabled = on;
+      document.getElementById('btn-items').disabled = on;
     }
 
     function setLoadingHint(msg) {
@@ -3908,11 +2256,14 @@ query {
     }
 
     function hideContentElements() {
-      ['error', 'cards-grid', 'tier-legend', 'section-header', 'filter-bar', 'maps-section'].forEach(id =>
-        document.getElementById(id).classList.add('hidden')
-      );
-      document.getElementById('stats-count').textContent = '';
-      document.getElementById('cards-grid').innerHTML = '';
+      ['error', 'cards-grid', 'tier-legend', 'section-header', 'filter-bar', 'load-more-wrapper'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      const statsCount = document.getElementById('stats-count');
+      if (statsCount) statsCount.textContent = '';
+      const cardsGrid = document.getElementById('cards-grid');
+      if (cardsGrid) cardsGrid.innerHTML = '';
     }
 
     function handleSearch(val) {
@@ -3922,10 +2273,12 @@ query {
 
     function showSection(section) {
       currentSection = section;
+      displayedItemsLimit = 60;
+
       document.getElementById('btn-guns').classList.toggle('active', section === 'guns');
       document.getElementById('btn-ammo').classList.toggle('active', section === 'ammo');
       document.getElementById('btn-tasks').classList.toggle('active', section === 'tasks');
-      document.getElementById('btn-maps').classList.toggle('active', section === 'maps');
+      document.getElementById('btn-items').classList.toggle('active', section === 'items');
 
       const searchEl = document.getElementById('search-input');
       if (searchEl) searchEl.value = '';
@@ -3964,8 +2317,8 @@ query {
           tier: getAmmoTier(a.penetrationPower)
         })).sort((a,b) => b.penetration - a.penetration);
 
-        tasksData   = FALLBACK_DATA.tasks;
-        mapsRawData = FALLBACK_DATA.maps;
+        tasksData    = FALLBACK_DATA.tasks;
+        allItemsData = FALLBACK_DATA.allItems || [];
 
         setLoadingState(false);
         updateSubtitle();
@@ -3982,10 +2335,7 @@ query {
       setLoadingHint('Conectando às fontes de dados em Português...');
 
       try {
-        const [data] = await Promise.all([
-          fetchData(),
-          fetchMapsCalibration().catch(() => null)
-        ]);
+        const data = await fetchData();
 
         gunsData    = (data.items || []).filter(i => i.properties && i.properties.defaultRecoilVertical != null).map(i => ({
           id: i.id,
@@ -4010,8 +2360,8 @@ query {
           tier: getAmmoTier(i.penetrationPower)
         })).sort((a, b) => b.penetration - a.penetration);
 
-        tasksData   = data.tasks || [];
-        mapsRawData = (data.maps && data.maps.length) ? data.maps : FALLBACK_DATA.maps;
+        tasksData    = data.tasks || [];
+        allItemsData = (data.allItems && data.allItems.length) ? data.allItems : (FALLBACK_DATA.allItems || []);
 
         setLoadingState(false);
         updateSubtitle();
