@@ -820,40 +820,271 @@
       display: grid;
       grid-template-columns: 1fr;
       gap: 16px;
+      align-items: start;
     }
-    @media (min-width: 900px) {
+    @media (min-width: 960px) {
       .maps-layout {
-        grid-template-columns: 280px 1fr;
+        grid-template-columns: 320px 1fr;
       }
     }
 
-    /* Sidebar seletora de mapas */
-    .maps-sidebar {
+    /* Coluna Esquerda: Painel de Raid (320px) */
+    .maps-sidebar.raid-panel {
       background: #111111;
       border: 1px solid #222;
       border-radius: 3px;
       padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      max-height: 750px;
+      gap: 14px;
+      max-height: 800px;
       overflow-y: auto;
     }
 
-    .maps-sidebar-title {
-      font-size: 0.72rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
+    .raid-panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       border-bottom: 1px solid #222;
-      padding-bottom: 8px;
+      padding-bottom: 12px;
     }
 
-    .map-btn-list {
+    .raid-panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .raid-map-badge {
+      background: rgba(194, 170, 128, 0.15);
+      border: 1px solid rgba(194, 170, 128, 0.35);
+      color: var(--accent-light);
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .raid-map-select-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .raid-label {
+      font-size: 0.65rem;
+      color: var(--text-sec);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .raid-map-select {
+      background: #161616;
+      border: 1px solid #333;
+      color: var(--text-main);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 8px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .raid-map-select:focus {
+      border-color: var(--accent);
+    }
+
+    .raid-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .raid-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .raid-section-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .raid-section-title.active-title { color: var(--color-missions); }
+    .raid-section-title.general-title { color: var(--accent-light); }
+
+    .raid-section-desc {
+      font-size: 0.66rem;
+      color: #888;
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    .raid-empty-box {
+      background: #151515;
+      border: 1px dashed #2a2a2a;
+      border-radius: 3px;
+      padding: 12px;
+      font-size: 0.72rem;
+      color: var(--text-sec);
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    .raid-tasks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .raid-task-card {
+      background: #161616;
+      border: 1px solid #262626;
+      border-left: 3px solid #383838;
+      border-radius: 3px;
+      padding: 9px 10px;
       display: flex;
       flex-direction: column;
       gap: 6px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .raid-task-card.is-pinned {
+      border-left-color: var(--color-missions);
+      background: #1c1813;
+    }
+    .raid-task-card.done {
+      opacity: 0.55;
+      border-left-color: var(--status-done);
+      background: #121512;
+    }
+    .raid-task-card.raid-task-flash {
+      border-color: var(--color-missions) !important;
+      background: rgba(255, 153, 0, 0.2) !important;
+      box-shadow: 0 0 14px rgba(255, 153, 0, 0.6);
+      transition: none;
+    }
+
+    .raid-task-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .raid-task-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      flex: 1;
+      user-select: none;
+    }
+
+    .raid-task-check {
+      accent-color: var(--status-done);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+      margin: 0;
+      flex-shrink: 0;
+    }
+
+    .raid-task-name {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+    .raid-task-name.text-done {
+      text-decoration: line-through;
+      color: #777;
+    }
+
+    .raid-task-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .raid-pin-btn, .raid-focus-btn {
+      background: #202020;
+      border: 1px solid #333;
+      color: var(--text-sec);
+      font-size: 0.65rem;
+      border-radius: 3px;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .raid-pin-btn.pinned {
+      background: rgba(255, 153, 0, 0.25);
+      border-color: var(--color-missions);
+      color: var(--color-missions);
+      font-weight: 700;
+    }
+    .raid-focus-btn:hover {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    .raid-task-objs {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-left: 23px;
+    }
+
+    .raid-obj-item {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 0.68rem;
+      color: #aaa;
+      line-height: 1.35;
+    }
+
+    .raid-obj-badge {
+      font-size: 0.58rem;
+      font-weight: 800;
+      padding: 1px 4px;
+      border-radius: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #252525;
+      color: #ccc;
+      flex-shrink: 0;
+    }
+    .raid-obj-badge.type-shoot { background: rgba(255, 51, 51, 0.2); color: #ff6666; border: 1px solid rgba(255,51,51,0.3); }
+    .raid-obj-badge.type-visit { background: rgba(51, 153, 255, 0.2); color: #66b2ff; border: 1px solid rgba(51,153,255,0.3); }
+    .raid-obj-badge.type-giveitem { background: rgba(153, 204, 0, 0.2); color: #b3e600; border: 1px solid rgba(153,204,0,0.3); }
+    .raid-obj-badge.type-mark { background: rgba(255, 153, 0, 0.2); color: #ffaa33; border: 1px solid rgba(255,153,0,0.3); }
+
+    .raid-pending-details, .raid-completed-details {
+      border: 1px solid #222;
+      border-radius: 3px;
+      background: #131313;
+      padding: 7px 10px;
+      font-size: 0.72rem;
+    }
+    .raid-pending-summary, .raid-completed-summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--text-sec);
+      outline: none;
+      user-select: none;
+    }
+    .raid-pending-summary:hover, .raid-completed-summary:hover {
+      color: var(--accent-light);
     }
 
     .map-select-btn {
@@ -1134,7 +1365,7 @@
 
     /* Container do Leaflet */
     #map {
-      height: 620px;
+      height: 720px;
       width: 100%;
       background: #080808;
       border: 1px solid #202020;
@@ -1172,7 +1403,7 @@
 
     .map-iframe {
       width: 100%;
-      height: 640px;
+      height: 720px;
       border: 1px solid #252525;
       border-radius: 2px;
       background: #0a0a0a;
@@ -1410,15 +1641,17 @@
     <!-- ====================================================
          MAPAS INTERATIVOS & SISTEMA HÍBRIDO
     ==================================================== -->
+    <!-- ====================================================
+         MAPAS INTERATIVOS & SISTEMA HÍBRIDO (SPLIT-SCREEN)
+    ==================================================== -->
     <div class="maps-section hidden" id="maps-section">
       <div class="maps-layout">
-        <!-- Sidebar seletora de mapas -->
-        <aside class="maps-sidebar">
-          <div class="maps-sidebar-title">Mapas de Tarkov</div>
-          <div class="map-btn-list" id="map-btn-list"></div>
+        <!-- Coluna Esquerda: Painel de Raid (320px) -->
+        <aside class="maps-sidebar raid-panel" id="raid-panel">
+          <!-- Renderizado dinamicamente por renderRaidPanel() -->
         </aside>
 
-        <!-- Visualizador Principal -->
+        <!-- Coluna Direita: Visualizador Principal (1fr) -->
         <section class="map-viewer-wrapper">
           <!-- Toolbar Superior -->
           <div class="map-toolbar">
@@ -1426,22 +1659,22 @@
               <span class="map-current-name" id="current-map-title">CUSTOMS</span>
             </div>
 
-            <!-- Seletor de Modo: Leaflet vs Embed -->
+            <!-- Seletor de Modo: Tarkov.dev Oficial (Principal) vs Leaflet Tático -->
             <div class="map-mode-selector">
-              <button class="map-mode-btn active" id="btn-mode-leaflet" onclick="setMapMode('leaflet')">
-                Mapa Tático (Leaflet)
+              <button class="map-mode-btn active" id="btn-mode-embed" onclick="setMapMode('embed')">
+                Mapa Oficial (Tarkov.dev)
               </button>
-              <button class="map-mode-btn" id="btn-mode-embed" onclick="setMapMode('embed')">
-                Mapa Completo (Embed)
+              <button class="map-mode-btn" id="btn-mode-leaflet" onclick="setMapMode('leaflet')">
+                Mapa Tático (Leaflet)
               </button>
             </div>
 
             <!-- Ações Rápidas -->
             <div class="map-action-group">
-              <button class="map-action-btn active" id="btn-contrast" onclick="toggleContrastMode()" title="Inverte as cores das linhas para máxima visibilidade no tema escuro">
+              <button class="map-action-btn" id="btn-contrast" onclick="toggleContrastMode()" style="display:none;" title="Inverte as cores das linhas para máxima visibilidade no tema escuro">
                 Alto Contraste: ATIVADO
               </button>
-              <button class="map-action-btn" id="btn-reset-view" onclick="resetMapView()">
+              <button class="map-action-btn" id="btn-reset-view" onclick="resetMapView()" style="display:none;">
                 Centralizar
               </button>
               <a class="map-action-btn" id="btn-open-tarkovdev" href="https://tarkov.dev/map/customs" target="_blank" rel="noopener" title="Abrir mapa oficial do Tarkov.dev em nova aba">
@@ -1456,8 +1689,24 @@
             <span id="map-toast-text">Área da missão focada</span>
           </div>
 
-          <!-- MODO 1: MAPA NATIVO LEAFLET -->
-          <div id="leaflet-wrapper" style="display:flex; flex-direction:column; gap:10px;">
+          <!-- MODO 1: MAPA OFICIAL COMPLETO (IFRAME EMBED - PRINCIPAL) -->
+          <div id="embed-wrapper" class="embed-container-wrapper">
+            <div class="embed-info-bar">
+              <span id="embed-source-label">Fonte: <strong>Tarkov.dev Oficial</strong> · Mapa: Customs</span>
+              <div style="display:flex; gap:8px;">
+                <button class="map-action-btn" id="btn-toggle-embed-src" onclick="toggleEmbedSource()">
+                  Alternar para MapGenie
+                </button>
+                <a class="map-action-btn" id="btn-external-direct" href="https://tarkov.dev/map/customs" target="_blank" rel="noopener">
+                  Abrir no Tarkov.dev ↗
+                </a>
+              </div>
+            </div>
+            <iframe id="map-iframe" class="map-iframe" src="https://tarkov.dev/map/customs" allowfullscreen loading="lazy"></iframe>
+          </div>
+
+          <!-- MODO 2: MAPA NATIVO LEAFLET CALIBRADO -->
+          <div id="leaflet-wrapper" class="hidden" style="display:flex; flex-direction:column; gap:10px;">
             <!-- Seletor de Andares (Múltiplos Níveis) -->
             <div class="floor-selector-bar" id="floor-selector-bar">
               <span class="floor-label">Nível / Andar:</span>
@@ -1490,22 +1739,6 @@
             <!-- Div do Mapa Leaflet -->
             <div id="map"></div>
           </div>
-
-          <!-- MODO 2: MAPA COMPLETO INTERATIVO (IFRAME EMBED) -->
-          <div id="embed-wrapper" class="embed-container-wrapper hidden">
-            <div class="embed-info-bar">
-              <span id="embed-source-label">Fonte: <strong>MapGenie (Embed Escuro)</strong></span>
-              <div style="display:flex; gap:8px;">
-                <button class="map-action-btn" id="btn-toggle-embed-src" onclick="toggleEmbedSource()">
-                  Alternar para Tarkov.dev
-                </button>
-                <a class="map-action-btn" id="btn-external-direct" href="#" target="_blank" rel="noopener">
-                  Abrir Mapa Completo ↗
-                </a>
-              </div>
-            </div>
-            <iframe id="map-iframe" class="map-iframe" src="" allowfullscreen loading="lazy"></iframe>
-          </div>
         </section>
       </div>
     </div>
@@ -1535,8 +1768,8 @@
     let currentFloorId = 'all';
     let activeOverlayBounds = null;
     let highContrastActive = true;
-    let currentViewMode = 'leaflet'; // 'leaflet' | 'embed'
-    let currentEmbedSource = 'mapgenie'; // 'mapgenie' | 'tarkovdev'
+    let currentViewMode = 'embed'; // 'embed' (Tarkov.dev Oficial Principal) | 'leaflet' (Tático)
+    let currentEmbedSource = 'tarkovdev'; // 'tarkovdev' | 'mapgenie'
 
     // Layer Groups do Leaflet
     const mapLayers = {
@@ -1798,7 +2031,49 @@
     };
 
     /* ════════════════════════════════════════════════════════
-       BUG 2 FIX: GQL_QUERY COM BOSSES CORRETO { boss { name } }
+       BOSS_HOTSPOTS: SPAWNS REAIS DE CHEFES POR MAPA
+    ════════════════════════════════════════════════════════ */
+    const BOSS_HOTSPOTS = {
+      customs: [
+        { bossName: "Reshala", locationName: "Dormitórios (2F/3F)", coords: [680, 520], floor: '2f', chance: '30%' },
+        { bossName: "Reshala", locationName: "Nova Gasolina", coords: [480, 650], floor: '1f', chance: '30%' },
+        { bossName: "Reshala", locationName: "Fortaleza / Stronghold", coords: [430, 500], floor: '1f', chance: '30%' }
+      ],
+      woods: [
+        { bossName: "Shturman", locationName: "Serraria Central", coords: [500, 500], floor: '1f', chance: '35%' }
+      ],
+      factory: [
+        { bossName: "Tagilla", locationName: "Piso Fabril / Empilhadeiras", coords: [380, 650], floor: '1f', chance: '30%' }
+      ],
+      interchange: [
+        { bossName: "Killa", locationName: "Shopping ULTRA / KIBA", coords: [500, 500], floor: '1f', chance: '30%' }
+      ],
+      shoreline: [
+        { bossName: "Sanitar", locationName: "Resort Azure Coast", coords: [600, 500], floor: '2f', chance: '30%' },
+        { bossName: "Sanitar", locationName: "Pier / Marina", coords: [280, 520], floor: '1f', chance: '30%' }
+      ],
+      reserve: [
+        { bossName: "Glukhar", locationName: "Edifícios Torre / Peão", coords: [480, 420], floor: '1f', chance: '35%' },
+        { bossName: "Glukhar", locationName: "Estação de Trem Blindado", coords: [350, 580], floor: '1f', chance: '35%' }
+      ],
+      lighthouse: [
+        { bossName: "Zryachiy", locationName: "Farol do Cabo Dalniy", coords: [220, 350], floor: '1f', chance: '100%' },
+        { bossName: "Rogues", locationName: "Estação de Tratamento de Água", coords: [680, 520], floor: '2f', chance: '80%' }
+      ],
+      streets: [
+        { bossName: "Kaban", locationName: "Concessionária LexOs", coords: [480, 520], floor: '1f', chance: '30%' },
+        { bossName: "Kollontay", locationName: "Hotel Concordia", coords: [580, 420], floor: '2f', chance: '25%' }
+      ],
+      "ground-zero": [
+        { bossName: "Kollontay", locationName: "Edifício TerraGroup", coords: [520, 520], floor: '1f', chance: '20%' }
+      ],
+      "the-lab": [
+        { bossName: "Raiders de Segurança", locationName: "Cúpula Central & Elevadores", coords: [480, 500], floor: '1f', chance: '70%' }
+      ]
+    };
+
+    /* ════════════════════════════════════════════════════════
+       GQL_QUERY COM BOSSES E TASK OBJECTIVE SHOOT
     ════════════════════════════════════════════════════════ */
     const GQL_QUERY = `
 query {
@@ -1851,6 +2126,13 @@ query {
         zones {
           id
           map { name normalizedName }
+          position { x y z }
+        }
+      }
+      ... on TaskObjectiveShoot {
+        zones {
+          id
+          map { id name normalizedName }
           position { x y z }
         }
       }
@@ -1916,21 +2198,161 @@ query {
       return 'D';
     }
 
+    /* ════════════════════════════════════════════════════════
+       CALIBRAÇÃO MATEMÁTICA OFICIAL DO TARKOV.DEV
+       Matriz de Rotação (0, 90, 180, 270) & Limites (bounds)
+    ════════════════════════════════════════════════════════ */
+    let MAP_CALIBRATIONS = {
+      "customs": {
+        slug: "customs",
+        coordinateRotation: 180,
+        rawBounds: [[698, -307], [-372, 237]],
+        rotatedBounds: { minX: -698, maxX: 372, minY: -237, maxY: 307 }
+      },
+      "woods": {
+        slug: "woods",
+        coordinateRotation: 180,
+        rawBounds: [[646, -914], [-761, 442]],
+        rotatedBounds: { minX: -646, maxX: 761, minY: -442, maxY: 914 }
+      },
+      "factory": {
+        slug: "factory",
+        coordinateRotation: 90,
+        rawBounds: [[77, -64.5], [-65.5, 67.4]],
+        rotatedBounds: { minX: -67.4, maxX: 64.5, minY: -65.5, maxY: 77 }
+      },
+      "shoreline": {
+        slug: "shoreline",
+        coordinateRotation: 180,
+        rawBounds: [[504, -415], [-1056, 618]],
+        rotatedBounds: { minX: -504, maxX: 1056, minY: -618, maxY: 415 }
+      },
+      "interchange": {
+        slug: "interchange",
+        coordinateRotation: 180,
+        rawBounds: [[598, -442], [-433, 426]],
+        rotatedBounds: { minX: -598, maxX: 433, minY: -426, maxY: 442 }
+      },
+      "reserve": {
+        slug: "reserve",
+        coordinateRotation: 180,
+        rawBounds: [[289, -293], [-303, 244]],
+        rotatedBounds: { minX: -289, maxX: 303, minY: -244, maxY: 293 }
+      },
+      "lighthouse": {
+        slug: "lighthouse",
+        coordinateRotation: 180,
+        rawBounds: [[515, -998], [-545, 725]],
+        rotatedBounds: { minX: -515, maxX: 545, minY: -725, maxY: 998 }
+      },
+      "streets": {
+        slug: "streets-of-tarkov",
+        coordinateRotation: 180,
+        rawBounds: [[323, -295], [-280, 532]],
+        rotatedBounds: { minX: -323, maxX: 280, minY: -532, maxY: 295 }
+      },
+      "streets-of-tarkov": {
+        slug: "streets-of-tarkov",
+        coordinateRotation: 180,
+        rawBounds: [[323, -295], [-280, 532]],
+        rotatedBounds: { minX: -323, maxX: 280, minY: -532, maxY: 295 }
+      },
+      "ground-zero": {
+        slug: "ground-zero",
+        coordinateRotation: 180,
+        rawBounds: [[249, -124], [-99, 364]],
+        rotatedBounds: { minX: -249, maxX: 99, minY: -364, maxY: 124 }
+      },
+      "the-lab": {
+        slug: "the-lab",
+        coordinateRotation: 270,
+        rawBounds: [[-80, -477], [-287, -193]],
+        rotatedBounds: { minX: -477, maxX: -193, minY: 80, maxY: 287 }
+      }
+    };
+
+    function applyOfficialMapsJson(data) {
+      if (!Array.isArray(data)) return;
+      data.forEach(m => {
+        const sub = (m.maps || []).find(s => s.projection === 'interactive' || (s.bounds && s.coordinateRotation !== undefined));
+        if (sub && sub.bounds) {
+          const rot = sub.coordinateRotation || 0;
+          const rad = (rot * Math.PI) / 180;
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+
+          function rotate(x, z) {
+            return {
+              x: x * cos - z * sin,
+              y: x * sin + z * cos
+            };
+          }
+
+          const p0 = rotate(sub.bounds[0][0], sub.bounds[0][1]);
+          const p1 = rotate(sub.bounds[1][0], sub.bounds[1][1]);
+
+          const calibObj = {
+            slug: m.normalizedName,
+            coordinateRotation: rot,
+            rawBounds: sub.bounds,
+            rotatedBounds: {
+              minX: Math.min(p0.x, p1.x),
+              maxX: Math.max(p0.x, p1.x),
+              minY: Math.min(p0.y, p1.y),
+              maxY: Math.max(p0.y, p1.y)
+            }
+          };
+
+          MAP_CALIBRATIONS[m.normalizedName] = calibObj;
+          if (m.normalizedName === 'streets-of-tarkov') {
+            MAP_CALIBRATIONS['streets'] = calibObj;
+          }
+        }
+      });
+    }
+
+    async function fetchMapsCalibration() {
+      try {
+        const res = await fetch('https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json');
+        if (res.ok) {
+          const data = await res.json();
+          applyOfficialMapsJson(data);
+          console.log('[Tarkov Tracker] Calibração de mapas oficial do Tarkov.dev aplicada.');
+        }
+      } catch (err) {
+        console.warn('[Tarkov Tracker] Usando calibração oficial pré-calculada embutida:', err);
+      }
+    }
+
     function projectGameCoords(x, z, mapId) {
       const mapDef = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
-      const bounds = mapDef.bounds || { minX: -500, maxX: 500, minZ: -500, maxZ: 500 };
+      const calib = MAP_CALIBRATIONS[mapDef.slug] || MAP_CALIBRATIONS[mapDef.id] || MAP_CALIBRATIONS['customs'];
 
-      const padding = 80;
+      const rot = calib.coordinateRotation || 0;
+      const rad = (rot * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      // 1. Matriz de rotação oficial
+      const rotX = x * cos - z * sin;
+      const rotY = x * sin + z * cos;
+
+      // 2. Normalização proporcional aos limites reais rotacionados
+      const bounds = calib.rotatedBounds;
       const rangeX = (bounds.maxX - bounds.minX) || 1;
-      const rangeZ = (bounds.maxZ - bounds.minZ) || 1;
+      const rangeY = (bounds.maxY - bounds.minY) || 1;
 
-      const clampedX = Math.max(bounds.minX, Math.min(bounds.maxX, x));
-      const clampedZ = Math.max(bounds.minZ, Math.min(bounds.maxZ, z));
+      // No SVG do Tarkov.dev:
+      // Horizontal (X no Leaflet):
+      const normX = ((bounds.maxX - rotX) / rangeX) * 1000;
+      // Vertical (Y no Leaflet):
+      const normY = ((rotY - bounds.minY) / rangeY) * 1000;
 
-      const normX = ((clampedX - bounds.minX) / rangeX) * (1000 - 2 * padding) + padding;
-      const normY = ((clampedZ - bounds.minZ) / rangeZ) * (1000 - 2 * padding) + padding;
+      // Limites de segurança na viewport
+      const clampedX = Math.max(15, Math.min(985, normX));
+      const clampedY = Math.max(15, Math.min(985, normY));
 
-      return [normY, normX];
+      return [clampedY, clampedX];
     }
 
     function pointMatchesFloor(point, selectedFloor) {
@@ -2333,20 +2755,8 @@ query {
       mapLayers.bosses   = L.layerGroup().addTo(leafletMap);
       mapLayers.hotspots = L.layerGroup().addTo(leafletMap);
 
-      renderMapsSidebar();
+      renderRaidPanel('customs');
       switchMap('customs');
-    }
-
-    function renderMapsSidebar() {
-      const container = document.getElementById('map-btn-list');
-      if (!container) return;
-
-      container.innerHTML = MAPS_DATABASE.map(m => `
-        <button class="map-select-btn ${m.id === currentMapId ? 'active' : ''}" data-map-id="${m.id}" onclick="switchMap('${m.id}')">
-          <span>${esc(m.namePt)}</span>
-          <span class="map-select-desc">${esc(m.desc)}</span>
-        </button>
-      `).join('');
     }
 
     function renderFloorSelector(mapData) {
@@ -2380,17 +2790,16 @@ query {
       currentMapId = mapData.id;
       currentFloorId = 'all';
 
-      // Atualizar classe ativa na barra lateral
-      document.querySelectorAll('.map-select-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mapId === currentMapId);
-      });
-
       // Atualizar título e links
-      document.getElementById('current-map-title').textContent = mapData.namePt.toUpperCase();
-      document.getElementById('btn-open-tarkovdev').href = `https://tarkov.dev/map/${mapData.slug}`;
+      const titleEl = document.getElementById('current-map-title');
+      if (titleEl) titleEl.textContent = mapData.namePt.toUpperCase();
 
-      // Renderizar seletor de andares
+      const tarkovLinkEl = document.getElementById('btn-open-tarkovdev');
+      if (tarkovLinkEl) tarkovLinkEl.href = `https://tarkov.dev/map/${mapData.slug}`;
+
+      // Renderizar controles do mapa e Painel de Raid (320px)
       renderFloorSelector(mapData);
+      renderRaidPanel(currentMapId);
 
       if (currentViewMode === 'embed') {
         updateEmbedFrame(mapData);
@@ -2488,9 +2897,12 @@ query {
               coords = hotspot.coords;
               pointFloor = hotspot.floor || '1f';
             } else {
-              coords = [500, 500];
-              pointFloor = '1f';
+              // NUNCA cria pino falso [500, 500]! Objetivos sem coordenadas são listados no Painel de Raid.
+              coords = null;
             }
+
+            // Ignorar sem coordenadas (evita pino falso no centro)
+            if (!coords) return;
 
             // Filtro de Andar
             if (!pointMatchesFloor({ floor: pointFloor }, selectedFloor)) {
@@ -2590,32 +3002,57 @@ query {
       if (!layer) return;
 
       const mapDef = MAPS_DATABASE.find(m => m.id === mapId);
-      const rawMap = mapsRawData.find(m => m.id === mapId || (m.normalizedName && m.normalizedName.includes(mapDef?.slug || '')));
+      const rawMap = mapsRawData.find(m =>
+        m.id === mapId ||
+        (m.normalizedName && m.normalizedName.includes(mapDef?.slug || '')) ||
+        (m.name && m.name.toLowerCase().includes(mapDef?.name.toLowerCase() || ''))
+      );
 
-      if (!rawMap || !rawMap.bosses) return;
+      let placedAnyBoss = false;
 
-      rawMap.bosses.forEach((boss, idx) => {
-        // Bug 2 Fix: Tratamento da estrutura correta boss.boss.name vs boss.name
-        const bossName = boss.boss?.name || boss.name || 'Chefe / Boss';
-        const chance = boss.spawnChance != null ? (boss.spawnChance * 100).toFixed(0) + '%' : 'Variável';
+      if (rawMap && rawMap.bosses) {
+        rawMap.bosses.forEach(boss => {
+          const bossName = boss.boss?.name || boss.name || 'Chefe / Boss';
+          const chance = boss.spawnChance != null ? (boss.spawnChance * 100).toFixed(0) + '%' : 'Variável';
 
-        const coords = [480 + (idx * 40), 500 + (idx * 30)];
-
-        const icon = L.divIcon({
-          className: 'tactical-marker',
-          html: `<div class="marker-box m-boss" title="Chefe: ${esc(bossName)}">💀</div>`,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13]
+          (boss.spawnLocations || []).forEach(loc => {
+            if (loc.positions && loc.positions.length > 0) {
+              loc.positions.forEach(pos => {
+                if (!pointMatchesFloor({ position: pos }, selectedFloor)) return;
+                placedAnyBoss = true;
+                const coords = projectGameCoords(pos.x, pos.z, mapId);
+                createBossMarker(coords, bossName, loc.name || loc.spawnKey, chance, layer);
+              });
+            }
+          });
         });
+      }
 
-        const m = L.marker(coords, { icon }).bindPopup(`
-          <strong>CHEFE DE ÁREA</strong>
-          <div style="color:var(--color-bosses); font-size:0.75rem; font-weight:700;">${esc(bossName)}</div>
-          <div style="color:#aaa; font-size:0.72rem; margin-top:2px;">Chance de Encontro: ${chance}</div>
-        `);
+      // Se a API não trouxer posições pontuais, usar BOSS_HOTSPOTS (verificados nos mapas)
+      if (!placedAnyBoss && BOSS_HOTSPOTS[mapId]) {
+        BOSS_HOTSPOTS[mapId].forEach(b => {
+          if (!pointMatchesFloor(b, selectedFloor)) return;
+          createBossMarker(b.coords, b.bossName, b.locationName, b.chance, layer);
+        });
+      }
+    }
 
-        layer.addLayer(m);
+    function createBossMarker(coords, bossName, locationName, chance, layer) {
+      const icon = L.divIcon({
+        className: 'tactical-marker',
+        html: `<div class="marker-box m-boss" title="Chefe: ${esc(bossName)}">💀</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
       });
+
+      const m = L.marker(coords, { icon }).bindPopup(`
+        <strong>CHEFE DE ÁREA</strong>
+        <div style="color:var(--color-bosses); font-size:0.78rem; font-weight:800; margin-top:2px;">${esc(bossName)}</div>
+        ${locationName ? `<div style="color:var(--accent-light); font-size:0.72rem; margin-top:2px;">📍 ${esc(locationName)}</div>` : ''}
+        <div style="color:#aaa; font-size:0.72rem; margin-top:2px;">Chance de Encontro: ${chance}</div>
+      `);
+
+      layer.addLayer(m);
     }
 
     function populateHotspotPins(mapId, selectedFloor) {
@@ -2673,12 +3110,14 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       SISTEMA HÍBRIDO (LEAFLET VS EMBED)
+       SISTEMA HÍBRIDO (TARKOV.DEV OFICIAL VS LEAFLET TÁTICO)
     ════════════════════════════════════════════════════════ */
     function setMapMode(mode) {
       currentViewMode = mode;
-      document.getElementById('btn-mode-leaflet').classList.toggle('active', mode === 'leaflet');
-      document.getElementById('btn-mode-embed').classList.toggle('active', mode === 'embed');
+      const btnEmbed = document.getElementById('btn-mode-embed');
+      const btnLeaf  = document.getElementById('btn-mode-leaflet');
+      if (btnEmbed) btnEmbed.classList.toggle('active', mode === 'embed');
+      if (btnLeaf)  btnLeaf.classList.toggle('active', mode === 'leaflet');
 
       const leafletWrap = document.getElementById('leaflet-wrapper');
       const embedWrap   = document.getElementById('embed-wrapper');
@@ -2686,11 +3125,14 @@ query {
       const btnReset    = document.getElementById('btn-reset-view');
 
       if (mode === 'leaflet') {
-        leafletWrap.classList.remove('hidden');
-        embedWrap.classList.add('hidden');
-        btnContrast.style.display = 'inline-flex';
-        btnReset.style.display    = 'inline-flex';
-        document.getElementById('active-map-mode-label').textContent = 'Tático (Leaflet)';
+        if (leafletWrap) leafletWrap.classList.remove('hidden');
+        if (embedWrap)   embedWrap.classList.add('hidden');
+        if (btnContrast) btnContrast.style.display = 'inline-flex';
+        if (btnReset)    btnReset.style.display    = 'inline-flex';
+        const modeLabel = document.getElementById('active-map-mode-label');
+        if (modeLabel) modeLabel.textContent = 'Tático (Leaflet Calibrado)';
+
+        if (!leafletMap) initLeafletMap();
 
         setTimeout(() => {
           if (leafletMap) {
@@ -2699,11 +3141,12 @@ query {
           }
         }, 80);
       } else {
-        leafletWrap.classList.add('hidden');
-        embedWrap.classList.remove('hidden');
-        btnContrast.style.display = 'none';
-        btnReset.style.display    = 'none';
-        document.getElementById('active-map-mode-label').textContent = 'Interativo (Embed)';
+        if (leafletWrap) leafletWrap.classList.add('hidden');
+        if (embedWrap)   embedWrap.classList.remove('hidden');
+        if (btnContrast) btnContrast.style.display = 'none';
+        if (btnReset)    btnReset.style.display    = 'none';
+        const modeLabel = document.getElementById('active-map-mode-label');
+        if (modeLabel) modeLabel.textContent = 'Oficial (Tarkov.dev Embed)';
 
         const mapDef = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
         updateEmbedFrame(mapDef);
@@ -2714,25 +3157,38 @@ query {
       const iframe = document.getElementById('map-iframe');
       const label = document.getElementById('embed-source-label');
       const directLink = document.getElementById('btn-external-direct');
+      const openTarkovBtn = document.getElementById('btn-open-tarkovdev');
 
       const mapGenieUrl = `https://mapgenie.io/tarkov/maps/${mapDef.slug}?embed=dark`;
       const tarkovDevUrl = `https://tarkov.dev/map/${mapDef.slug}`;
 
+      if (openTarkovBtn) openTarkovBtn.href = tarkovDevUrl;
+
+      if (!iframe) return;
+
       if (currentEmbedSource === 'mapgenie') {
         iframe.src = mapGenieUrl;
-        label.innerHTML = `Fonte: <strong>MapGenie (Embed Escuro)</strong> · Mapa: ${esc(mapDef.name)}`;
-        directLink.href = mapGenieUrl;
+        if (label) label.innerHTML = `Fonte: <strong>MapGenie (Embed Escuro)</strong> · Mapa: ${esc(mapDef.namePt)}`;
+        if (directLink) {
+          directLink.href = mapGenieUrl;
+          directLink.textContent = 'Abrir no MapGenie ↗';
+        }
       } else {
         iframe.src = tarkovDevUrl;
-        label.innerHTML = `Fonte: <strong>Tarkov.dev Oficial</strong> · Mapa: ${esc(mapDef.name)}`;
-        directLink.href = tarkovDevUrl;
+        if (label) label.innerHTML = `Fonte: <strong>Tarkov.dev Oficial</strong> · Mapa: ${esc(mapDef.namePt)}`;
+        if (directLink) {
+          directLink.href = tarkovDevUrl;
+          directLink.textContent = 'Abrir no Tarkov.dev ↗';
+        }
       }
     }
 
     function toggleEmbedSource() {
       currentEmbedSource = (currentEmbedSource === 'mapgenie') ? 'tarkovdev' : 'mapgenie';
-      document.getElementById('btn-toggle-embed-src').textContent =
-        (currentEmbedSource === 'mapgenie') ? 'Alternar para Tarkov.dev' : 'Alternar para MapGenie';
+      const btn = document.getElementById('btn-toggle-embed-src');
+      if (btn) {
+        btn.textContent = (currentEmbedSource === 'mapgenie') ? 'Alternar para Tarkov.dev' : 'Alternar para MapGenie';
+      }
 
       const mapDef = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
       updateEmbedFrame(mapDef);
@@ -2741,9 +3197,10 @@ query {
     function toggleContrastMode() {
       highContrastActive = !highContrastActive;
       const btn = document.getElementById('btn-contrast');
-
-      btn.classList.toggle('active', highContrastActive);
-      btn.textContent = highContrastActive ? 'Alto Contraste: ATIVADO' : 'Alto Contraste: DESLIGADO';
+      if (btn) {
+        btn.classList.toggle('active', highContrastActive);
+        btn.textContent = highContrastActive ? 'Alto Contraste: ATIVADO' : 'Alto Contraste: DESLIGADO';
+      }
 
       const overlayImg = document.querySelector('.leaflet-image-layer');
       if (overlayImg) {
@@ -2758,7 +3215,248 @@ query {
     }
 
     /* ════════════════════════════════════════════════════════
-       REDIRECIONAMENTO: MISSÃO -> MAPA
+       PAINEL DE RAID TÁTICO (COLUNA ESQUERDA - 320PX)
+    ════════════════════════════════════════════════════════ */
+    function taskRelatesToMap(task, cleanName, slug) {
+      return (task.objectives || []).some(obj =>
+        (obj.maps || []).some(m =>
+          (m.name || '').toLowerCase().includes(cleanName) ||
+          (m.normalizedName || '').includes(slug || '')
+        )
+      );
+    }
+
+    function renderRaidPanel(mapId) {
+      const panel = document.getElementById('raid-panel');
+      if (!panel) return;
+
+      const mapDef = MAPS_DATABASE.find(m => m.id === mapId) || MAPS_DATABASE[0];
+      const cleanName = mapDef.name.toLowerCase();
+      const slug = mapDef.slug;
+
+      const allMapTasks = tasksData.filter(t => taskRelatesToMap(t, cleanName, slug));
+      const activeTasks = allMapTasks.filter(t => isTaskActive(t.id) && !isTaskCompleted(t.id));
+      const pendingTasks = allMapTasks.filter(t => !isTaskActive(t.id) && !isTaskCompleted(t.id));
+      const completedTasks = allMapTasks.filter(t => isTaskCompleted(t.id));
+
+      // Missões gerais sem coordenadas nem hotspots
+      const generalTasks = allMapTasks.filter(t => {
+        if (isTaskCompleted(t.id)) return false;
+        const hasZone = (t.objectives || []).some(obj => obj.zones && obj.zones.length && obj.zones[0].position);
+        const hasHotspot = (typeof MISSION_HOTSPOTS !== 'undefined') && MISSION_HOTSPOTS[t.id];
+        return !hasZone && !hasHotspot;
+      });
+
+      let html = `
+        <div class="raid-panel-header">
+          <div class="raid-panel-title">
+            <span>PAINEL DE RAID</span>
+            <span class="raid-map-badge">${esc(mapDef.namePt)}</span>
+          </div>
+          <div class="raid-map-select-wrapper">
+            <label for="raid-map-select" class="raid-label">Selecionar Mapa de Infiltração:</label>
+            <select id="raid-map-select" class="raid-map-select" onchange="switchMap(this.value)">
+              ${MAPS_DATABASE.map(m => {
+                const mClean = m.name.toLowerCase();
+                const actCount = tasksData.filter(t => isTaskActive(t.id) && !isTaskCompleted(t.id) && taskRelatesToMap(t, mClean, m.slug)).length;
+                const badge = actCount > 0 ? ` [${actCount} 📌]` : '';
+                return `<option value="${m.id}" ${m.id === mapId ? 'selected' : ''}>${esc(m.namePt)}${badge}</option>`;
+              }).join('')}
+            </select>
+          </div>
+        </div>
+
+        <!-- 1. Missões Ativas neste Mapa -->
+        <div class="raid-section">
+          <div class="raid-section-header">
+            <span class="raid-section-title active-title">📌 MISSÕES ATIVAS NESTE MAPA (${activeTasks.length})</span>
+          </div>
+      `;
+
+      if (activeTasks.length === 0) {
+        html += `
+          <div class="raid-empty-box">
+            Nenhuma missão fixada para <strong>${esc(mapDef.namePt)}</strong>.<br>
+            <span style="color:#777; font-size:0.68rem; display:block; margin-top:4px;">
+              Vá na aba <strong>MISSÕES</strong> e clique em <strong>📌 Fixar</strong> nas suas tarefas em andamento para monitorá-las aqui.
+            </span>
+          </div>
+        `;
+      } else {
+        html += `<div class="raid-tasks-list">`;
+        activeTasks.forEach(task => {
+          html += renderRaidTaskCard(task, mapId, cleanName, slug, true);
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+
+      // 2. Missões Gerais do Mapa (Sem local fixo)
+      if (generalTasks.length > 0) {
+        html += `
+          <div class="raid-section">
+            <div class="raid-section-header">
+              <span class="raid-section-title general-title">📍 MISSÕES GERAIS (SEM LOCAL FIXO) (${generalTasks.length})</span>
+            </div>
+            <p class="raid-section-desc">Objetivos válidos em qualquer setor deste mapa (eliminações, coletas gerais):</p>
+            <div class="raid-tasks-list">
+        `;
+        generalTasks.forEach(task => {
+          html += renderRaidTaskCard(task, mapId, cleanName, slug, isTaskActive(task.id));
+        });
+        html += `</div></div>`;
+      }
+
+      // 3. Outras Missões Pendentes
+      const otherPending = pendingTasks.filter(t => !generalTasks.includes(t));
+      if (otherPending.length > 0) {
+        html += `
+          <details class="raid-pending-details">
+            <summary class="raid-pending-summary">Outras Missões Pendentes (${otherPending.length})</summary>
+            <div class="raid-tasks-list" style="margin-top:8px;">
+        `;
+        otherPending.forEach(task => {
+          html += renderRaidTaskCard(task, mapId, cleanName, slug, false);
+        });
+        html += `</div></details>`;
+      }
+
+      // 4. Missões Concluídas
+      if (completedTasks.length > 0) {
+        html += `
+          <details class="raid-completed-details">
+            <summary class="raid-completed-summary">Missões Concluídas (${completedTasks.length})</summary>
+            <div class="raid-tasks-list" style="margin-top:8px; opacity:0.65;">
+        `;
+        completedTasks.forEach(task => {
+          html += renderRaidTaskCard(task, mapId, cleanName, slug, false);
+        });
+        html += `</div></details>`;
+      }
+
+      panel.innerHTML = html;
+    }
+
+    function renderRaidTaskCard(task, mapId, cleanName, slug, isPinned) {
+      const isDone = isTaskCompleted(task.id);
+      const mapObjs = (task.objectives || []).filter(obj =>
+        (obj.maps || []).some(m =>
+          (m.name || '').toLowerCase().includes(cleanName) ||
+          (m.normalizedName || '').includes(slug || '')
+        )
+      );
+      const displayObjs = mapObjs.length ? mapObjs : (task.objectives || []);
+
+      const hasCoords = displayObjs.some(obj =>
+        obj.zones && obj.zones.length && obj.zones[0].position
+      ) || ((typeof MISSION_HOTSPOTS !== 'undefined') && MISSION_HOTSPOTS[task.id]?.mapId === mapId);
+
+      return `
+        <div class="raid-task-card ${isDone ? 'done' : ''} ${isPinned ? 'is-pinned' : ''}" id="raid-task-${task.id}">
+          <div class="raid-task-top">
+            <label class="raid-task-checkbox-label">
+              <input type="checkbox" class="raid-task-check" ${isDone ? 'checked' : ''}
+                onchange="toggleTaskDoneFromRaid('${task.id}', this.checked)">
+              <span class="raid-task-name ${isDone ? 'text-done' : ''}">${esc(task.name)}</span>
+            </label>
+            <div class="raid-task-actions">
+              <button class="raid-pin-btn ${isPinned ? 'pinned' : ''}"
+                onclick="toggleTaskActiveFromRaid('${task.id}')"
+                title="${isPinned ? 'Desafixar missão ativa' : 'Fixar missão como Ativa na Raid'}">
+                📌
+              </button>
+              ${hasCoords ? `
+                <button class="raid-focus-btn" onclick="focusTaskFromRaid('${task.id}', '${mapId}')" title="Focar marcador no mapa Leaflet">
+                  🎯
+                </button>
+              ` : ''}
+            </div>
+          </div>
+          <div class="raid-task-objs">
+            ${displayObjs.map(obj => `
+              <div class="raid-obj-item">
+                <span class="raid-obj-badge type-${esc(obj.type || 'info')}">${esc((obj.type || '').toUpperCase())}</span>
+                <span class="raid-obj-desc">${esc(obj.description)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleTaskDoneFromRaid(taskId, checked) {
+      setTaskCompleted(taskId, checked);
+      renderRaidPanel(currentMapId);
+      updateTasksProgressStats();
+      if (currentViewMode === 'leaflet') {
+        populateMapLayers(currentMapId, currentFloorId);
+      }
+    }
+
+    function toggleTaskActiveFromRaid(taskId) {
+      const current = isTaskActive(taskId);
+      setTaskActive(taskId, !current);
+      renderRaidPanel(currentMapId);
+      updateTasksProgressStats();
+      if (currentViewMode === 'leaflet') {
+        populateMapLayers(currentMapId, currentFloorId);
+      }
+    }
+
+    function focusTaskFromRaid(taskId, mapId) {
+      const task = tasksData.find(t => t.id === taskId);
+      if (!task) return;
+
+      setMapMode('leaflet');
+      const missionBtn = document.querySelector('.filter-chip.chip-missions');
+      if (missionBtn && !missionBtn.classList.contains('active')) {
+        toggleLayer('missions', missionBtn);
+      }
+
+      let coords = null;
+      let pointFloor = '1f';
+      const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[taskId] : null;
+
+      (task.objectives || []).forEach(obj => {
+        if (obj.zones && obj.zones.length && obj.zones[0].position && !coords) {
+          const p = obj.zones[0].position;
+          coords = projectGameCoords(p.x, p.z, mapId);
+          pointFloor = (p.y != null) ? (p.y < -1.5 ? 'b1' : (p.y > 2.5 ? '2f' : '1f')) : '1f';
+        }
+      });
+
+      if (!coords && hotspot && hotspot.mapId === mapId) {
+        coords = hotspot.coords;
+        pointFloor = hotspot.floor || '1f';
+      }
+
+      if (coords) {
+        setMapFloor(pointFloor);
+        highlightMissionOnMap(coords, task.name, '', hotspot ? hotspot.name : '');
+        showMapToast(`Área da missão focada: <strong>${esc(task.name)}</strong>`);
+      }
+    }
+
+    function updateTasksProgressStats() {
+      const total    = tasksData.length;
+      const done     = tasksData.filter(t => isTaskCompleted(t.id)).length;
+      const active   = tasksData.filter(t => isTaskActive(t.id) && !isTaskCompleted(t.id)).length;
+      const pending  = total - done;
+      const pct      = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      const doneEl   = document.getElementById('tasks-done-count');
+      const activeEl = document.getElementById('tasks-active-count');
+      const pendEl   = document.getElementById('tasks-pending-count');
+      const pctEl    = document.getElementById('tasks-progress-percent');
+
+      if (doneEl)   doneEl.textContent = done;
+      if (activeEl) activeEl.textContent = active;
+      if (pendEl)   pendEl.textContent = pending;
+      if (pctEl)    pctEl.textContent = `${pct}% Concluído (${done}/${total})`;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       REDIRECIONAMENTO: MISSÃO -> MAPA (SEM PINOS FALSOS)
     ════════════════════════════════════════════════════════ */
     function viewObjectiveOnMap(taskId, taskName, objDesc, targetMapName, event) {
       if (event) event.stopPropagation();
@@ -2766,29 +3464,56 @@ query {
       // 1. Alternar para a aba MAPAS
       showSection('maps');
 
-      // 2. Garantir modo Leaflet
-      setMapMode('leaflet');
-
-      // 3. Selecionar o mapa alvo
+      // 2. Encontrar o mapa alvo
       const foundMap = findMapByNameOrAlias(targetMapName) || MAPS_DATABASE[0];
       switchMap(foundMap.id);
 
-      // 4. Ativar filtro de missões se estiver desligado
-      const missionBtn = document.querySelector('.filter-chip.chip-missions');
-      if (missionBtn && !missionBtn.classList.contains('active')) {
-        toggleLayer('missions', missionBtn);
+      // 3. Verificar se há coordenadas reais ou hotspot
+      const task = tasksData.find(t => t.id === taskId);
+      let targetCoords = null;
+      let targetFloor = '1f';
+      const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[taskId] : null;
+
+      if (task && task.objectives) {
+        for (const obj of task.objectives) {
+          if (obj.zones && obj.zones.length && obj.zones[0].position) {
+            const p = obj.zones[0].position;
+            targetCoords = projectGameCoords(p.x, p.z, foundMap.id);
+            targetFloor = (p.y != null) ? (p.y < -1.5 ? 'b1' : (p.y > 2.5 ? '2f' : '1f')) : '1f';
+            break;
+          }
+        }
       }
 
-      // 5. Coordenadas da missão com fallback seguro
-      const hotspot = (typeof MISSION_HOTSPOTS !== 'undefined') ? MISSION_HOTSPOTS[taskId] : null;
-      const targetCoords = hotspot ? hotspot.coords : [500, 500];
-      const locationNote = hotspot ? hotspot.name : (targetMapName || 'Área Operacional');
+      if (!targetCoords && hotspot && hotspot.mapId === foundMap.id) {
+        targetCoords = hotspot.coords;
+        targetFloor = hotspot.floor || '1f';
+      }
 
-      // Marcador de foco temporário
-      highlightMissionOnMap(targetCoords, taskName, objDesc, locationNote);
+      if (targetCoords) {
+        // Alternar para Leaflet tático para focar o pino
+        setMapMode('leaflet');
+        setMapFloor(targetFloor);
 
-      // 6. Alerta toast
-      showMapToast(`Área da missão focada: <strong>${esc(taskName)}</strong> (${esc(locationNote)})`);
+        const missionBtn = document.querySelector('.filter-chip.chip-missions');
+        if (missionBtn && !missionBtn.classList.contains('active')) {
+          toggleLayer('missions', missionBtn);
+        }
+
+        const locationNote = hotspot ? hotspot.name : (targetMapName || 'Área Operacional');
+        highlightMissionOnMap(targetCoords, taskName, objDesc, locationNote);
+        showMapToast(`Área da missão focada: <strong>${esc(taskName)}</strong> (${esc(locationNote)})`);
+      } else {
+        // NUNCA gera pino falso em [500, 500]!
+        // Destacar o card da missão no Painel de Raid (320px)
+        const raidItem = document.getElementById('raid-task-' + taskId);
+        if (raidItem) {
+          raidItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          raidItem.classList.add('raid-task-flash');
+          setTimeout(() => raidItem.classList.remove('raid-task-flash'), 2500);
+        }
+        showMapToast(`Missão geral no mapa: <strong>${esc(taskName)}</strong> (Sem local fixo)`);
+      }
     }
 
     function highlightMissionOnMap(coords, taskName, objDesc, locationNote) {
@@ -3037,20 +3762,29 @@ query {
         filterBar.classList.add('hidden');
         secHdr.classList.remove('hidden');
 
-        secTitle.textContent = 'Mapas Táticos';
+        secTitle.textContent = 'Mapas & Painel de Raid';
         secCount.textContent = `${MAPS_DATABASE.length} mapas`;
 
         statsTiers.style.display = 'none';
         statsTasks.style.display = 'none';
         statsMaps.style.display  = 'flex';
 
-        initLeafletMap();
-        setTimeout(() => {
-          if (leafletMap) {
-            leafletMap.invalidateSize();
-            if (activeOverlayBounds) leafletMap.fitBounds(activeOverlayBounds);
-          }
-        }, 120);
+        // Renderizar Painel de Raid (320px)
+        renderRaidPanel(currentMapId);
+
+        // Modo Embed Oficial (Principal) vs Leaflet
+        if (currentViewMode === 'embed') {
+          const mapDef = MAPS_DATABASE.find(m => m.id === currentMapId) || MAPS_DATABASE[0];
+          updateEmbedFrame(mapDef);
+        } else {
+          initLeafletMap();
+          setTimeout(() => {
+            if (leafletMap) {
+              leafletMap.invalidateSize();
+              if (activeOverlayBounds) leafletMap.fitBounds(activeOverlayBounds);
+            }
+          }, 120);
+        }
 
         return;
       }
@@ -3248,7 +3982,10 @@ query {
       setLoadingHint('Conectando às fontes de dados em Português...');
 
       try {
-        const data = await fetchData();
+        const [data] = await Promise.all([
+          fetchData(),
+          fetchMapsCalibration().catch(() => null)
+        ]);
 
         gunsData    = (data.items || []).filter(i => i.properties && i.properties.defaultRecoilVertical != null).map(i => ({
           id: i.id,
