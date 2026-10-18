@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tarkov Arsenal Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
   <style>
     /* =========================================================
@@ -173,6 +175,8 @@
     }
 
     .stats-bar span { display: flex; align-items: center; gap: 6px; }
+    /* sem conteúdo visível (Armas/Munições): esconde a faixa vazia */
+    .stats-bar:not(:has(> div:not([style*="display: none"]):not([style*="display:none"]))) { display: none; }
     .stats-bar .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
     /* =========================================================
@@ -1124,8 +1128,8 @@
     .maps-layout {
       display: flex;
       gap: 14px;
-      height: calc(100vh - 220px);
-      min-height: 500px;
+      height: max(680px, calc(100vh - 160px));
+      min-height: 560px;
     }
 
     /* Sidebar esquerda - seleção de mapa */
@@ -1243,8 +1247,12 @@
       width: 100%;
       height: 100%;
       border: none;
-      display: block;
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 4;
     }
+    .map-iframe-wrapper iframe.show { display: block; }
 
     .map-iframe-overlay {
       position: absolute;
@@ -1255,7 +1263,7 @@
       flex-direction: column;
       gap: 12px;
       background: rgba(10,10,10,0.92);
-      z-index: 5;
+      z-index: 900;
     }
     .map-iframe-overlay.hidden { display: none; }
     .map-iframe-overlay-text {
@@ -1350,6 +1358,63 @@
       flex-wrap: wrap;
     }
 
+
+    /* --- Leaflet (mapa interativo) --- */
+    #leaflet-map { position: absolute; inset: 0; background: #0d0d0d; outline: none; }
+    #leaflet-map.hc .leaflet-tkBase-pane,
+    #leaflet-map.hc .leaflet-tkFloor-pane { filter: contrast(1.4) brightness(1.25); }
+    .leaflet-container { font-family: inherit; }
+    .leaflet-bar a { background: #151515; color: var(--accent-light); border-bottom: 1px solid #2a2a2a; }
+    .leaflet-bar a:hover { background: #222; color: #fff; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #151515; color: var(--text-main); border: 1px solid var(--border-accent); }
+    .leaflet-popup-content { margin: 10px 12px; font-size: 0.78rem; line-height: 1.4; max-width: 240px; }
+    .tk-pop-sub { color: var(--text-sec); font-size: 0.72rem; }
+    .map-floor-bar.hidden { display: none; }
+    .map-status {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 800;
+      background: rgba(10,10,10,0.92); border: 1px solid var(--border-accent); color: var(--accent-light);
+      font-size: 0.74rem; padding: 6px 14px; border-radius: 2px; max-width: 80%; text-align: center;
+      display: none; pointer-events: none;
+    }
+    .map-status.show { display: block; }
+    .map-legend {
+      position: absolute; left: 10px; bottom: 10px; z-index: 800; display: flex; gap: 10px; flex-wrap: wrap;
+      background: rgba(10,10,10,0.85); border: 1px solid #222; border-radius: 2px; padding: 5px 9px;
+      font-size: 0.64rem; color: var(--text-sec); pointer-events: none;
+    }
+    .tk-lg { display: inline-block; width: 9px; height: 9px; margin-right: 4px; border: 1px solid #000; }
+    .tk-mk-wrap { background: none; border: none; }
+    .tk-mk {
+      width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #000; border: 2px solid #000; line-height: 1;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.7);
+    }
+    .tk-ex-pmc { background: #99cc00; }
+    .tk-ex-scav { background: #3399ff; border-radius: 4px; }
+    .tk-ex-shared { background: linear-gradient(90deg, #99cc00 50%, #3399ff 50%); }
+    .tk-boss { background: #ff3333; color: #fff; }
+    .tk-mission { background: #ff9900; }
+    .tk-spawn { background: #ffd24d; width: 14px; height: 14px; margin: 6px; font-size: 10px; }
+    .tk-poi { background: #bbb; font-size: 12px; }
+    .tk-transit { background: #c2aa80; border-radius: 4px; }
+    .tk-pulse { position: relative; width: 44px; height: 44px; }
+    .tk-pulse::before, .tk-pulse::after {
+      content: ''; position: absolute; inset: 0; border-radius: 50%; border: 3px solid #ff9900;
+      animation: tkPulse 1.6s ease-out infinite;
+    }
+    .tk-pulse::after { animation-delay: 0.8s; }
+    .tk-pulse span {
+      position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px;
+      border-radius: 50%; background: #ff9900; border: 2px solid #000;
+    }
+    @keyframes tkPulse { from { transform: scale(0.3); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+    .map-locate-btn, .obj-map-btn {
+      background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent-light);
+      font-size: 0.66rem; font-weight: 700; padding: 3px 8px; border-radius: 2px; cursor: pointer; margin-top: 5px;
+      display: inline-block;
+    }
+    .map-locate-btn:hover, .obj-map-btn:hover { background: var(--accent); color: #000; }
+
     @media (max-width: 768px) {
       .maps-layout { flex-direction: column; height: auto; }
       .maps-sidebar { width: 100%; height: 120px; display: flex; flex-direction: row; padding: 0; overflow-x: auto; }
@@ -1359,6 +1424,7 @@
       .maps-main { min-height: 400px; }
       .map-content-area { flex-direction: column; }
       .map-missions-panel { width: 100%; height: 200px; }
+      .map-iframe-wrapper { min-height: 420px; }
     }
   </style>
 </head>
@@ -1382,7 +1448,7 @@
         <h1>Tarkov Arsenal Tracker</h1>
       </div>
       <p class="subtitle" id="subtitle">
-        Conectando à API em Português (PT-BR) · Armas, Munições, Missões e Valor de Itens
+        Armas, Munições, Missões, Itens e Mapas
       </p>
     </div>
   </header>
@@ -1424,7 +1490,6 @@
     <div id="stats-maps-info" style="display:none; align-items:center; gap:16px; flex-wrap:wrap;">
       <span id="map-active-missions-stat" style="color:var(--color-missions); font-weight:600;">0 missões ativas</span>
       <span id="map-current-name-stat" style="color:var(--accent-light); font-weight:600;">Customs</span>
-      <span style="color:var(--text-sec); font-size:0.7rem;">· Mapa oficial via tarkov.dev</span>
     </div>
   </div>
 
@@ -1536,32 +1601,49 @@
             <button class="map-filter-btn active" id="mf-missions" onclick="toggleMapFilter('missions', this)">
               <span class="dot-indicator" style="background:#ff9900;"></span> Missões Ativas
             </button>
+            <button class="map-filter-btn active" id="mf-extractions" onclick="toggleMapFilter('extractions', this)" title="Extrações de PMC (círculo verde), Scav (quadrado azul) e cooperativas">
+              <span class="dot-indicator" style="background:#99cc00;"></span> Extrações PMC / Scav
+            </button>
             <button class="map-filter-btn active" id="mf-bosses" onclick="toggleMapFilter('bosses', this)">
-              <span class="dot-indicator" style="background:#ff3333;"></span> Bosses
+              <span class="dot-indicator" style="background:#ff3333;"></span> Chefes
             </button>
-            <button class="map-filter-btn active" id="mf-extractions" onclick="toggleMapFilter('extractions', this)">
-              <span class="dot-indicator" style="background:#99cc00;"></span> Extrações
+            <button class="map-filter-btn" id="mf-spawns" onclick="toggleMapFilter('spawns', this)">
+              <span class="dot-indicator" style="background:#ffd24d;"></span> Spawns PMC
             </button>
-            <button class="map-filter-btn active" id="mf-spawns" onclick="toggleMapFilter('spawns', this)">
-              <span class="dot-indicator" style="background:#3399ff;"></span> Spawns PMC
+            <button class="map-filter-btn" id="mf-poi" onclick="toggleMapFilter('poi', this)" title="Trancas (chaves) e transições entre mapas">
+              <span class="dot-indicator" style="background:#aaaaaa;"></span> Chaves &amp; Locais
             </button>
             <div style="flex:1"></div>
+            <button class="map-filter-btn" id="map-style-btn" onclick="toggleMapStyle()" title="Alternar entre mapa abstrato (vetorial) e satélite" style="display:none;">🗺️ Estilo: Abstrato</button>
+            <button class="map-filter-btn" id="map-hc-btn" onclick="toggleMapContrast(this)" title="Aumenta contraste e brilho do mapa">◐ Alto contraste</button>
+            <button class="map-filter-btn" onclick="clearMapFocus()" title="Remove o destaque do objetivo">✖ Limpar destaque</button>
             <button class="map-filter-btn" onclick="openMapExternal()" title="Abrir no tarkov.dev em nova aba" style="border-color:var(--accent); color:var(--accent-light);">
               ↗ Abrir Externo
             </button>
           </div>
 
-          <!-- Área do mapa: iframe + painel de missões -->
+          <!-- Seletor de andares (aparece só em mapas com mais de um nível) -->
+          <div class="map-filter-bar map-floor-bar hidden" id="map-floor-bar"></div>
+
+          <!-- Área do mapa: Leaflet + painel de missões -->
           <div class="map-content-area">
 
-            <!-- iframe do mapa oficial tarkov.dev -->
             <div class="map-iframe-wrapper" id="map-iframe-wrapper">
-              <div class="map-iframe-overlay" id="map-iframe-overlay">
+              <div id="leaflet-map"></div>
+              <div class="map-status" id="map-status"></div>
+              <div class="map-legend">
+                <span><i class="tk-lg" style="background:#99cc00;border-radius:50%"></i>Extração PMC</span>
+                <span><i class="tk-lg" style="background:#3399ff;border-radius:3px"></i>Extração Scav</span>
+                <span><i class="tk-lg" style="background:#ff3333;border-radius:50%"></i>Chefe</span>
+                <span><i class="tk-lg" style="background:#ff9900;border-radius:50%"></i>Missão</span>
+              </div>
+              <!-- Contingência: mapa oficial em iframe quando Leaflet/calibração não carregam -->
+              <div class="map-iframe-overlay hidden" id="map-iframe-overlay">
                 <div class="map-iframe-overlay-text">
-                  🗺️ Clique para carregar o mapa interativo oficial<br>
-                  <small style="color:#555;">Powered by tarkov.dev — Inclui bosses, spawns e extrações atualizados</small>
+                  <span id="map-iframe-overlay-msg">Mapa indisponível.</span><br>
+                  <small style="color:#555;">Alternativa: mapa oficial tarkov.dev</small>
                 </div>
-                <button class="map-open-btn" onclick="loadMapIframe()">Carregar Mapa Interativo</button>
+                <button class="map-open-btn" onclick="loadMapIframe()">Carregar Mapa Oficial (tarkov.dev)</button>
               </div>
               <iframe id="map-iframe" src="" allowfullscreen></iframe>
             </div>
@@ -1606,8 +1688,7 @@
 
     // Estado dos Mapas
     let currentMapId = 'customs';
-    let mapIframeLoaded = false;
-    const mapFilters = { missions: true, bosses: true, extractions: true, spawns: true };
+    const mapFilters = { missions: true, bosses: true, extractions: true, spawns: false, poi: false };
 
     /* ════════════════════════════════════════════════════════
        TRADERS & FORMATAÇÃO MONETÁRIA
@@ -2072,109 +2153,543 @@ query {
 
     /* ════════════════════════════════════════════════════════
        BANCO DE DADOS DE MAPAS
+       key = chave do mapa em tarkov.dev (src/data/maps.json)
     ════════════════════════════════════════════════════════ */
     const MAPS_DB = [
-      {
-        id: 'customs',
-        name: 'Customs',
-        icon: '🏭',
-        slug: 'customs',
-        bosses: ['Reshala (Dealer)', 'Glukhar (raro)'],
-        extractions: ['Crossroads', 'ZB-1011', 'ZB-1012', 'RUAF Roadblock', 'Trailer Park', 'Old Gas Station'],
-        pmc_spawns: ['Entrada sul (Old Gas)', 'Portão principal', 'Dois andares', 'Dormitórios'],
-        normalizedNames: ['customs', 'bigmap']
-      },
-      {
-        id: 'woods',
-        name: 'Woods',
-        icon: '🌲',
-        slug: 'woods',
-        bosses: ['Shturman (Lumber yard)'],
-        extractions: ['Mountain Stash', 'Outskirts', 'Outskirts Water', 'Old Station', 'Bridge V-Ex', 'South V-Ex'],
-        pmc_spawns: ['RUAF Gate', 'UN Roadblock', 'Usec Camp', 'Bear Camp'],
-        normalizedNames: ['woods']
-      },
-      {
-        id: 'factory',
-        name: 'Factory',
-        icon: '⚙️',
-        slug: 'factory',
-        bosses: ['Tagilla'],
-        extractions: ['Gate 0', 'Gate 3', 'Cellars', 'Hole in the Fence', '3rd Floor Offices Window'],
-        pmc_spawns: ['Office', 'Corridor', 'Crossroads', 'Pipes'],
-        normalizedNames: ['factory4_day', 'factory4_night', 'factory']
-      },
-      {
-        id: 'shoreline',
-        name: 'Shoreline',
-        icon: '🏖️',
-        slug: 'shoreline',
-        bosses: ['Sanitar (Resort)'],
-        extractions: ['Pier', 'Rock Passage', 'Road to Customs', 'Tunnel', 'CCP Temporary'],
-        pmc_spawns: ['North (swamps)', 'South (village)', 'Weather Station', 'Pier'],
-        normalizedNames: ['shoreline']
-      },
-      {
-        id: 'interchange',
-        name: 'Interchange',
-        icon: '🛒',
-        slug: 'interchange',
-        bosses: ['Killa (Inside ULTRA mall)'],
-        extractions: ['Emercom Checkpoint', 'Railway Exfil', 'Hole in Fence', 'Power Station'],
-        pmc_spawns: ['Parking lot', 'Emercom', 'OLI', 'IDEA'],
-        normalizedNames: ['interchange']
-      },
-      {
-        id: 'reserve',
-        name: 'Reserve',
-        icon: '🏰',
-        slug: 'reserve',
-        bosses: ['Gluhar (HQ / barracks)', 'Raiders (extraction)'],
-        extractions: ['D-2', 'Manhole', 'Heating Pipe', 'Armored Train', 'Cliff Descent'],
-        pmc_spawns: ['White King', 'Black King', 'HQ', 'Dome'],
-        normalizedNames: ['rezervbase']
-      },
-      {
-        id: 'lighthouse',
-        name: 'Lighthouse',
-        icon: '💡',
-        slug: 'lighthouse',
-        bosses: ['Zryachiy (Lighthouse island)', 'Rogues (Water treatment)'],
-        extractions: ['Smugglers Boat', 'Side Tunnel', 'South Road', 'Chalet', 'Landing Zone'],
-        pmc_spawns: ['Coastal rocks', 'Village', 'Mountain road', 'Bridge'],
-        normalizedNames: ['lighthouse']
-      },
-      {
-        id: 'streets',
-        name: 'Streets of Tarkov',
-        icon: '🏙️',
-        slug: 'streets-of-tarkov',
-        bosses: ['Kaban (Klimov street)', 'Kollontay', 'Goons (raro)'],
-        extractions: ['Concordia', 'Damaged House', 'Gas Station', 'Primorsky Ave Taxi', 'Scav Checkpoint'],
-        pmc_spawns: ['Pinewood Hotel', 'Abandoned Factory', 'Cardinal', 'Chekannaya'],
-        normalizedNames: ['tarkovstreets']
-      },
-      {
-        id: 'ground-zero',
-        name: 'Ground Zero',
-        icon: '🟥',
-        slug: 'ground-zero',
-        bosses: ['Niente (beginners only)'],
-        extractions: ['Destroyed Apts', 'Scav Lands', 'Underpass', 'Dorms V-Ex'],
-        pmc_spawns: ['North sector', 'South sector', 'Exfil zone'],
-        normalizedNames: ['sandbox', 'sandbox_high']
-      },
-      {
-        id: 'labs',
-        name: 'The Lab',
-        icon: '🧪',
-        slug: 'the-lab',
-        bosses: ['Raider squads', 'Tagilla (raro)'],
-        extractions: ['Garage Gate', 'Parking Gate', 'Med bay elevator', 'Server Room elevator'],
-        pmc_spawns: ['Hangar gate', 'Medical sector', 'Server area'],
-        normalizedNames: ['laboratory']
-      }
+      { id: 'customs',     key: 'customs',           name: 'Customs',           icon: '🏭', slug: 'customs' },
+      { id: 'woods',       key: 'woods',             name: 'Woods',             icon: '🌲', slug: 'woods' },
+      { id: 'factory',     key: 'factory',           name: 'Factory',           icon: '⚙️', slug: 'factory' },
+      { id: 'shoreline',   key: 'shoreline',         name: 'Shoreline',         icon: '🏖️', slug: 'shoreline' },
+      { id: 'interchange', key: 'interchange',       name: 'Interchange',       icon: '🛒', slug: 'interchange' },
+      { id: 'reserve',     key: 'reserve',           name: 'Reserve',           icon: '🏰', slug: 'reserve' },
+      { id: 'lighthouse',  key: 'lighthouse',        name: 'Lighthouse',        icon: '💡', slug: 'lighthouse' },
+      { id: 'streets',     key: 'streets-of-tarkov', name: 'Streets of Tarkov', icon: '🏙️', slug: 'streets-of-tarkov' },
+      { id: 'ground-zero', key: 'ground-zero',       name: 'Ground Zero',       icon: '🟥', slug: 'ground-zero' },
+      { id: 'labs',        key: 'the-lab',           name: 'The Lab',           icon: '🧪', slug: 'the-lab' }
     ];
+
+    // IDs de mapa da API tarkov.dev -> id interno (Factory dia/noite, Ground Zero 21+ e Lab dark compartilham o mapa)
+    const MAP_API_IDS = {
+      '56f40101d2720b2a4d8b45d6': 'customs',
+      '5704e3c2d2720bac5b8b4567': 'woods',
+      '55f2d3fd4bdc2d5f408b4567': 'factory',
+      '59fc81d786f774390775787e': 'factory',
+      '5704e554d2720bac5b8b456e': 'shoreline',
+      '5714dbc024597771384a510d': 'interchange',
+      '5704e5fad2720bc05b8b4567': 'reserve',
+      '5704e4dad2720bb55b8b4567': 'lighthouse',
+      '5714dc692459777137212e12': 'streets',
+      '653e6760052c01c1c805532f': 'ground-zero',
+      '65b8d6f5cdde2479cb2a3125': 'ground-zero',
+      '5b0fc42d86f7744a585f9105': 'labs',
+      '6a294a5b5eb5f9a1700417b7': 'labs'
+    };
+    const MAP_NORM_NAMES = {
+      'customs': 'customs', 'bigmap': 'customs', 'woods': 'woods',
+      'factory': 'factory', 'factory4_day': 'factory', 'factory4_night': 'factory', 'night-factory': 'factory',
+      'shoreline': 'shoreline', 'interchange': 'interchange',
+      'reserve': 'reserve', 'rezervbase': 'reserve', 'lighthouse': 'lighthouse',
+      'streets-of-tarkov': 'streets', 'tarkovstreets': 'streets',
+      'ground-zero': 'ground-zero', 'ground-zero-21': 'ground-zero', 'sandbox': 'ground-zero', 'sandbox_high': 'ground-zero',
+      'the-lab': 'labs', 'laboratory': 'labs', 'the-lab-dark': 'labs'
+    };
+
+    /** Converte qualquer referência de mapa (id, objeto {id,name,normalizedName} ou nome) no id interno de MAPS_DB */
+    function mapIdOf(ref) {
+      if (!ref) return null;
+      if (typeof ref === 'string') ref = { id: ref, name: ref };
+      return MAP_API_IDS[ref.id]
+        || MAP_NORM_NAMES[String(ref.normalizedName || ref.id || '').toLowerCase()]
+        || (MAPS_DB.find(m => m.name.toLowerCase() === String(ref.name || '').toLowerCase()) || {}).id
+        || null;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       DADOS DOS MAPAS (calibração + posições)
+    ════════════════════════════════════════════════════════ */
+    const MAPS_META_URL = 'https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json';
+    const JSON_MAPS_URL = 'https://json.tarkov.dev/regular/maps';
+    const JSON_MAPS_PT  = 'https://json.tarkov.dev/regular/maps_pt';
+
+    let mapsMeta = null;      // key -> definição interativa do tarkov.dev (bounds, transform, rotação, andares)
+    let mapsGeo = null;       // id interno -> { extracts, bosses, spawns, poi }
+    let taskGeo = {};         // id do objetivo -> [{ mid, positions[], outline }]
+    let metaPromise = null;
+    let geoPromise = null;
+    const svgTextCache = {};
+
+    function loadMapsMeta() {
+      if (!metaPromise) {
+        metaPromise = fetch(MAPS_META_URL)
+          .then(r => { if (!r.ok) throw new Error('maps.json ' + r.status); return r.json(); })
+          .then(groups => {
+            const out = {};
+            groups.forEach(g => (g.maps || []).forEach(m => { if (m.projection === 'interactive') out[m.key] = m; }));
+            mapsMeta = out;
+            return out;
+          })
+          .catch(e => { console.warn('[Mapas] Calibração indisponível:', e.message); metaPromise = null; return null; });
+      }
+      return metaPromise;
+    }
+
+    function loadMapGeo() {
+      if (geoPromise) return geoPromise;
+      geoPromise = (async () => {
+        const [mr, pr, tr] = await Promise.all([
+          fetch(JSON_MAPS_URL),
+          fetch(JSON_MAPS_PT).catch(() => null),
+          fetch(JSON_TASKS_URL).catch(() => null)
+        ]);
+        if (!mr.ok) throw new Error('maps ' + mr.status);
+        const mj = await mr.json();
+        const trn = pr && pr.ok ? ((await pr.json()).data || {}) : {};
+        const tj = tr && tr.ok ? await tr.json() : null;
+        const T = k => trn[k] || k;
+        const mobs = (mj.data && mj.data.mobs) || {};
+        const avg = (ps, k) => ps.reduce((s, p) => s + p[k], 0) / ps.length;
+
+        const geo = {};
+        for (const m of Object.values((mj.data && mj.data.maps) || {})) {
+          const mid = mapIdOf(m);
+          if (!mid || geo[mid]) continue;
+          const g = geo[mid] = { extracts: [], bosses: [], spawns: [], poi: [] };
+
+          for (const e of m.extracts || []) {
+            if (e.position) g.extracts.push({ name: T(e.name), faction: e.faction || 'shared', pos: e.position });
+          }
+          for (const b of m.bosses || []) {
+            const bossName = trn[b.mob] || (mobs[b.mob] && mobs[b.mob].name) || b.mob;
+            for (const loc of b.spawnLocations || []) {
+              const ps = loc.positions || [];
+              if (!ps.length) continue;
+              g.bosses.push({
+                name: bossName, chance: b.spawnChance, locChance: loc.chance, zone: T(loc.name),
+                pos: { x: avg(ps, 'x'), y: avg(ps, 'y'), z: avg(ps, 'z') }
+              });
+            }
+          }
+          for (const s of m.spawns || []) {
+            const cats = s.categories || [], sides = s.sides || [];
+            if (s.position && cats.includes('player') && (sides.includes('pmc') || sides.includes('all'))) g.spawns.push(s.position);
+          }
+          for (const l of m.locks || []) {
+            if (l.position) g.poi.push({ type: 'lock', key: l.key, lockType: l.lockType, pos: l.position });
+          }
+          for (const t of m.transits || []) {
+            if (t.position) g.poi.push({ type: 'transit', name: T(t.description), target: mapIdOf(t.map), pos: t.position });
+          }
+        }
+
+        const tg = {};
+        for (const t of Object.values((tj && tj.data && tj.data.tasks) || {})) {
+          for (const o of t.objectives || []) {
+            const arr = [];
+            for (const z of o.zones || []) {
+              const mid = mapIdOf(z.map);
+              if (mid && z.position) arr.push({ mid, positions: [z.position], outline: z.outline || null });
+            }
+            for (const l of o.possibleLocations || []) {
+              const mid = mapIdOf(l.map);
+              if (mid && (l.positions || []).length) arr.push({ mid, positions: l.positions, outline: null });
+            }
+            if (arr.length) tg[o.id] = arr;
+          }
+        }
+        mapsGeo = geo;
+        taskGeo = tg;
+        return geo;
+      })().catch(e => { geoPromise = null; throw e; });
+      return geoPromise;
+    }
+
+    /* ════════════════════════════════════════════════════════
+       LEAFLET: CRS CALIBRADO (mesma projeção do tarkov.dev)
+    ════════════════════════════════════════════════════════ */
+    // bounds do tarkov.dev vêm como [[x1, z1], [x2, z2]]; LatLng = [z, x]
+    function mapBounds(b) { return L.latLngBounds([b[0][1], b[0][0]], [b[1][1], b[1][0]]); }
+
+    function makeCRS(meta) {
+      const t = meta.transform || [1, 0, 1, 0];
+      const rot = meta.coordinateRotation || 0;
+      const rotate = (ll, deg) => {
+        if (!ll.lng && !ll.lat) return L.latLng(0, 0);
+        if (!deg) return ll;
+        const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+        return L.latLng(ll.lng * s + ll.lat * c, ll.lng * c - ll.lat * s);
+      };
+      return L.extend({}, L.CRS.Simple, {
+        transformation: new L.Transformation(t[0], t[1], -t[2], t[3]),
+        projection: L.extend({}, L.Projection.LonLat, {
+          project: ll => L.Projection.LonLat.project(rotate(ll, rot)),
+          unproject: p => rotate(L.Projection.LonLat.unproject(p), -rot)
+        })
+      });
+    }
+
+    const FLOOR_LABELS = {
+      '2nd Floor': '2º Andar', '3rd Floor': '3º Andar', '4th Floor': '4º Andar', '5th Floor': '5º Andar',
+      'Underground': 'Subsolo', 'Tunnels': 'Túneis', 'Garage': 'Garagem', 'Bunkers': 'Bunkers',
+      'Second Level': '2º Nível', 'Technical': 'Nível Técnico'
+    };
+    const BLANK_TILE = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+
+    let lmap = null, lMeta = null, lMapId = null, lStyle = 'svg', lFloor = -1, lFloorSeq = 0, lToken = 0;
+    let lBaseLayer = null, lFloorLayer = null, lGroups = {}, lMarkers = [], pendingFocus = null, mapStylePref = 'svg';
+    let mapStatusTimer = null;
+
+    function mapStatus(text, ms) {
+      const el = document.getElementById('map-status');
+      if (!el) return;
+      clearTimeout(mapStatusTimer);
+      el.textContent = text || '';
+      el.classList.toggle('show', !!text);
+      if (text && ms) mapStatusTimer = setTimeout(() => el.classList.remove('show'), ms);
+    }
+
+    function destroyLeaflet() {
+      if (lmap) { lmap.remove(); lmap = null; }
+      lGroups = {}; lMarkers = []; lBaseLayer = null; lFloorLayer = null; lFloor = -1; lMeta = null; lMapId = null;
+    }
+
+    /** Fallback: sem Leaflet / sem calibração -> oferece o mapa oficial em iframe */
+    function showMapFallback(msg) {
+      const overlay = document.getElementById('map-iframe-overlay');
+      const txt = document.getElementById('map-iframe-overlay-msg');
+      if (txt) txt.textContent = msg;
+      if (overlay) overlay.classList.remove('hidden');
+      const box = document.getElementById('leaflet-map');
+      if (box) box.style.display = 'none';
+      mapStatus('');
+      renderFloorBar();
+    }
+
+    function resetMapFallback() {
+      const overlay = document.getElementById('map-iframe-overlay');
+      const iframe = document.getElementById('map-iframe');
+      const box = document.getElementById('leaflet-map');
+      if (overlay) overlay.classList.add('hidden');
+      if (iframe) { iframe.classList.remove('show'); iframe.src = ''; }
+      if (box) box.style.display = 'block';
+    }
+
+    /** Carrega o mapa oficial do tarkov.dev em iframe (modo de contingência) */
+    function loadMapIframe() {
+      const mapDef = MAPS_DB.find(m => m.id === currentMapId);
+      if (!mapDef) return;
+      const iframe = document.getElementById('map-iframe');
+      const overlay = document.getElementById('map-iframe-overlay');
+      iframe.src = `https://tarkov.dev/map/${mapDef.slug}`;
+      iframe.classList.add('show');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    /** Abre o mapa no tarkov.dev em nova aba */
+    function openMapExternal() {
+      const mapDef = MAPS_DB.find(m => m.id === currentMapId);
+      if (!mapDef) return;
+      window.open(`https://tarkov.dev/map/${mapDef.slug}`, '_blank', 'noopener');
+    }
+
+    async function makeSvgOverlay(url, visibleIds, bounds, pane) {
+      if (!svgTextCache[url]) {
+        svgTextCache[url] = fetch(url).then(r => { if (!r.ok) throw new Error('svg ' + r.status); return r.text(); })
+          .catch(e => { delete svgTextCache[url]; throw e; });
+      }
+      const text = await svgTextCache[url];
+      const NS = 'http://www.w3.org/2000/svg';
+      const el = document.createElementNS(NS, 'svg');
+      el.setAttribute('xmlns', NS);
+      el.innerHTML = text;
+      const root = el.children[0];
+      el.setAttribute('viewBox', root.getAttribute('viewBox'));
+      for (const g of [...root.children].filter(c => c.nodeName === 'g' && c.id)) {
+        const keep = g.dataset && g.dataset.keepWithGroup;
+        g.style.display = (visibleIds.includes(g.id) || (keep && visibleIds.includes(keep))) ? '' : 'none';
+      }
+      return L.svgOverlay(el, bounds, { pane, className: 'tk-svg' });
+    }
+
+    function nativeLayerOpts() {
+      return { maxZoom: Math.max(7, lMeta.maxZoom), maxNativeZoom: lMeta.maxZoom, errorTileUrl: BLANK_TILE };
+    }
+
+    function setupBaseLayer() {
+      if (lBaseLayer) { lmap.removeLayer(lBaseLayer); lBaseLayer = null; }
+      const bounds = mapBounds(lMeta.bounds);
+      if (lStyle === 'tile' && lMeta.tilePath) {
+        lBaseLayer = L.tileLayer(lMeta.tilePath, { tileSize: lMeta.tileSize || 256, bounds, pane: 'tkBase', ...nativeLayerOpts() }).addTo(lmap);
+      } else if (lMeta.svgPath) {
+        const tk = lToken;
+        makeSvgOverlay(lMeta.svgPath, [lMeta.svgLayer], lMeta.svgBounds ? mapBounds(lMeta.svgBounds) : bounds, 'tkBase')
+          .then(ov => { if (tk === lToken && lmap && lStyle !== 'tile') lBaseLayer = ov.addTo(lmap); })
+          .catch(e => mapStatus('Não foi possível carregar a imagem do mapa (' + e.message + ').', 6000));
+      }
+    }
+
+    function floorList() {
+      return (lMeta && lMeta.layers ? lMeta.layers : [])
+        .map((layer, idx) => ({ layer, idx }))
+        .filter(({ layer }) => layer.tilePath || layer.svgLayer);
+    }
+
+    function renderFloorBar() {
+      const bar = document.getElementById('map-floor-bar');
+      if (!bar) return;
+      const floors = lmap ? floorList() : [];
+      if (!floors.length) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+      const btn = (idx, label) => `<button class="map-filter-btn ${idx === lFloor ? 'active' : ''}" onclick="setFloor(${idx})">${esc(label)}</button>`;
+      bar.innerHTML = '<span class="map-filter-label">Andar:</span>' + btn(-1, 'Térreo / Principal') +
+        floors.map(({ layer, idx }) => btn(idx, FLOOR_LABELS[layer.name] || layer.name)).join('');
+      bar.classList.remove('hidden');
+    }
+
+    function setFloor(idx) {
+      if (!lmap) return;
+      lFloor = idx;
+      const seq = ++lFloorSeq;
+      if (lFloorLayer) { lmap.removeLayer(lFloorLayer); lFloorLayer = null; }
+      const layer = idx >= 0 ? lMeta.layers[idx] : null;
+      if (layer) {
+        let kind = lStyle;
+        if (!layer.svgLayer) kind = 'tile';
+        if (!layer.tilePath) kind = 'svg';
+        const bounds = mapBounds(lMeta.bounds);
+        if (kind === 'tile') {
+          lFloorLayer = L.tileLayer(layer.tilePath, { tileSize: lMeta.tileSize || 256, bounds, pane: 'tkFloor', ...nativeLayerOpts() }).addTo(lmap);
+        } else if (lMeta.svgPath) {
+          const tk = lToken;
+          makeSvgOverlay(lMeta.svgPath, [layer.svgLayer], lMeta.svgBounds ? mapBounds(lMeta.svgBounds) : bounds, 'tkFloor')
+            .then(ov => { if (seq === lFloorSeq && tk === lToken && lmap) lFloorLayer = ov.addTo(lmap); })
+            .catch(e => mapStatus('Não foi possível carregar o andar (' + e.message + ').', 6000));
+        }
+      }
+      renderFloorBar();
+      updateMarkerOpacity();
+    }
+
+    /** Andar (índice em meta.layers, ou -1 = térreo) onde uma posição do jogo {x,y,z} se encontra */
+    function floorOf(pos) {
+      if (!lMeta || !lMeta.layers) return -1;
+      const ll = L.latLng(pos.z, pos.x);
+      for (let i = 0; i < lMeta.layers.length; i++) {
+        const lay = lMeta.layers[i];
+        if (!lay.tilePath && !lay.svgLayer) continue;
+        for (const ex of lay.extents || []) {
+          if (pos.y >= ex.height[0] && pos.y < ex.height[1] &&
+              (!ex.bounds || ex.bounds.some(b => mapBounds(b).contains(ll)))) return i;
+        }
+      }
+      return -1;
+    }
+
+    function updateMarkerOpacity() {
+      lMarkers.forEach(m => m.setOpacity(m._floor === lFloor ? 1 : 0.3));
+    }
+
+    function mkIcon(kind, glyph) {
+      return L.divIcon({
+        className: 'tk-mk-wrap', html: `<div class="tk-mk tk-${kind}">${glyph}</div>`,
+        iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -13]
+      });
+    }
+
+    function addMarker(group, pos, kind, glyph, popup) {
+      const m = L.marker([pos.z, pos.x], { icon: mkIcon(kind, glyph), keyboard: false, riseOnHover: true });
+      m._floor = floorOf(pos);
+      if (popup) m.bindPopup(popup);
+      m.addTo(lGroups[group]);
+      lMarkers.push(m);
+      return m;
+    }
+
+    const pct = v => Math.round((v || 0) * 100) + '%';
+    let keyNames = null;
+    function keyName(id) {
+      if (!keyNames) keyNames = new Map((allItemsData || []).map(i => [i.id, i.name]));
+      return keyNames.get(id) || 'Chave desconhecida';
+    }
+
+    /** (Re)desenha todos os marcadores do mapa atual; os filtros decidem quais camadas ficam visíveis */
+    function renderMapMarkers() {
+      if (!lmap) return;
+      ['missions', 'extractions', 'bosses', 'spawns', 'poi'].forEach(k => lGroups[k].clearLayers());
+      lMarkers = [];
+      const g = mapsGeo && mapsGeo[lMapId];
+
+      if (g) {
+        g.extracts.forEach(e => {
+          const k = e.faction === 'scav' ? 'scav' : e.faction === 'pmc' ? 'pmc' : 'shared';
+          const label = { pmc: 'Extração PMC', scav: 'Extração Scav', shared: 'Extração Cooperativa (PMC + Scav)' }[k];
+          addMarker('extractions', e.pos, 'ex-' + k, { pmc: '⇧', scav: 'S', shared: '⇄' }[k],
+            `<strong>${esc(e.name)}</strong><br><span class="tk-pop-sub">${label}</span>`);
+        });
+        g.bosses.forEach(b => addMarker('bosses', b.pos, 'boss', '☠',
+          `<strong>${esc(b.name)}</strong><br><span class="tk-pop-sub">Chefe · chance de aparecer: ${pct(b.chance)}` +
+          (b.locChance != null && b.locChance < 1 ? ` · neste local: ${pct(b.locChance)}` : '') +
+          `<br>Zona: ${esc(b.zone)}</span>`));
+        g.spawns.forEach(p => addMarker('spawns', p, 'spawn', '•', '<strong>Spawn PMC</strong>'));
+        g.poi.forEach(p => {
+          if (p.type === 'lock') {
+            addMarker('poi', p.pos, 'poi', '🔑',
+              `<strong>${esc(keyName(p.key))}</strong><br><span class="tk-pop-sub">Tranca (${esc(p.lockType || 'porta')})${p.needsPower ? ' · precisa de energia' : ''}</span>`);
+          } else {
+            const target = MAPS_DB.find(m => m.id === p.target);
+            addMarker('poi', p.pos, 'transit', '➜',
+              `<strong>Transição${target ? ' → ' + esc(target.name) : ''}</strong><br><span class="tk-pop-sub">${esc(p.name)}</span>`);
+          }
+        });
+      }
+
+      // Missões ativas: zonas e locais reais dos objetivos
+      const seen = new Set();
+      for (const task of tasksData) {
+        if (!isTaskActive(task.id) || isTaskCompleted(task.id)) continue;
+        for (const obj of task.objectives || []) {
+          for (const entry of taskGeo[obj.id] || []) {
+            if (entry.mid !== lMapId) continue;
+            if (entry.outline) {
+              L.polygon(entry.outline.map(p => [p.z, p.x]), { color: '#ff9900', weight: 1.5, fillOpacity: 0.15, interactive: false }).addTo(lGroups.missions);
+            }
+            entry.positions.slice(0, 12).forEach(p => {
+              const key = `${obj.id}|${p.x.toFixed(1)}|${p.z.toFixed(1)}`;
+              if (seen.has(key)) return;
+              seen.add(key);
+              addMarker('missions', p, 'mission', '!',
+                `<strong>${esc(task.name)}</strong><br><span class="tk-pop-sub">${esc((obj.type || '').toUpperCase())} — ${esc(obj.description)}</span>`);
+            });
+          }
+        }
+      }
+      updateMarkerOpacity();
+    }
+
+    /** Destaca um objetivo de missão: troca andar, dá zoom na zona e abre balão informativo */
+    function applyFocus() {
+      const pf = pendingFocus;
+      if (!pf || !lmap) return;
+      pendingFocus = null;
+      const task = tasksData.find(t => t.id === pf.taskId);
+      const obj = task && task.objectives[pf.objIdx];
+      if (!obj) return;
+
+      const entries = (taskGeo[obj.id] || []).filter(g => g.mid === lMapId);
+      const mapName = (MAPS_DB.find(m => m.id === lMapId) || {}).name || '';
+      if (!entries.length) {
+        mapStatus(`“${task.name}”: este objetivo não tem local fixo em ${mapName} (vale em qualquer ponto do mapa).`, 7000);
+        return;
+      }
+
+      lGroups.focus.clearLayers();
+      const pts = [];
+      const seen = new Set();
+      entries.forEach(e => e.positions.forEach(p => {
+        const k = p.x.toFixed(1) + '|' + p.z.toFixed(1);
+        if (!seen.has(k)) { seen.add(k); pts.push(p); }
+      }));
+      setFloor(floorOf(pts[0]));
+
+      const html = `<strong>${esc(task.name)}</strong><br><span class="tk-pop-sub">${esc((obj.type || '').toUpperCase())} — ${esc(obj.description)}</span>`;
+      let first = null;
+      pts.slice(0, 12).forEach(p => {
+        const m = L.marker([p.z, p.x], {
+          icon: L.divIcon({ className: 'tk-mk-wrap', html: '<div class="tk-pulse"><span></span></div>', iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -18] }),
+          zIndexOffset: 1000
+        }).addTo(lGroups.focus).bindPopup(html);
+        if (!first) first = m;
+      });
+      const latlngs = pts.map(p => [p.z, p.x]);
+      entries.forEach(e => {
+        if (e.outline) {
+          e.outline.forEach(p => latlngs.push([p.z, p.x]));
+          L.polygon(e.outline.map(p => [p.z, p.x]), { color: '#ff9900', weight: 2, fillOpacity: 0.2, interactive: false }).addTo(lGroups.focus);
+        }
+      });
+
+      const zoom = Math.max(lMeta.maxZoom - 0.5, lMeta.minZoom);
+      if (latlngs.length === 1) lmap.flyTo(latlngs[0], zoom, { duration: 1 });
+      else lmap.flyToBounds(L.latLngBounds(latlngs), { maxZoom: zoom, padding: [70, 70], duration: 1 });
+      setTimeout(() => { if (lmap && first) first.openPopup(); }, 1150);
+    }
+
+    function clearMapFocus() { if (lGroups.focus) lGroups.focus.clearLayers(); }
+
+    function focusFromPanel(taskId, objIdx) {
+      pendingFocus = { taskId, objIdx };
+      applyFocus();
+    }
+
+    /** Monta o mapa Leaflet para o mapa atual */
+    async function openMap(mapId) {
+      const token = ++lToken;
+      const def = MAPS_DB.find(m => m.id === mapId);
+      if (!def) return;
+      destroyLeaflet();
+      resetMapFallback();
+      renderFloorBar();
+
+      if (typeof L === 'undefined') { showMapFallback('A biblioteca de mapas (Leaflet) não carregou — verifique a conexão.'); return; }
+      mapStatus('Carregando mapa…');
+      const all = await loadMapsMeta();
+      if (token !== lToken) return;
+      const meta = all && all[def.key];
+      if (!meta) { showMapFallback('Não foi possível carregar a calibração do mapa (offline?). Use o mapa oficial do tarkov.dev.'); return; }
+
+      lMeta = meta; lMapId = mapId;
+      lStyle = (mapStylePref === 'tile' && meta.tilePath) || !meta.svgPath ? 'tile' : 'svg';
+      const bounds = mapBounds(meta.bounds);
+      lmap = L.map('leaflet-map', {
+        crs: makeCRS(meta), minZoom: meta.minZoom, maxZoom: Math.max(7, meta.maxZoom),
+        zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 110,
+        maxBounds: bounds.pad(0.25), maxBoundsViscosity: 0.9, attributionControl: false
+      });
+      lmap.createPane('tkBase').style.zIndex = 200;
+      lmap.createPane('tkFloor').style.zIndex = 250;
+      ['missions', 'extractions', 'bosses', 'spawns', 'poi', 'focus'].forEach(k => {
+        lGroups[k] = L.layerGroup();
+        if (k === 'focus' || mapFilters[k]) lGroups[k].addTo(lmap);
+      });
+      lmap.fitBounds(bounds);
+      setupBaseLayer();
+      renderFloorBar();
+      updateStyleButton();
+
+      mapStatus('Carregando posições…');
+      try {
+        await loadMapGeo();
+        if (token !== lToken) return;
+        mapStatus('');
+      } catch (e) {
+        if (token !== lToken) return;
+        console.warn('[Mapas] Posições indisponíveis:', e.message);
+        mapStatus('Posições de extrações, chefes e objetivos indisponíveis (sem conexão com json.tarkov.dev).', 7000);
+      }
+      renderMapMarkers();
+      renderMapMissionsPanel();
+      applyFocus();
+    }
+
+    function updateStyleButton() {
+      const btn = document.getElementById('map-style-btn');
+      if (!btn) return;
+      const both = lMeta && lMeta.tilePath && lMeta.svgPath;
+      btn.style.display = both ? '' : 'none';
+      btn.textContent = lStyle === 'svg' ? '🗺️ Estilo: Abstrato' : '🛰️ Estilo: Satélite';
+    }
+
+    function toggleMapStyle() {
+      if (!lmap || !(lMeta.tilePath && lMeta.svgPath)) return;
+      lStyle = lStyle === 'svg' ? 'tile' : 'svg';
+      mapStylePref = lStyle;
+      setupBaseLayer();
+      setFloor(lFloor);
+      updateStyleButton();
+    }
+
+    function toggleMapContrast(btn) {
+      const box = document.getElementById('leaflet-map');
+      btn.classList.toggle('active', box.classList.toggle('hc'));
+    }
 
     /* ════════════════════════════════════════════════════════
        FUNÇÕES DA ABA MAPAS
@@ -2184,11 +2699,6 @@ query {
     function buildMapSidebar() {
       const sidebar = document.getElementById('maps-sidebar');
       if (!sidebar) return;
-
-      const title = sidebar.querySelector('.maps-sidebar-title') || document.createElement('div');
-      title.className = 'maps-sidebar-title';
-      title.textContent = 'Selecionar Mapa';
-
       let html = `<div class="maps-sidebar-title">Selecionar Mapa</div>`;
       MAPS_DB.forEach(m => {
         const isActive = m.id === currentMapId;
@@ -2203,54 +2713,27 @@ query {
     /** Seleciona um mapa e re-renderiza o conteúdo */
     function selectMap(mapId) {
       currentMapId = mapId;
-      mapIframeLoaded = false;
-
-      // Atualiza sidebar
       document.querySelectorAll('.map-entry').forEach(el => {
         el.classList.toggle('active', el.getAttribute('onclick').includes(`'${mapId}'`));
       });
-
-      // Reseta iframe
-      const iframe = document.getElementById('map-iframe');
-      const overlay = document.getElementById('map-iframe-overlay');
-      if (iframe) iframe.src = '';
-      if (overlay) overlay.classList.remove('hidden');
-
-      renderMapContent();
+      const mapDef = MAPS_DB.find(m => m.id === mapId);
+      const mapNameStat = document.getElementById('map-current-name-stat');
+      if (mapNameStat && mapDef) mapNameStat.textContent = mapDef.name;
+      renderMapMissionsPanel();
+      openMap(mapId);
     }
 
-    /** Carrega o iframe do mapa quando o usuário clica */
-    function loadMapIframe() {
-      const mapDef = MAPS_DB.find(m => m.id === currentMapId);
-      if (!mapDef) return;
-
-      const iframe = document.getElementById('map-iframe');
-      const overlay = document.getElementById('map-iframe-overlay');
-
-      // URL do tarkov.dev embed (modo dark, sem UI extra)
-      const url = `https://tarkov.dev/map/${mapDef.slug}`;
-      iframe.src = url;
-      mapIframeLoaded = true;
-      if (overlay) overlay.classList.add('hidden');
-    }
-
-    /** Abre o mapa no tarkov.dev em nova aba */
-    function openMapExternal() {
-      const mapDef = MAPS_DB.find(m => m.id === currentMapId);
-      if (!mapDef) return;
-      window.open(`https://tarkov.dev/map/${mapDef.slug}`, '_blank', 'noopener');
-    }
-
-    /** Alterna os filtros de camada (bosses, extrações, spawns, missões) */
+    /** Liga/desliga uma camada do mapa (missões, extrações, chefes, spawns, chaves/locais) */
     function toggleMapFilter(filter, btn) {
       mapFilters[filter] = !mapFilters[filter];
       btn.classList.toggle('active', mapFilters[filter]);
-      renderMapMissionsPanel();
-
-      // Mostra/oculta o painel de missões
-      const panel = document.getElementById('map-missions-panel');
-      if (panel) {
-        panel.classList.toggle('hidden', !mapFilters.missions);
+      if (lmap && lGroups[filter]) {
+        if (mapFilters[filter]) lGroups[filter].addTo(lmap); else lmap.removeLayer(lGroups[filter]);
+      }
+      if (filter === 'missions') {
+        const panel = document.getElementById('map-missions-panel');
+        if (panel) panel.classList.toggle('hidden', !mapFilters.missions);
+        if (lmap) setTimeout(() => lmap.invalidateSize(), 50);
       }
     }
 
@@ -2263,30 +2746,20 @@ query {
 
       if (subtitle) subtitle.textContent = `em ${mapDef.name}`;
 
-      // Coleta missões ativas (marcadas em andamento) com objetivos neste mapa
-      const normalizedNames = mapDef.normalizedNames || [mapDef.id];
+      // Missões ativas (e não concluídas) com objetivos neste mapa
       const activeMissionsForMap = [];
-
       for (const task of tasksData) {
         if (!isTaskActive(task.id)) continue;
         if (isTaskCompleted(task.id)) continue;
 
-        const relevantObjs = (task.objectives || []).filter(obj => {
-          if (!obj.maps || obj.maps.length === 0) return false;
-          return obj.maps.some(m => {
-            const mn = (m.name || m.id || m || '').toLowerCase();
-            return normalizedNames.some(nn => mn.includes(nn) || nn.includes(mn)) ||
-                   mn.includes(mapDef.name.toLowerCase()) ||
-                   mn.includes(mapDef.id);
-          });
+        const relevantObjs = [];
+        (task.objectives || []).forEach((obj, idx) => {
+          const located = (taskGeo[obj.id] || []).some(g => g.mid === mapDef.id);
+          if (located || (obj.maps || []).some(m => mapIdOf(m) === mapDef.id)) relevantObjs.push({ obj, idx, located });
         });
-
-        if (relevantObjs.length > 0) {
-          activeMissionsForMap.push({ task, objs: relevantObjs });
-        }
+        if (relevantObjs.length > 0) activeMissionsForMap.push({ task, objs: relevantObjs });
       }
 
-      // Atualiza estatísticas
       const statEl = document.getElementById('map-active-missions-stat');
       if (statEl) statEl.textContent = `${activeMissionsForMap.length} missão(ões) ativa(s)`;
 
@@ -2301,13 +2774,28 @@ query {
       list.innerHTML = activeMissionsForMap.map(({ task, objs }) => `
         <div class="map-mission-item">
           <div class="map-mission-name is-active">📌 ${esc(task.name)}</div>
-          ${objs.map(obj => `
+          ${objs.map(({ obj, idx, located }) => `
             <div class="map-mission-obj">
               <strong>${esc((obj.type || 'objetivo').toUpperCase())}</strong> — ${esc(obj.description)}
+              ${located ? `<button class="map-locate-btn" onclick="focusFromPanel('${task.id}', ${idx})">📍 Localizar</button>` : ''}
             </div>
           `).join('')}
         </div>
       `).join('');
+    }
+
+    /** Botão "Ver no Mapa" da aba Missões: abre o mapa/andar certos, dá zoom no objetivo e abre o balão */
+    function viewOnMap(taskId, objIdx, event) {
+      if (event) event.stopPropagation();
+      const task = tasksData.find(t => t.id === taskId);
+      const obj = task && task.objectives[objIdx];
+      if (!obj) return;
+      const hit = (taskGeo[obj.id] || [])[0];
+      const mid = (hit && hit.mid) || (obj.maps || []).map(mapIdOf).find(Boolean);
+      if (mid) currentMapId = mid;
+      pendingFocus = { taskId, objIdx };
+      showSection('maps');
+      // se os dados de posição ainda não foram carregados, openMap resolve o foco depois de carregá-los
     }
 
     /** Renderiza a aba de MAPAS completa */
@@ -2345,20 +2833,25 @@ query {
       if (secTitle) secTitle.textContent = 'Mapas Táticos';
       if (secCount) secCount.textContent = `${MAPS_DB.length} mapas`;
 
-      // Nome do mapa na stats bar
       const mapNameStat = document.getElementById('map-current-name-stat');
       if (mapNameStat) mapNameStat.textContent = mapDef.name;
 
-      // Exibe seção de mapas
+      // Exibe seção de mapas (precisa estar visível antes do Leaflet medir o contêiner)
       if (mapsSection) mapsSection.classList.add('visible');
 
-      // Inicializa sidebar e painel de missões
       buildMapSidebar();
       renderMapMissionsPanel();
-
-      // Controla visibilidade do painel de missões
       const panel = document.getElementById('map-missions-panel');
       if (panel) panel.classList.toggle('hidden', !mapFilters.missions);
+
+      if (lmap && lMapId === mapDef.id) {
+        // mapa já montado: só reajusta o tamanho e atualiza as missões ativas
+        lmap.invalidateSize();
+        renderMapMarkers();
+        applyFocus();
+      } else {
+        openMap(mapDef.id);
+      }
     }
 
     /* ════════════════════════════════════════════════════════
@@ -2570,6 +3063,7 @@ query {
                       </span>
                     </div>
                     <div class="obj-desc">${esc(obj.description)}</div>
+                    ${hasMaps ? `<button class="obj-map-btn" onclick="viewOnMap('${task.id}', ${i}, event)">🗺️ Ver no Mapa</button>` : ''}
                   </div>
                 `;
               }).join('')}
@@ -2827,7 +3321,7 @@ query {
         taskPills.style.display = 'none';
         secTitle.textContent = isGuns ? 'Armas' : 'Munições';
         legend.classList.remove('hidden');
-        statsTiers.style.display = 'flex';
+        statsTiers.style.display = 'none';
         statsTasks.style.display = 'none';
 
         document.getElementById('legend-s').textContent = isGuns ? 'Tier S — Recuo ≤ 55'  : 'Tier S — Penetração ≥ 50';
@@ -2853,14 +3347,8 @@ query {
     ════════════════════════════════════════════════════════ */
     function updateSubtitle() {
       const sub = document.getElementById('subtitle');
-      const labels = {
-        graphql: { text: 'Dados em tempo real via <span>api.tarkov.dev/graphql</span> (PT-BR)', badge: 'live',    label: 'API Live' },
-        json:    { text: 'Dados via <span>json.tarkov.dev</span> (CDN Estático PT-BR)',         badge: 'json',    label: 'JSON CDN' },
-        offline: { text: 'Dados offline (amostra embutida PT-BR)',                              badge: 'offline', label: 'Offline' },
-      };
-      const s = labels[dataSource] || labels.offline;
-      sub.innerHTML = `${s.text} · Classificação por Tier & Mercado de Itens
-        <br><span class="source-badge ${s.badge}"><span class="source-dot"></span>${s.label}</span>`;
+      sub.textContent = 'Armas, Munições, Missões, Itens e Mapas';
+      if (dataSource === 'offline') sub.textContent += ' · modo offline (amostra reduzida)';
     }
 
     function setLoadingState(on) {
@@ -2952,7 +3440,7 @@ query {
 
         setLoadingState(false);
         updateSubtitle();
-        renderSection(currentSection);
+        showSection(currentSection);
       }, 300);
     }
 
@@ -2995,7 +3483,7 @@ query {
 
         setLoadingState(false);
         updateSubtitle();
-        renderSection(currentSection);
+        showSection(currentSection);
 
       } catch (err) {
         setLoadingState(false);

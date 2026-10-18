@@ -37,28 +37,23 @@ Uma Single Page Application (SPA) tática e responsiva para rastrear o arsenal d
 - **Detalhes Expansíveis**: Ao clicar no cartão da missão, os objetivos são exibidos com etiquetas coloridas (`shoot`, `visit`, `giveItem`, `plantItem`, `extract`, `build`, etc.) e descrição em Português.
 - **Redirecionamento Missão -> Mapa**: Botão **"Ver no Mapa"** que transita para a aba de Mapas, seleciona o mapa exato da missão, foca a câmera e posiciona um marcador tático com anel pulsante laranja.
 
-### 🗺️ 4. Sistema Híbrido Split-Screen de Mapas & Painel de Raid
-- **Coluna Esquerda: Painel de Raid Tático (320px)**:
-  - **Seletor de Mapas Integrado**: Alternância instantânea de mapas com indicador de missões ativas.
-  - **📌 Missões Ativas neste Mapa**: Monitoramento em tempo real com caixas de seleção interativas para concluir objetivos sem sair da raid (`task_done_ID` gravado ao vivo no `localStorage`).
-  - **📍 Missões Gerais do Mapa (Sem local fixo)**: Identificação clara de missões com objetivos globais (ex: eliminações ou coletas em qualquer setor) sem poluir o mapa com pinos artificiais no centro `[500, 500]`.
-  - **Outras Missões Pendentes**: Accordion expansível para consulta rápida de tarefas secundárias no mapa selecionado.
-- **Coluna Direita: Visualizador de Mapas (1fr)**:
-  - **Modo Principal: Tarkov.dev Oficial (Embed)**: Visualização de alta fidelidade com todos os andares, extrações, spawns e loot oficial do Tarkov.dev (com alternador para MapGenie).
-  - **Modo Tático: Leaflet Calibrado Matematicamente**:
-    - **Calibração Oficial Tarkov.dev**: Carregamento dinâmico do `maps.json` oficial com matriz de rotação (`coordinateRotation`: 0, 90, 180, 270) e projeção de limites reais (`bounds`), garantindo alinhamento pixel-perfect sobre os SVGs.
-    - **Sem Pinos Falsos**: Remoção total do fallback arbitrário `[500, 500]` e de fórmulas artificiais para chefes (`[480 + idx*40, 500 + idx*30]`). Chefes e objetivos só geram marcadores em posições pontuais reais ou hotspots verificados.
-    - **Seletor de Andares Multi-Nível (Floors)**: Filtro dinâmico para mapas verticais complexos (`Todos`, `B1 / Subsolo`, `1º Andar`, `2º Andar / Telhado`).
-    - **Filtro de Alto Contraste / Modo Claro**: Inverte as linhas escuras dos SVGs do Tarkov.dev (`filter: invert(0.92) hue-rotate(180deg) contrast(1.25)`).
-    - **Barra de Filtros por Camadas (`L.layerGroup`)**: Missões (Ativas/Pendentes), Extrações PMC, Extrações Scav, Chefes (Bosses) e Locais Importantes (Hotspots).
-- **GraphQL Otimizado (`TaskObjectiveShoot`)**: Consulta estendida para trazer coordenadas reais de zonas de eliminação.
+### 🗺️ 4. Mapas Interativos (Leaflet + calibração oficial tarkov.dev)
+- **10 mapas**: Customs, Woods, Factory, Shoreline, Interchange, Reserve, Lighthouse, Streets of Tarkov, Ground Zero e The Lab.
+- **Pan/zoom fluido** com Leaflet 1.9.4 (`L.CRS.Simple`), usando o `maps.json` oficial do tarkov.dev (`bounds`, `transform`, `coordinateRotation`, `minZoom/maxZoom`): as posições `{x, y, z}` do jogo são projetadas com a mesma fórmula do tarkov.dev, então os ícones caem no local exato.
+- **Seletor de andares** (Térreo, 2º/3º/4º/5º Andar, Subsolo, Túneis, Bunkers, Garagem...) gerado a partir dos `layers` de cada mapa; ícones de outros andares ficam esmaecidos.
+- **Estilo Abstrato (SVG) / Satélite (tiles)** quando o mapa tem os dois, e botão de **Alto contraste**.
+- **Camadas ligáveis**: Missões Ativas (pinos + zonas do objetivo), Extrações PMC (círculo verde) / Scav (quadrado azul) / cooperativas, Chefes (com chance de aparecer), Spawns PMC e Chaves & Locais (trancas e transições).
+- **"Ver no Mapa"** nos objetivos da aba Missões: muda para a aba Mapas, abre o mapa e andar corretos, dá zoom na zona do objetivo e abre um balão com a missão. Objetivos sem local fixo (ex.: "elimine X em qualquer lugar") avisam isso em vez de criar um pino falso.
+- **Painel "Missões Ativas neste mapa"** com botão "Localizar" por objetivo.
+- **Contingência**: sem Leaflet/calibração, o mapa oficial do tarkov.dev pode ser carregado em iframe.
+- Fontes: `raw.githubusercontent.com/the-hideout/tarkov-dev/.../maps.json` (calibração), `json.tarkov.dev/regular/maps(_pt)` e `/tasks` (extrações, chefes, spawns, trancas e zonas de objetivos) — carregados só quando a aba Mapas é aberta.
 
 ---
 
 ## 🛡️ Arquitetura de Conectividade e Resiliência (3 Camadas)
 
-1. **Camada 1 (GraphQL Oficial em Português)**: Consulta completa com `items`, `ammo`, `maps` (com `extracts` e `bosses`) e `tasks` (com `zones`).
-2. **Camada 2 (JSON CDN Estático em Português)**: Endpoints traduzidos resilientes `items_pt`, `tasks_pt` e `maps_pt`.
+1. **Camada 1 (GraphQL Oficial em Português)**: Consulta com `items`, `ammo` e `tasks` (as posições de mapa vêm sempre do JSON CDN, na aba Mapas).
+2. **Camada 2 (JSON CDN Estático em Português)**: Endpoints traduzidos resilientes `items_pt` e `tasks_pt` (mais `maps`/`maps_pt` na aba Mapas).
 3. **Camada 3 (Fallback Offline)**: Dataset embutido 100% em Português com suporte completo a armas, munições, missões clássicas, extrações e hotspots.
 
 ---
