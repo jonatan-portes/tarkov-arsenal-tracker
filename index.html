@@ -1119,6 +1119,8 @@
       border: 1px solid #2a2a2a; border-radius: 2px; padding: 0 5px; cursor: help;
     }
     .task-need-flag:hover { color: var(--accent-light); border-color: var(--accent); opacity: 1; }
+    .pop-needs { margin-top: 6px; }
+    .pop-needs-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
     .needs-box {
       background: #161616; border: 1px solid #242424; border-left: 2px solid var(--color-flea);
       border-radius: 2px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
@@ -1982,6 +1984,16 @@ query {
         </div>`;
     }
 
+    /** Balão do mapa: missão + objetivo + fotos dos itens que a missão exige */
+    function missionPopup(task, obj) {
+      const items = [];
+      (taskNeeds[task.id] || []).forEach(g => g.items.slice(0, 4).forEach(i => items.push(i)));
+      const thumbs = items.slice(0, 8).map(i =>
+        `<span class="need-thumb-box" title="${esc(i.name)}"><img src="${esc(i.icon)}" alt="${esc(i.name)}" onerror="this.parentElement.style.display='none'"></span>`).join('');
+      return `<strong>${esc(task.name)}</strong><br><span class="tk-pop-sub">${esc((obj.type || '').toUpperCase())} — ${esc(obj.description)}</span>` +
+        (thumbs ? `<div class="pop-needs"><span class="tk-pop-sub">🎒 Necessário:</span><div class="pop-needs-row">${thumbs}</div></div>` : '');
+    }
+
     function needFlag(taskId) {
       const groups = taskNeeds[taskId];
       if (!groups || !groups.length) return '';
@@ -2757,8 +2769,7 @@ query {
               const key = `${obj.id}|${p.x.toFixed(1)}|${p.z.toFixed(1)}`;
               if (seen.has(key)) return;
               seen.add(key);
-              addMarker('missions', p, 'mission', '!',
-                `<strong>${esc(task.name)}</strong><br><span class="tk-pop-sub">${esc((obj.type || '').toUpperCase())} — ${esc(obj.description)}</span>`);
+              addMarker('missions', p, 'mission', '!', missionPopup(task, obj));
             });
           }
         }
@@ -2791,7 +2802,7 @@ query {
       }));
       setFloor(floorOf(pts[0]));
 
-      const html = `<strong>${esc(task.name)}</strong><br><span class="tk-pop-sub">${esc((obj.type || '').toUpperCase())} — ${esc(obj.description)}</span>`;
+      const html = missionPopup(task, obj);
       let first = null;
       pts.slice(0, 12).forEach(p => {
         const m = L.marker([p.z, p.x], {
@@ -2975,7 +2986,7 @@ query {
 
       list.innerHTML = activeMissionsForMap.map(({ task, objs }) => `
         <div class="map-mission-item">
-          <div class="map-mission-name is-active">📌 ${esc(task.name)}</div>
+          <div class="map-mission-name is-active">📌 ${esc(task.name)} ${needFlag(task.id)}</div>
           ${objs.map(({ obj, idx, located }) => `
             <div class="map-mission-obj">
               <strong>${esc((obj.type || 'objetivo').toUpperCase())}</strong> — ${esc(obj.description)}
