@@ -1114,6 +1114,252 @@
     ::-webkit-scrollbar-track { background: #0a0a0a; }
     ::-webkit-scrollbar-thumb { background: #262626; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+    /* =========================================================
+       ABA MAPAS
+    ========================================================= */
+    #maps-section { display:none; }
+    #maps-section.visible { display:block; }
+
+    .maps-layout {
+      display: flex;
+      gap: 14px;
+      height: calc(100vh - 220px);
+      min-height: 500px;
+    }
+
+    /* Sidebar esquerda - seleção de mapa */
+    .maps-sidebar {
+      width: 190px;
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .maps-sidebar-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-sec);
+      padding: 8px 12px 4px;
+    }
+
+    .map-entry {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--text-sec);
+      transition: background 0.15s, color 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .map-entry:hover { background: rgba(255,255,255,0.04); color: var(--text-main); }
+    .map-entry.active {
+      background: var(--accent-dim);
+      color: var(--accent-light);
+      border-left-color: var(--accent);
+    }
+    .map-entry-icon { font-size: 1rem; flex-shrink:0; }
+
+    /* Área principal */
+    .maps-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    /* Toolbar de filtros */
+    .map-filter-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .map-filter-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-sec);
+      margin-right: 4px;
+    }
+
+    .map-filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: transparent;
+      border: 1px solid #282828;
+      color: var(--text-sec);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .map-filter-btn:hover { border-color: var(--accent); color: var(--text-main); }
+    .map-filter-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent-light);
+    }
+    .map-filter-btn .dot-indicator {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Conteúdo do mapa: iframe + painel de missões */
+    .map-content-area {
+      flex: 1;
+      display: flex;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .map-iframe-wrapper {
+      flex: 1;
+      position: relative;
+      background: #0a0a0a;
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .map-iframe-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .map-iframe-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(10,10,10,0.92);
+      z-index: 5;
+    }
+    .map-iframe-overlay.hidden { display: none; }
+    .map-iframe-overlay-text {
+      color: var(--text-sec);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+    .map-open-btn {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent-light);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 10px 22px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .map-open-btn:hover { background: var(--accent); color: #000; }
+
+    /* Painel lateral de missões ativas no mapa */
+    .map-missions-panel {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .map-missions-panel.hidden { display: none; }
+
+    .map-missions-header {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid #1c1c1c;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-light);
+      flex-shrink: 0;
+    }
+
+    .map-missions-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+    }
+
+    .map-mission-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #141414;
+    }
+    .map-mission-item:last-child { border-bottom: none; }
+
+    .map-mission-name {
+      font-size: 0.76rem;
+      color: var(--text-main);
+      font-weight: 600;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .map-mission-name.is-active { color: var(--color-missions); }
+
+    .map-mission-obj {
+      font-size: 0.68rem;
+      color: var(--text-sec);
+      line-height: 1.4;
+      padding: 3px 6px;
+      background: rgba(255,255,255,0.03);
+      border-left: 2px solid var(--accent);
+      margin-top: 3px;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .map-no-missions {
+      padding: 20px 12px;
+      text-align: center;
+      font-size: 0.74rem;
+      color: var(--text-sec);
+      line-height: 1.5;
+    }
+
+    /* Stats bar do mapa */
+    .map-stats-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .maps-layout { flex-direction: column; height: auto; }
+      .maps-sidebar { width: 100%; height: 120px; display: flex; flex-direction: row; padding: 0; overflow-x: auto; }
+      .maps-sidebar-title { display: none; }
+      .map-entry { flex-shrink: 0; border-left: none; border-bottom: 3px solid transparent; }
+      .map-entry.active { border-bottom-color: var(--accent); border-left-color: transparent; }
+      .maps-main { min-height: 400px; }
+      .map-content-area { flex-direction: column; }
+      .map-missions-panel { width: 100%; height: 200px; }
+    }
   </style>
 </head>
 <body>
@@ -1149,6 +1395,7 @@
     <button class="nav-btn" id="btn-ammo" onclick="showSection('ammo')">MUNIÇÕES</button>
     <button class="nav-btn" id="btn-tasks" onclick="showSection('tasks')">MISSÕES</button>
     <button class="nav-btn" id="btn-items" onclick="showSection('items')">ITENS</button>
+    <button class="nav-btn" id="btn-maps" onclick="showSection('maps')">MAPAS</button>
   </nav>
 
   <!-- ======================================================
@@ -1173,6 +1420,11 @@
       <span>No Flea: <strong id="items-flea-count" style="color:var(--status-done);">0</strong></span>
       <span>Sem Flea: <strong id="items-noflea-count" style="color:#aaa;">0</strong></span>
       <span id="items-filter-label" style="color:var(--accent); font-weight:600;">Todos os Itens</span>
+    </div>
+    <div id="stats-maps-info" style="display:none; align-items:center; gap:16px; flex-wrap:wrap;">
+      <span id="map-active-missions-stat" style="color:var(--color-missions); font-weight:600;">0 missões ativas</span>
+      <span id="map-current-name-stat" style="color:var(--accent-light); font-weight:600;">Customs</span>
+      <span style="color:var(--text-sec); font-size:0.7rem;">· Mapa oficial via tarkov.dev</span>
     </div>
   </div>
 
@@ -1262,6 +1514,74 @@
       <button class="load-more-btn" id="btn-load-more" onclick="loadMoreItems()">Carregar Mais (+60 Itens)</button>
       <span class="load-more-info" id="load-more-info"></span>
     </div>
+
+    <!-- =====================================================
+         ABA MAPAS
+    ===================================================== -->
+    <div id="maps-section">
+      <div class="maps-layout">
+
+        <!-- Sidebar: lista de mapas -->
+        <aside class="maps-sidebar" id="maps-sidebar">
+          <div class="maps-sidebar-title">Selecionar Mapa</div>
+          <!-- Gerado via JS -->
+        </aside>
+
+        <!-- Área principal -->
+        <div class="maps-main">
+
+          <!-- Barra de filtros -->
+          <div class="map-filter-bar" id="map-filter-bar">
+            <span class="map-filter-label">Mostrar:</span>
+            <button class="map-filter-btn active" id="mf-missions" onclick="toggleMapFilter('missions', this)">
+              <span class="dot-indicator" style="background:#ff9900;"></span> Missões Ativas
+            </button>
+            <button class="map-filter-btn active" id="mf-bosses" onclick="toggleMapFilter('bosses', this)">
+              <span class="dot-indicator" style="background:#ff3333;"></span> Bosses
+            </button>
+            <button class="map-filter-btn active" id="mf-extractions" onclick="toggleMapFilter('extractions', this)">
+              <span class="dot-indicator" style="background:#99cc00;"></span> Extrações
+            </button>
+            <button class="map-filter-btn active" id="mf-spawns" onclick="toggleMapFilter('spawns', this)">
+              <span class="dot-indicator" style="background:#3399ff;"></span> Spawns PMC
+            </button>
+            <div style="flex:1"></div>
+            <button class="map-filter-btn" onclick="openMapExternal()" title="Abrir no tarkov.dev em nova aba" style="border-color:var(--accent); color:var(--accent-light);">
+              ↗ Abrir Externo
+            </button>
+          </div>
+
+          <!-- Área do mapa: iframe + painel de missões -->
+          <div class="map-content-area">
+
+            <!-- iframe do mapa oficial tarkov.dev -->
+            <div class="map-iframe-wrapper" id="map-iframe-wrapper">
+              <div class="map-iframe-overlay" id="map-iframe-overlay">
+                <div class="map-iframe-overlay-text">
+                  🗺️ Clique para carregar o mapa interativo oficial<br>
+                  <small style="color:#555;">Powered by tarkov.dev — Inclui bosses, spawns e extrações atualizados</small>
+                </div>
+                <button class="map-open-btn" onclick="loadMapIframe()">Carregar Mapa Interativo</button>
+              </div>
+              <iframe id="map-iframe" src="" allowfullscreen></iframe>
+            </div>
+
+            <!-- Painel lateral: missões ativas neste mapa -->
+            <div class="map-missions-panel" id="map-missions-panel">
+              <div class="map-missions-header">
+                📌 Missões Ativas<br>
+                <span id="map-missions-panel-mapname" style="color:var(--text-sec); font-weight:400; font-size:0.62rem; text-transform:none; letter-spacing:0;">neste mapa</span>
+              </div>
+              <div class="map-missions-list" id="map-missions-list">
+                <div class="map-no-missions">Nenhuma missão ativa<br>neste mapa</div>
+              </div>
+            </div>
+
+          </div><!-- /.map-content-area -->
+        </div><!-- /.maps-main -->
+      </div><!-- /.maps-layout -->
+    </div><!-- /#maps-section -->
+
   </main>
 
   <!-- ======================================================
@@ -1283,6 +1603,11 @@
     let itemSortMode = 'flea_desc'; // 'flea_desc' | 'flea_asc' | 'trader_sell_desc' | 'trader_buy_asc' | 'name_asc'
     let displayedItemsLimit = 60;
     const expandedTaskIds = new Set();
+
+    // Estado dos Mapas
+    let currentMapId = 'customs';
+    let mapIframeLoaded = false;
+    const mapFilters = { missions: true, bosses: true, extractions: true, spawns: true };
 
     /* ════════════════════════════════════════════════════════
        TRADERS & FORMATAÇÃO MONETÁRIA
@@ -1746,6 +2071,297 @@ query {
 
 
     /* ════════════════════════════════════════════════════════
+       BANCO DE DADOS DE MAPAS
+    ════════════════════════════════════════════════════════ */
+    const MAPS_DB = [
+      {
+        id: 'customs',
+        name: 'Customs',
+        icon: '🏭',
+        slug: 'customs',
+        bosses: ['Reshala (Dealer)', 'Glukhar (raro)'],
+        extractions: ['Crossroads', 'ZB-1011', 'ZB-1012', 'RUAF Roadblock', 'Trailer Park', 'Old Gas Station'],
+        pmc_spawns: ['Entrada sul (Old Gas)', 'Portão principal', 'Dois andares', 'Dormitórios'],
+        normalizedNames: ['customs', 'bigmap']
+      },
+      {
+        id: 'woods',
+        name: 'Woods',
+        icon: '🌲',
+        slug: 'woods',
+        bosses: ['Shturman (Lumber yard)'],
+        extractions: ['Mountain Stash', 'Outskirts', 'Outskirts Water', 'Old Station', 'Bridge V-Ex', 'South V-Ex'],
+        pmc_spawns: ['RUAF Gate', 'UN Roadblock', 'Usec Camp', 'Bear Camp'],
+        normalizedNames: ['woods']
+      },
+      {
+        id: 'factory',
+        name: 'Factory',
+        icon: '⚙️',
+        slug: 'factory',
+        bosses: ['Tagilla'],
+        extractions: ['Gate 0', 'Gate 3', 'Cellars', 'Hole in the Fence', '3rd Floor Offices Window'],
+        pmc_spawns: ['Office', 'Corridor', 'Crossroads', 'Pipes'],
+        normalizedNames: ['factory4_day', 'factory4_night', 'factory']
+      },
+      {
+        id: 'shoreline',
+        name: 'Shoreline',
+        icon: '🏖️',
+        slug: 'shoreline',
+        bosses: ['Sanitar (Resort)'],
+        extractions: ['Pier', 'Rock Passage', 'Road to Customs', 'Tunnel', 'CCP Temporary'],
+        pmc_spawns: ['North (swamps)', 'South (village)', 'Weather Station', 'Pier'],
+        normalizedNames: ['shoreline']
+      },
+      {
+        id: 'interchange',
+        name: 'Interchange',
+        icon: '🛒',
+        slug: 'interchange',
+        bosses: ['Killa (Inside ULTRA mall)'],
+        extractions: ['Emercom Checkpoint', 'Railway Exfil', 'Hole in Fence', 'Power Station'],
+        pmc_spawns: ['Parking lot', 'Emercom', 'OLI', 'IDEA'],
+        normalizedNames: ['interchange']
+      },
+      {
+        id: 'reserve',
+        name: 'Reserve',
+        icon: '🏰',
+        slug: 'reserve',
+        bosses: ['Gluhar (HQ / barracks)', 'Raiders (extraction)'],
+        extractions: ['D-2', 'Manhole', 'Heating Pipe', 'Armored Train', 'Cliff Descent'],
+        pmc_spawns: ['White King', 'Black King', 'HQ', 'Dome'],
+        normalizedNames: ['rezervbase']
+      },
+      {
+        id: 'lighthouse',
+        name: 'Lighthouse',
+        icon: '💡',
+        slug: 'lighthouse',
+        bosses: ['Zryachiy (Lighthouse island)', 'Rogues (Water treatment)'],
+        extractions: ['Smugglers Boat', 'Side Tunnel', 'South Road', 'Chalet', 'Landing Zone'],
+        pmc_spawns: ['Coastal rocks', 'Village', 'Mountain road', 'Bridge'],
+        normalizedNames: ['lighthouse']
+      },
+      {
+        id: 'streets',
+        name: 'Streets of Tarkov',
+        icon: '🏙️',
+        slug: 'streets-of-tarkov',
+        bosses: ['Kaban (Klimov street)', 'Kollontay', 'Goons (raro)'],
+        extractions: ['Concordia', 'Damaged House', 'Gas Station', 'Primorsky Ave Taxi', 'Scav Checkpoint'],
+        pmc_spawns: ['Pinewood Hotel', 'Abandoned Factory', 'Cardinal', 'Chekannaya'],
+        normalizedNames: ['tarkovstreets']
+      },
+      {
+        id: 'ground-zero',
+        name: 'Ground Zero',
+        icon: '🟥',
+        slug: 'ground-zero',
+        bosses: ['Niente (beginners only)'],
+        extractions: ['Destroyed Apts', 'Scav Lands', 'Underpass', 'Dorms V-Ex'],
+        pmc_spawns: ['North sector', 'South sector', 'Exfil zone'],
+        normalizedNames: ['sandbox', 'sandbox_high']
+      },
+      {
+        id: 'labs',
+        name: 'The Lab',
+        icon: '🧪',
+        slug: 'the-lab',
+        bosses: ['Raider squads', 'Tagilla (raro)'],
+        extractions: ['Garage Gate', 'Parking Gate', 'Med bay elevator', 'Server Room elevator'],
+        pmc_spawns: ['Hangar gate', 'Medical sector', 'Server area'],
+        normalizedNames: ['laboratory']
+      }
+    ];
+
+    /* ════════════════════════════════════════════════════════
+       FUNÇÕES DA ABA MAPAS
+    ════════════════════════════════════════════════════════ */
+
+    /** Inicializa a sidebar com a lista de mapas */
+    function buildMapSidebar() {
+      const sidebar = document.getElementById('maps-sidebar');
+      if (!sidebar) return;
+
+      const title = sidebar.querySelector('.maps-sidebar-title') || document.createElement('div');
+      title.className = 'maps-sidebar-title';
+      title.textContent = 'Selecionar Mapa';
+
+      let html = `<div class="maps-sidebar-title">Selecionar Mapa</div>`;
+      MAPS_DB.forEach(m => {
+        const isActive = m.id === currentMapId;
+        html += `<div class="map-entry ${isActive ? 'active' : ''}" onclick="selectMap('${m.id}')">
+          <span class="map-entry-icon">${m.icon}</span>
+          <span>${m.name}</span>
+        </div>`;
+      });
+      sidebar.innerHTML = html;
+    }
+
+    /** Seleciona um mapa e re-renderiza o conteúdo */
+    function selectMap(mapId) {
+      currentMapId = mapId;
+      mapIframeLoaded = false;
+
+      // Atualiza sidebar
+      document.querySelectorAll('.map-entry').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('onclick').includes(`'${mapId}'`));
+      });
+
+      // Reseta iframe
+      const iframe = document.getElementById('map-iframe');
+      const overlay = document.getElementById('map-iframe-overlay');
+      if (iframe) iframe.src = '';
+      if (overlay) overlay.classList.remove('hidden');
+
+      renderMapContent();
+    }
+
+    /** Carrega o iframe do mapa quando o usuário clica */
+    function loadMapIframe() {
+      const mapDef = MAPS_DB.find(m => m.id === currentMapId);
+      if (!mapDef) return;
+
+      const iframe = document.getElementById('map-iframe');
+      const overlay = document.getElementById('map-iframe-overlay');
+
+      // URL do tarkov.dev embed (modo dark, sem UI extra)
+      const url = `https://tarkov.dev/map/${mapDef.slug}`;
+      iframe.src = url;
+      mapIframeLoaded = true;
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    /** Abre o mapa no tarkov.dev em nova aba */
+    function openMapExternal() {
+      const mapDef = MAPS_DB.find(m => m.id === currentMapId);
+      if (!mapDef) return;
+      window.open(`https://tarkov.dev/map/${mapDef.slug}`, '_blank', 'noopener');
+    }
+
+    /** Alterna os filtros de camada (bosses, extrações, spawns, missões) */
+    function toggleMapFilter(filter, btn) {
+      mapFilters[filter] = !mapFilters[filter];
+      btn.classList.toggle('active', mapFilters[filter]);
+      renderMapMissionsPanel();
+
+      // Mostra/oculta o painel de missões
+      const panel = document.getElementById('map-missions-panel');
+      if (panel) {
+        panel.classList.toggle('hidden', !mapFilters.missions);
+      }
+    }
+
+    /** Renderiza o painel lateral de missões ativas para o mapa atual */
+    function renderMapMissionsPanel() {
+      const list = document.getElementById('map-missions-list');
+      const subtitle = document.getElementById('map-missions-panel-mapname');
+      const mapDef = MAPS_DB.find(m => m.id === currentMapId);
+      if (!list || !mapDef) return;
+
+      if (subtitle) subtitle.textContent = `em ${mapDef.name}`;
+
+      // Coleta missões ativas (marcadas em andamento) com objetivos neste mapa
+      const normalizedNames = mapDef.normalizedNames || [mapDef.id];
+      const activeMissionsForMap = [];
+
+      for (const task of tasksData) {
+        if (!isTaskActive(task.id)) continue;
+        if (isTaskCompleted(task.id)) continue;
+
+        const relevantObjs = (task.objectives || []).filter(obj => {
+          if (!obj.maps || obj.maps.length === 0) return false;
+          return obj.maps.some(m => {
+            const mn = (m.name || m.id || m || '').toLowerCase();
+            return normalizedNames.some(nn => mn.includes(nn) || nn.includes(mn)) ||
+                   mn.includes(mapDef.name.toLowerCase()) ||
+                   mn.includes(mapDef.id);
+          });
+        });
+
+        if (relevantObjs.length > 0) {
+          activeMissionsForMap.push({ task, objs: relevantObjs });
+        }
+      }
+
+      // Atualiza estatísticas
+      const statEl = document.getElementById('map-active-missions-stat');
+      if (statEl) statEl.textContent = `${activeMissionsForMap.length} missão(ões) ativa(s)`;
+
+      if (activeMissionsForMap.length === 0) {
+        list.innerHTML = `<div class="map-no-missions">
+          Nenhuma missão ativa<br>marcada para <strong>${mapDef.name}</strong><br>
+          <small style="color:#444; margin-top:6px; display:block;">Marque missões como "Ativa" na aba MISSÕES</small>
+        </div>`;
+        return;
+      }
+
+      list.innerHTML = activeMissionsForMap.map(({ task, objs }) => `
+        <div class="map-mission-item">
+          <div class="map-mission-name is-active">📌 ${esc(task.name)}</div>
+          ${objs.map(obj => `
+            <div class="map-mission-obj">
+              <strong>${esc((obj.type || 'objetivo').toUpperCase())}</strong> — ${esc(obj.description)}
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+    }
+
+    /** Renderiza a aba de MAPAS completa */
+    function renderMapsSection() {
+      const mapsSection = document.getElementById('maps-section');
+      const statsTiers  = document.getElementById('stats-tiers');
+      const statsTasks  = document.getElementById('stats-tasks-progress');
+      const statsItems  = document.getElementById('stats-items-info');
+      const statsMaps   = document.getElementById('stats-maps-info');
+      const filterBar   = document.getElementById('filter-bar');
+      const secHdr      = document.getElementById('section-header');
+      const grid        = document.getElementById('cards-grid');
+      const loadMore    = document.getElementById('load-more-wrapper');
+      const itemCtrls   = document.getElementById('item-controls');
+      const taskPills   = document.getElementById('task-pill-filters');
+
+      // Ocultar tudo que não é de mapas
+      if (grid)      grid.classList.add('hidden');
+      if (loadMore)  loadMore.classList.add('hidden');
+      if (filterBar) filterBar.classList.add('hidden');
+      if (secHdr)    secHdr.classList.remove('hidden');
+      if (itemCtrls) itemCtrls.style.display = 'none';
+      if (taskPills) taskPills.style.display  = 'none';
+
+      // Stats bar
+      if (statsTiers) statsTiers.style.display = 'none';
+      if (statsTasks) statsTasks.style.display = 'none';
+      if (statsItems) statsItems.style.display = 'none';
+      if (statsMaps)  statsMaps.style.display  = 'flex';
+
+      // Atualiza título
+      const secTitle = document.getElementById('section-title');
+      const secCount = document.getElementById('section-count');
+      const mapDef = MAPS_DB.find(m => m.id === currentMapId) || MAPS_DB[0];
+      if (secTitle) secTitle.textContent = 'Mapas Táticos';
+      if (secCount) secCount.textContent = `${MAPS_DB.length} mapas`;
+
+      // Nome do mapa na stats bar
+      const mapNameStat = document.getElementById('map-current-name-stat');
+      if (mapNameStat) mapNameStat.textContent = mapDef.name;
+
+      // Exibe seção de mapas
+      if (mapsSection) mapsSection.classList.add('visible');
+
+      // Inicializa sidebar e painel de missões
+      buildMapSidebar();
+      renderMapMissionsPanel();
+
+      // Controla visibilidade do painel de missões
+      const panel = document.getElementById('map-missions-panel');
+      if (panel) panel.classList.toggle('hidden', !mapFilters.missions);
+    }
+
+    /* ════════════════════════════════════════════════════════
        FUNÇÕES DA ABA ITENS (MERCADO & PREÇOS)
     ════════════════════════════════════════════════════════ */
     function renderItemCard(item) {
@@ -2018,6 +2634,10 @@ query {
       const isTasks = section === 'tasks';
       const isItems = section === 'items';
 
+      // Garantir que a seção de mapas está oculta
+      const mapsSec = document.getElementById('maps-section');
+      if (mapsSec) mapsSec.classList.remove('visible');
+
       grid.classList.remove('hidden');
       grid.classList.toggle('tasks-grid', isTasks);
       grid.classList.toggle('items-grid', isItems);
@@ -2249,6 +2869,7 @@ query {
       document.getElementById('btn-ammo').disabled = on;
       document.getElementById('btn-tasks').disabled = on;
       document.getElementById('btn-items').disabled = on;
+      document.getElementById('btn-maps').disabled = on;
     }
 
     function setLoadingHint(msg) {
@@ -2279,12 +2900,21 @@ query {
       document.getElementById('btn-ammo').classList.toggle('active', section === 'ammo');
       document.getElementById('btn-tasks').classList.toggle('active', section === 'tasks');
       document.getElementById('btn-items').classList.toggle('active', section === 'items');
+      document.getElementById('btn-maps').classList.toggle('active', section === 'maps');
+
+      // Oculta seção de mapas ao sair dela
+      const mapsSection = document.getElementById('maps-section');
+      if (mapsSection) mapsSection.classList.toggle('visible', section === 'maps');
 
       const searchEl = document.getElementById('search-input');
       if (searchEl) searchEl.value = '';
       searchQuery = '';
 
-      renderSection(section);
+      if (section === 'maps') {
+        renderMapsSection();
+      } else {
+        renderSection(section);
+      }
     }
 
     function loadFallback() {
