@@ -691,7 +691,7 @@
     }
 
     .task-card.expanded .task-details {
-      max-height: 2000px;
+      max-height: 6000px;
       border-top-color: #1f1f1f;
     }
 
@@ -1110,6 +1110,83 @@
     .source-badge.json    { background: rgba(51,153,255,0.15); color: #3399ff; border: 1px solid rgba(51,153,255,0.3); }
     .source-badge.offline { background: rgba(255,153,0,0.15);  color: #ff9900;  border: 1px solid rgba(255,153,0,0.3); }
     .source-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* =========================================================
+       ITENS NECESSÁRIOS (MISSÕES) + MODO RESUMIDO
+    ========================================================= */
+    .task-need-flag {
+      font-size: 0.64rem; color: var(--text-sec); opacity: 0.85; letter-spacing: 0.03em;
+      border: 1px solid #2a2a2a; border-radius: 2px; padding: 0 5px; cursor: help;
+    }
+    .task-need-flag:hover { color: var(--accent-light); border-color: var(--accent); opacity: 1; }
+    .needs-box {
+      background: #161616; border: 1px solid #242424; border-left: 2px solid var(--color-flea);
+      border-radius: 2px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .need-row { display: flex; flex-direction: column; gap: 5px; }
+    .need-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.66rem; color: var(--text-sec); }
+    .need-kind {
+      font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.62rem;
+      padding: 1px 6px; border-radius: 2px; background: rgba(194,170,128,0.14); color: var(--color-flea);
+    }
+    .need-kind.key { background: rgba(255,153,0,0.14); color: var(--color-missions); }
+    .need-items { display: flex; flex-wrap: wrap; gap: 6px; }
+    .need-item {
+      display: flex; align-items: center; gap: 7px; background: #0f0f0f; border: 1px solid #202020;
+      border-radius: 2px; padding: 3px 8px 3px 3px; min-width: 0; max-width: 100%;
+    }
+    .need-thumb-box {
+      width: 38px; height: 38px; min-width: 38px; background: #0d0d0d; border: 1px solid #202020;
+      border-radius: 2px; display: flex; align-items: center; justify-content: center; padding: 2px; overflow: hidden;
+    }
+    .need-thumb-box img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+    .need-name { font-size: 0.74rem; font-weight: 600; color: var(--text-main); line-height: 1.25; }
+    .need-more { font-size: 0.68rem; color: var(--text-sec); align-self: center; }
+
+    .view-toggle {
+      background: #151515; border: 1px solid #282828; color: var(--text-sec); font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.04em; padding: 3px 10px; border-radius: 2px; cursor: pointer; transition: all 0.15s;
+    }
+    .view-toggle:hover { border-color: var(--accent); color: var(--text-main); }
+    .view-toggle.on { border-color: var(--accent); background: var(--accent-dim); color: var(--accent-light); }
+
+    /* Resumir: Armas e Munições */
+    .cards-grid.compact:not(.tasks-grid):not(.items-grid) { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+    .cards-grid.compact .card { padding: 7px 9px; gap: 5px; }
+    .cards-grid.compact .card:hover { transform: none; }
+    .cards-grid.compact .card-visual-row { gap: 8px; }
+    .cards-grid.compact .card-thumb-box { width: 38px; height: 38px; min-width: 38px; padding: 2px; }
+    .cards-grid.compact .card-name { font-size: 0.72rem; line-height: 1.2; }
+    .cards-grid.compact .tier-badge { font-size: 0.58rem; padding: 1px 4px; }
+    .cards-grid.compact .chip { font-size: 0.6rem; padding: 0 5px; }
+    .cards-grid.compact .card-divider { display: none; }
+    .cards-grid.compact .card-stats { flex-direction: row; flex-wrap: wrap; gap: 2px 10px; }
+    .cards-grid.compact .stat-row { gap: 4px; }
+    .cards-grid.compact .stat-label { font-size: 0.58rem; }
+    .cards-grid.compact .stat-value { font-size: 0.7rem; }
+    /* Resumir: Itens */
+    .cards-grid.compact.items-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+    .cards-grid.compact .item-card { padding: 7px 9px; gap: 5px; }
+    .cards-grid.compact .item-visual-row { gap: 8px; }
+    .cards-grid.compact .item-thumb-box { width: 38px; height: 38px; min-width: 38px; padding: 2px; }
+    .cards-grid.compact .item-name { font-size: 0.74rem; }
+    .cards-grid.compact .item-meta-badges, .cards-grid.compact .price-sub-info,
+    .cards-grid.compact .item-buy-note { display: none; }
+    .cards-grid.compact .item-price-grid { padding: 5px 7px; gap: 6px; }
+    .cards-grid.compact .price-main-val { font-size: 0.76rem; }
+    .cards-grid.compact .price-box-title { font-size: 0.56rem; }
+    .cards-grid.compact .item-footer-row { padding-top: 2px; }
+    .cards-grid.compact .item-footer-row:not(:has(.item-margin-badge)) { display: none; }
+    /* Resumir: Missões */
+    .cards-grid.compact.tasks-grid { gap: 6px; }
+    @media (min-width: 900px)  { .cards-grid.compact.tasks-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1300px) { .cards-grid.compact.tasks-grid { grid-template-columns: repeat(3, 1fr); } }
+    .cards-grid.compact .task-header-row { padding: 6px 10px; gap: 8px; }
+    .cards-grid.compact .task-name { font-size: 0.76rem; }
+    .cards-grid.compact .task-meta { display: none; }
+    .cards-grid.compact .task-active-btn { font-size: 0.6rem; padding: 2px 6px; }
+    .cards-grid.compact .status-badge { display: none; }
+    .cards-grid.compact .task-check-input { width: 17px; height: 17px; }
 
     /* =========================================================
        SCROLLBAR
@@ -1569,6 +1646,7 @@
       <span class="section-title" id="section-title">Armas</span>
       <div class="section-line"></div>
       <span class="section-count" id="section-count">0 itens</span>
+      <button class="view-toggle" id="compact-btn" onclick="toggleCompact()" title="Reduz os cartões para caber mais itens na tela">⇲ Resumir</button>
     </div>
 
     <!-- Cards Grid (Armas, Munições, Missões e Itens) -->
@@ -1789,6 +1867,129 @@ query {
       }
     }
 
+    /* ════════════════════════════════════════════════════════
+       MODO RESUMIDO (preferência por aba, só visual)
+    ════════════════════════════════════════════════════════ */
+    function isCompact(section) {
+      try { return localStorage.getItem('view_compact_' + section) === 'true'; } catch (e) { return false; }
+    }
+
+    function toggleCompact() {
+      try { localStorage.setItem('view_compact_' + currentSection, isCompact(currentSection) ? 'false' : 'true'); } catch (e) {}
+      renderSection(currentSection);
+    }
+
+    /* ════════════════════════════════════════════════════════
+       ITENS NECESSÁRIOS PARA AS MISSÕES (chaves, entregas, itens de missão...)
+    ════════════════════════════════════════════════════════ */
+    let rawSrc = null;          // fontes brutas do JSON CDN (reaproveitadas quando a carga principal já usou o CDN)
+    let taskNeeds = {};         // taskId -> [{ kind, count, fir, items: [{id, name, icon}] }]
+    let needsPromise = null;
+
+    const NEED_LABELS = {
+      key: 'Chave', give: 'Entregar', find: 'Encontrar', sell: 'Vender', plant: 'Plantar',
+      questgive: 'Entregar item de missão', questfind: 'Achar item de missão', questplant: 'Plantar item de missão',
+      mark: 'Marcador', use: 'Usar', build: 'Montar'
+    };
+
+    function computeTaskNeeds(t, S) {
+      const groups = [], seen = new Set();
+      const info = id => {
+        const it = S.items[id];
+        if (it) return { id, name: S.trans[it.name] || it.normalizedName || id, icon: it.iconLink || `https://assets.tarkov.dev/${id}-icon.webp` };
+        const q = S.quest[id];
+        if (q) return { id, name: S.tasksPt[q.name] || q.normalizedName || id, icon: q.iconLink || `https://assets.tarkov.dev/${id}-icon.webp` };
+        return null;
+      };
+      const add = (kind, ids, count, fir) => {
+        const items = [...new Set((ids || []).filter(Boolean))].map(info).filter(Boolean);
+        if (!items.length) return;
+        const key = kind + '|' + items.map(i => i.id).sort().join(',');
+        if (seen.has(key)) return;
+        seen.add(key);
+        groups.push({ kind, count: count > 1 ? count : 0, fir: !!fir, items });
+      };
+      for (const nk of t.neededKeys || []) add('key', nk.keys);
+      for (const o of t.objectives || []) {
+        for (const g of o.requiredKeys || []) add('key', g);
+        const c = o.count, fir = o.foundInRaid;
+        switch (o.type) {
+          case 'giveItem':       add('give', o.items, c, fir); break;
+          case 'findItem':       add('find', o.items, c, fir); break;
+          case 'sellItem':       add('sell', o.items, c, fir); break;
+          case 'plantItem':      add('plant', o.items, c, fir); break;
+          case 'giveQuestItem':  add('questgive', [o.questItem], c); break;
+          case 'findQuestItem':  add('questfind', [o.questItem], c); break;
+          case 'plantQuestItem': add('questplant', [o.questItem], c); break;
+          case 'mark':           add('mark', [o.markerItem]); break;
+          case 'useItem':        add('use', o.useAny, c); break;
+          case 'buildWeapon':    add('build', [o.item]); break;
+        }
+      }
+      return groups;
+    }
+
+    function loadTaskNeeds() {
+      if (needsPromise) return needsPromise;
+      needsPromise = (async () => {
+        let S = rawSrc, fetched = false;
+        if (!S) {
+          const j = async u => { const r = await fetch(u); if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); };
+          const [items, trans, tasks, tasksPt] = await Promise.all([j(JSON_ITEMS_URL), j(JSON_TRANS_URL), j(JSON_TASKS_URL), j(JSON_TASK_PT)]);
+          S = { items: items?.data?.items || {}, trans: trans?.data || {}, tasks: tasks?.data?.tasks || {},
+                quest: tasks?.data?.questItems || {}, tasksPt: tasksPt?.data || {} };
+          fetched = true;
+        }
+        const out = {};
+        for (const [id, t] of Object.entries(S.tasks)) {
+          const g = computeTaskNeeds(t, S);
+          if (g.length) out[id] = g;
+        }
+        taskNeeds = out;
+        if (fetched && currentSection === 'tasks') renderSection('tasks');
+      })().catch(e => { console.warn('[Missões] Itens necessários indisponíveis:', e.message); needsPromise = null; });
+      return needsPromise;
+    }
+
+    function renderNeeds(taskId) {
+      const groups = taskNeeds[taskId];
+      if (!groups || !groups.length) return '';
+      const MAX = 6;
+      return `
+        <div class="objectives-heading"><span>🎒</span> Itens necessários</div>
+        <div class="needs-box">
+          ${groups.map(g => {
+            const shown = g.items.slice(0, MAX), extra = g.items.length - shown.length;
+            const label = g.kind === 'key' && g.items.length > 1 ? 'Chave (qualquer uma)' : (NEED_LABELS[g.kind] || g.kind);
+            return `
+              <div class="need-row">
+                <div class="need-head">
+                  <span class="need-kind ${g.kind === 'key' ? 'key' : ''}">${label}</span>
+                  ${g.count ? `<span>${g.count}×</span>` : ''}
+                  ${g.fir ? '<span title="Item precisa ser encontrado em raide">· em raide</span>' : ''}
+                  ${g.items.length > 1 && g.kind !== 'key' ? '<span>· um dos itens:</span>' : ''}
+                </div>
+                <div class="need-items">
+                  ${shown.map(i => `
+                    <div class="need-item" title="${esc(i.name)}">
+                      <div class="need-thumb-box"><img src="${esc(i.icon)}" alt="${esc(i.name)}" loading="lazy" onerror="this.parentElement.style.display='none'"></div>
+                      <span class="need-name">${esc(i.name)}</span>
+                    </div>`).join('')}
+                  ${extra > 0 ? `<span class="need-more">+${extra} alternativas</span>` : ''}
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function needFlag(taskId) {
+      const groups = taskNeeds[taskId];
+      if (!groups || !groups.length) return '';
+      const hasKey = groups.some(g => g.kind === 'key');
+      const names = groups.map(g => g.items[0].name + (g.items.length > 1 ? ' (+' + (g.items.length - 1) + ')' : '')).slice(0, 4).join(', ');
+      return `<span class="task-need-flag" title="Requer: ${esc(names)}">${hasKey ? '🔑' : '🎒'} ${groups.length}</span>`;
+    }
+
     function formatCaliber(cal) {
       if (!cal) return '';
       return cal
@@ -1859,6 +2060,7 @@ query {
           const translations = transJson?.data || {};
           const tasksMap     = tasksJson?.data?.tasks || {};
           const tasksPt      = tasksPtJson?.data || {};
+          if (tasksJson) rawSrc = { items: allItems, trans: translations, tasks: tasksMap, quest: tasksJson?.data?.questItems || {}, tasksPt };
 
           const guns = [];
           const ammoList = [];
@@ -2819,6 +3021,8 @@ query {
       if (secHdr)    secHdr.classList.remove('hidden');
       if (itemCtrls) itemCtrls.style.display = 'none';
       if (taskPills) taskPills.style.display  = 'none';
+      const cBtn = document.getElementById('compact-btn');
+      if (cBtn) cBtn.style.display = 'none';
 
       // Stats bar
       if (statsTiers) statsTiers.style.display = 'none';
@@ -3034,6 +3238,7 @@ query {
               <div class="task-meta">
                 <span>📋 ${task.objectives.length} diretriz(es)</span>
                 ${isActive ? '<span class="task-active-indicator">EM ANDAMENTO</span>' : ''}
+                ${needFlag(task.id)}
               </div>
             </div>
             <div class="task-right-col">
@@ -3044,6 +3249,7 @@ query {
 
           <div class="task-details">
             <div class="task-details-inner">
+              ${renderNeeds(task.id)}
               <div class="objectives-heading">
                 <span>🎯</span> Diretrizes Operacionais
               </div>
@@ -3135,6 +3341,10 @@ query {
       grid.classList.remove('hidden');
       grid.classList.toggle('tasks-grid', isTasks);
       grid.classList.toggle('items-grid', isItems);
+      const compactOn = isCompact(section);
+      grid.classList.toggle('compact', compactOn);
+      const compactBtn = document.getElementById('compact-btn');
+      if (compactBtn) { compactBtn.style.display = ''; compactBtn.classList.toggle('on', compactOn); compactBtn.textContent = compactOn ? '⇱ Expandir' : '⇲ Resumir'; }
 
       // Atualiza placeholder de busca conforme a aba ativa
       if (searchInput) {
@@ -3483,6 +3693,7 @@ query {
 
         setLoadingState(false);
         updateSubtitle();
+        loadTaskNeeds();
         showSection(currentSection);
 
       } catch (err) {
