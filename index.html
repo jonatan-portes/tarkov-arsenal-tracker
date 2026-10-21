@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tarkov Arsenal Tracker</title>
+  <title>Central Tática</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
@@ -60,7 +60,7 @@
     header {
       background: linear-gradient(135deg, #0e0e0e 0%, #191814 100%);
       border-bottom: 2px solid var(--accent);
-      padding: 22px 20px 18px;
+      padding: 34px 20px 30px;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -76,12 +76,20 @@
       pointer-events: none;
     }
 
-    .header-inner { position: relative; max-width: 900px; margin: 0 auto; }
+    .header-inner { position: relative; max-width: none; margin: 0; }
+    .lang-switch { position: absolute; top: -14px; right: -12px; display: flex; gap: 6px; z-index: 1; }
+    .lang-opt {
+      background: rgba(10,10,10,0.55); border: 1px solid #3a3a30; border-radius: 3px; padding: 3px 4px; cursor: pointer;
+      line-height: 0; opacity: 0.55; transition: opacity .15s, border-color .15s, transform .15s;
+    }
+    .lang-opt:hover { opacity: 0.9; transform: translateY(-1px); }
+    .lang-opt.active { opacity: 1; border-color: var(--accent-light); box-shadow: 0 0 8px rgba(154,136,102,0.45); }
+    .lang-opt svg { width: 22px; height: 15px; display: block; border-radius: 1px; }
 
     .header-logo {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 12px;
       margin-bottom: 6px;
     }
@@ -95,6 +103,13 @@
       text-transform: uppercase;
       color: var(--accent-light);
       text-shadow: 0 0 20px rgba(154,136,102,0.25);
+    }
+
+    header::after { /* logo oficial como fundo, à direita do título */
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.55;
+      background: url('logo-eft.png') 90% center / auto 125% no-repeat;
+      -webkit-mask-image: linear-gradient(90deg, transparent 50%, #000 72%, #000 92%, transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 50%, #000 72%, #000 92%, transparent 100%);
     }
 
     header p.subtitle {
@@ -323,6 +338,7 @@
     }
 
     /* Tier Legend */
+    .tier-legend, .subtitle, .section-header { display: none !important; } /* ocultos (visual mais limpo); JS ainda os atualiza */
     .tier-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .tier-legend.hidden { display: none; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-sec); }
@@ -1468,6 +1484,11 @@
       font-size: 13px; font-weight: 800; color: #000; border: 2px solid #000; line-height: 1;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.7);
     }
+    .tk-ex-label {
+      background: rgba(10,10,10,0.85); border: 1px solid #222; color: #fff; box-shadow: none;
+      font-size: 0.62rem; font-weight: 700; padding: 1px 5px; white-space: nowrap;
+    }
+    .tk-ex-label::before { display: none; }
     .tk-ex-pmc { background: #99cc00; }
     .tk-ex-scav { background: #3399ff; border-radius: 4px; }
     .tk-ex-shared { background: linear-gradient(90deg, #99cc00 50%, #3399ff 50%); }
@@ -1516,15 +1537,18 @@
     <div class="header-inner">
       <div class="header-logo">
         <svg class="logo-icon" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="18" cy="18" r="15" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          <circle cx="18" cy="18" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          <line x1="18" y1="2"  x2="18" y2="10" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="18" y1="26" x2="18" y2="34" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="2"  y1="18" x2="10" y2="18" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="26" y1="18" x2="34" y2="18" stroke="currentColor" stroke-width="1.5"/>
-          <circle cx="18" cy="18" r="2" fill="currentColor"/>
+          <path d="M18 3 31 8v9c0 8.5-5.4 14.2-13 17C10.4 31.200 5 25.500 5 17V8Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+          <path d="m11.500 17 6.500-6 6.500 6m-13 6 6.500-6 6.500 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <h1>Tarkov Arsenal Tracker</h1>
+        <h1>Central Tática</h1>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-opt" id="lang-pt" onclick="setLang('pt')" title="Português (Brasil)" aria-label="Português (Brasil)">
+          <svg viewBox="0 0 30 21" xmlns="http://www.w3.org/2000/svg"><rect width="30" height="21" fill="#009c3b"/><path d="M15 2.2 27.2 10.5 15 18.8 2.8 10.5Z" fill="#ffdf00"/><circle cx="15" cy="10.5" r="4.6" fill="#002776"/><path d="M10.6 9.3q4.6-1.2 8.9 1.3" stroke="#fff" stroke-width=".9" fill="none"/></svg>
+        </button>
+        <button class="lang-opt" id="lang-en" onclick="setLang('en')" title="English (US)" aria-label="English (US)">
+          <svg viewBox="0 0 30 21" xmlns="http://www.w3.org/2000/svg"><rect width="30" height="21" fill="#fff"/><g fill="#b22234"><rect width="30" height="1.62"/><rect y="3.23" width="30" height="1.62"/><rect y="6.46" width="30" height="1.62"/><rect y="9.69" width="30" height="1.62"/><rect y="12.92" width="30" height="1.62"/><rect y="16.15" width="30" height="1.62"/><rect y="19.38" width="30" height="1.62"/></g><rect width="12" height="11.3" fill="#3c3b6e"/><g fill="#fff"><circle cx="2" cy="2" r=".7"/><circle cx="5" cy="2" r=".7"/><circle cx="8" cy="2" r=".7"/><circle cx="10.5" cy="2" r=".7"/><circle cx="3.5" cy="4.3" r=".7"/><circle cx="6.5" cy="4.3" r=".7"/><circle cx="9.5" cy="4.3" r=".7"/><circle cx="2" cy="6.6" r=".7"/><circle cx="5" cy="6.6" r=".7"/><circle cx="8" cy="6.6" r=".7"/><circle cx="10.5" cy="6.6" r=".7"/><circle cx="3.5" cy="8.9" r=".7"/><circle cx="6.5" cy="8.9" r=".7"/><circle cx="9.5" cy="8.9" r=".7"/></g></svg>
+        </button>
       </div>
       <p class="subtitle" id="subtitle">
         Armas, Munições, Missões, Itens e Mapas
@@ -1566,10 +1590,6 @@
       <span>Sem Flea: <strong id="items-noflea-count" style="color:#aaa;">0</strong></span>
       <span id="items-filter-label" style="color:var(--accent); font-weight:600;">Todos os Itens</span>
     </div>
-    <div id="stats-maps-info" style="display:none; align-items:center; gap:16px; flex-wrap:wrap;">
-      <span id="map-active-missions-stat" style="color:var(--color-missions); font-weight:600;">0 missões ativas</span>
-      <span id="map-current-name-stat" style="color:var(--accent-light); font-weight:600;">Customs</span>
-    </div>
   </div>
 
   <!-- ======================================================
@@ -1610,6 +1630,9 @@
     <div class="filter-bar hidden" id="filter-bar">
       <input type="text" class="search-input" id="search-input" placeholder="Buscar por nome ou calibre..." oninput="handleSearch(this.value)">
 
+      <!-- Filtro por calibre (aba Munições) -->
+      <div class="task-pill-filters" id="ammo-caliber-pills" style="display:none;"></div>
+
       <!-- Filtros Rápidos de Missões -->
       <div class="task-pill-filters" id="task-pill-filters" style="display:none;">
         <button class="task-pill active" onclick="setTaskQuickFilter('all', this)">Todas</button>
@@ -1648,7 +1671,6 @@
       <span class="section-title" id="section-title">Armas</span>
       <div class="section-line"></div>
       <span class="section-count" id="section-count">0 itens</span>
-      <button class="view-toggle" id="compact-btn" onclick="toggleCompact()" title="Reduz os cartões para caber mais itens na tela">⇲ Resumir</button>
     </div>
 
     <!-- Cards Grid (Armas, Munições, Missões e Itens) -->
@@ -1695,11 +1717,6 @@
             </button>
             <div style="flex:1"></div>
             <button class="map-filter-btn" id="map-style-btn" onclick="toggleMapStyle()" title="Alternar entre mapa abstrato (vetorial) e satélite" style="display:none;">🗺️ Estilo: Abstrato</button>
-            <button class="map-filter-btn" id="map-hc-btn" onclick="toggleMapContrast(this)" title="Aumenta contraste e brilho do mapa">◐ Alto contraste</button>
-            <button class="map-filter-btn" onclick="clearMapFocus()" title="Remove o destaque do objetivo">✖ Limpar destaque</button>
-            <button class="map-filter-btn" onclick="openMapExternal()" title="Abrir no tarkov.dev em nova aba" style="border-color:var(--accent); color:var(--accent-light);">
-              ↗ Abrir Externo
-            </button>
           </div>
 
           <!-- Seletor de andares (aparece só em mapas com mais de um nível) -->
@@ -1753,6 +1770,15 @@
     /* ════════════════════════════════════════════════════════
        STATE GLOBAL
     ════════════════════════════════════════════════════════ */
+    /* Idioma da interface E dos dados do jogo (nomes oficiais vêm da API no idioma escolhido) */
+    const LANG = (() => { try { return localStorage.getItem('lang') === 'en' ? 'en' : 'pt'; } catch (e) { return 'pt'; } })();
+    const LOCALE = LANG === 'en' ? 'en-US' : 'pt-BR';
+    function setLang(l) {
+      if (l === LANG) return;
+      try { localStorage.setItem('lang', l); } catch (e) {}
+      location.reload();
+    }
+
     let gunsData = [];
     let ammoData = [];
     let tasksData = [];
@@ -1760,6 +1786,7 @@
     let currentSection = 'guns';
     let dataSource = '';
     let searchQuery = '';
+    let ammoCaliberFilter = ''; // '' = todos
     let taskQuickFilter = 'all'; // 'all' | 'active' | 'pending' | 'completed'
     let itemCategoryFilter = 'all'; // 'all' | 'barter' | 'weapons' | 'ammo' | 'meds' | 'keys' | 'gear' | 'provisions'
     let itemSortMode = 'flea_desc'; // 'flea_desc' | 'flea_asc' | 'trader_sell_desc' | 'trader_buy_asc' | 'name_asc'
@@ -1793,7 +1820,7 @@
 
     function formatPrice(val, currency = 'RUB') {
       if (val == null || val === 0 || isNaN(val)) return '—';
-      const numStr = Math.round(Number(val)).toLocaleString('pt-BR');
+      const numStr = Math.round(Number(val)).toLocaleString(LOCALE);
       if (currency === 'USD') return `$ ${numStr}`;
       if (currency === 'EUR') return `€ ${numStr}`;
       return `${numStr} ₽`;
@@ -1816,15 +1843,15 @@
     ════════════════════════════════════════════════════════ */
     const GQL_QUERY = `
 query {
-  items(types: [gun], lang: pt) {
+  items(types: [gun], lang: ${LANG}) {
     id name iconLink
     properties { ... on ItemPropertiesWeapon { defaultRecoilVertical ergonomics fireRate caliber } }
   }
-  ammo(lang: pt) {
+  ammo(lang: ${LANG}) {
     item { id name iconLink }
     caliber penetrationPower damage armorDamage fragmentationChance
   }
-  tasks(lang: pt) {
+  tasks(lang: ${LANG}) {
     id name
     objectives {
       id
@@ -1841,9 +1868,9 @@ query {
     ════════════════════════════════════════════════════════ */
     const GQL_ENDPOINT   = 'https://api.tarkov.dev/graphql';
     const JSON_ITEMS_URL = 'https://json.tarkov.dev/regular/items';
-    const JSON_TRANS_URL = 'https://json.tarkov.dev/regular/items_pt';
+    const JSON_TRANS_URL = `https://json.tarkov.dev/regular/items_${LANG}`;
     const JSON_TASKS_URL = 'https://json.tarkov.dev/regular/tasks';
-    const JSON_TASK_PT   = 'https://json.tarkov.dev/regular/tasks_pt';
+    const JSON_TASK_PT   = `https://json.tarkov.dev/regular/tasks_${LANG}`;
 
     /* ════════════════════════════════════════════════════════
        PERSISTÊNCIA: MISSÕES CONCLUÍDAS E ATIVAS
@@ -1867,18 +1894,6 @@ query {
       } else {
         localStorage.removeItem('task_active_' + taskId);
       }
-    }
-
-    /* ════════════════════════════════════════════════════════
-       MODO RESUMIDO (preferência por aba, só visual)
-    ════════════════════════════════════════════════════════ */
-    function isCompact(section) {
-      try { return localStorage.getItem('view_compact_' + section) === 'true'; } catch (e) { return false; }
-    }
-
-    function toggleCompact() {
-      try { localStorage.setItem('view_compact_' + currentSection, isCompact(currentSection) ? 'false' : 'true'); } catch (e) {}
-      renderSection(currentSection);
     }
 
     /* ════════════════════════════════════════════════════════
@@ -1916,12 +1931,12 @@ query {
         for (const g of o.requiredKeys || []) add('key', g);
         const c = o.count, fir = o.foundInRaid;
         switch (o.type) {
-          case 'giveItem':       add('give', o.items, c, fir); break;
-          case 'findItem':       add('find', o.items, c, fir); break;
+          case 'giveItem':       if (!fir) add('give', o.items, c, fir); break; // "em raide" = item pego durante a raide, não pré-requisito
           case 'sellItem':       add('sell', o.items, c, fir); break;
           case 'plantItem':      add('plant', o.items, c, fir); break;
-          case 'giveQuestItem':  add('questgive', [o.questItem], c); break;
-          case 'findQuestItem':  add('questfind', [o.questItem], c); break;
+          case 'giveQuestItem':  // se a própria missão manda achá-lo, ele é pego na raide, não pré-requisito
+            if (!(t.objectives || []).some(x => x.type === 'findQuestItem' && x.questItem === o.questItem)) add('questgive', [o.questItem], c);
+            break;
           case 'plantQuestItem': add('questplant', [o.questItem], c); break;
           case 'mark':           add('mark', [o.markerItem]); break;
           case 'useItem':        add('use', o.useAny, c); break;
@@ -2423,7 +2438,7 @@ query {
     ════════════════════════════════════════════════════════ */
     const MAPS_META_URL = 'https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json';
     const JSON_MAPS_URL = 'https://json.tarkov.dev/regular/maps';
-    const JSON_MAPS_PT  = 'https://json.tarkov.dev/regular/maps_pt';
+    const JSON_MAPS_PT  = `https://json.tarkov.dev/regular/maps_${LANG}`;
 
     let mapsMeta = null;      // key -> definição interativa do tarkov.dev (bounds, transform, rotação, andares)
     let mapsGeo = null;       // id interno -> { extracts, bosses, spawns, poi }
@@ -2736,7 +2751,8 @@ query {
           const k = e.faction === 'scav' ? 'scav' : e.faction === 'pmc' ? 'pmc' : 'shared';
           const label = { pmc: 'Extração PMC', scav: 'Extração Scav', shared: 'Extração Cooperativa (PMC + Scav)' }[k];
           addMarker('extractions', e.pos, 'ex-' + k, { pmc: '⇧', scav: 'S', shared: '⇄' }[k],
-            `<strong>${esc(e.name)}</strong><br><span class="tk-pop-sub">${label}</span>`);
+            `<strong>${esc(e.name)}</strong><br><span class="tk-pop-sub">${label}</span>`)
+            .bindTooltip(esc(e.name), { permanent: true, direction: 'top', offset: [0, -14], className: 'tk-ex-label' });
         });
         g.bosses.forEach(b => addMarker('bosses', b.pos, 'boss', '☠',
           `<strong>${esc(b.name)}</strong><br><span class="tk-pop-sub">Chefe · chance de aparecer: ${pct(b.chance)}` +
@@ -3032,8 +3048,6 @@ query {
       if (secHdr)    secHdr.classList.remove('hidden');
       if (itemCtrls) itemCtrls.style.display = 'none';
       if (taskPills) taskPills.style.display  = 'none';
-      const cBtn = document.getElementById('compact-btn');
-      if (cBtn) cBtn.style.display = 'none';
 
       // Stats bar
       if (statsTiers) statsTiers.style.display = 'none';
@@ -3046,7 +3060,7 @@ query {
       const secCount = document.getElementById('section-count');
       const mapDef = MAPS_DB.find(m => m.id === currentMapId) || MAPS_DB[0];
       if (secTitle) secTitle.textContent = 'Mapas Táticos';
-      if (secCount) secCount.textContent = `${MAPS_DB.length} mapas`;
+      if (secCount) secCount.textContent = '';
 
       const mapNameStat = document.getElementById('map-current-name-stat');
       if (mapNameStat) mapNameStat.textContent = mapDef.name;
@@ -3141,6 +3155,20 @@ query {
           </div>
         </div>
       `;
+    }
+
+    function setAmmoCaliber(cal) {
+      ammoCaliberFilter = cal;
+      renderSection('ammo');
+    }
+
+    function renderAmmoCaliberPills() {
+      const box = document.getElementById('ammo-caliber-pills');
+      const cals = [...new Set(ammoData.map(a => a.caliber).filter(Boolean))].sort();
+      const pretty = c => c.replace(/^([5-9])(\d\d)x/, '$1.$2x'); // 545x39 -> 5.45x39
+      box.innerHTML = ['', ...cals].map(c =>
+        `<button class="task-pill${c === ammoCaliberFilter ? ' active' : ''}" onclick="setAmmoCaliber(${JSON.stringify(c).replace(/"/g, '&quot;')})">${c ? pretty(c) : 'Todos'}</button>`
+      ).join('');
     }
 
     function setItemCategory(cat, btn) {
@@ -3352,10 +3380,7 @@ query {
       grid.classList.remove('hidden');
       grid.classList.toggle('tasks-grid', isTasks);
       grid.classList.toggle('items-grid', isItems);
-      const compactOn = isCompact(section);
-      grid.classList.toggle('compact', compactOn);
-      const compactBtn = document.getElementById('compact-btn');
-      if (compactBtn) { compactBtn.style.display = ''; compactBtn.classList.toggle('on', compactOn); compactBtn.textContent = compactOn ? '⇱ Expandir' : '⇲ Resumir'; }
+      grid.classList.toggle('compact', !isTasks); // resumido fixo, exceto em Missões
 
       // Atualiza placeholder de busca conforme a aba ativa
       if (searchInput) {
@@ -3373,6 +3398,7 @@ query {
       ────────────────────────────────────────────────────────── */
       if (isItems) {
         taskPills.style.display  = 'none';
+        document.getElementById('ammo-caliber-pills').style.display = 'none';
         itemCtrls.style.display  = 'flex';
         legend.classList.add('hidden');
         statsTiers.style.display = 'none';
@@ -3430,9 +3456,9 @@ query {
         const fleaCount   = allItemsData.filter(i => (i.fleaPrice || 0) > 0 && !(i.types || []).includes('noFlea')).length;
         const noFleaCount = totalItems - fleaCount;
 
-        document.getElementById('items-total-count').textContent  = totalItems.toLocaleString('pt-BR');
-        document.getElementById('items-flea-count').textContent   = fleaCount.toLocaleString('pt-BR');
-        document.getElementById('items-noflea-count').textContent = noFleaCount.toLocaleString('pt-BR');
+        document.getElementById('items-total-count').textContent  = totalItems.toLocaleString(LOCALE);
+        document.getElementById('items-flea-count').textContent   = fleaCount.toLocaleString(LOCALE);
+        document.getElementById('items-noflea-count').textContent = noFleaCount.toLocaleString(LOCALE);
 
         const catNames = {
           all: 'Todos os Itens',
@@ -3453,7 +3479,7 @@ query {
           ? itemsToRender.map(renderItemCard).join('')
           : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhum item encontrado no filtro selecionado.</div>';
 
-        secCount.textContent = `${filtered.length.toLocaleString('pt-BR')} itens encontrados`;
+        secCount.textContent = `${filtered.length.toLocaleString(LOCALE)} itens encontrados`;
 
         // Controle do botão "Carregar Mais"
         if (filtered.length > displayedItemsLimit) {
@@ -3461,7 +3487,7 @@ query {
           const remaining = filtered.length - displayedItemsLimit;
           const nextCount = Math.min(60, remaining);
           document.getElementById('btn-load-more').textContent = `Carregar Mais (+${nextCount} Itens)`;
-          document.getElementById('load-more-info').textContent = `Exibindo ${itemsToRender.length} de ${filtered.length.toLocaleString('pt-BR')} itens catalogados`;
+          document.getElementById('load-more-info').textContent = `Exibindo ${itemsToRender.length} de ${filtered.length.toLocaleString(LOCALE)} itens catalogados`;
         } else {
           loadMoreWrap.classList.add('hidden');
         }
@@ -3484,6 +3510,11 @@ query {
 
       const q = searchQuery.toLowerCase().trim();
       let filteredData = data;
+      document.getElementById('ammo-caliber-pills').style.display = isAmmo ? 'flex' : 'none';
+      if (isAmmo) {
+        renderAmmoCaliberPills();
+        if (ammoCaliberFilter) filteredData = filteredData.filter(a => a.caliber === ammoCaliberFilter);
+      }
       if (q) {
         filteredData = data.filter(item => {
           const nameMatch = (item.name || '').toLowerCase().includes(q);
@@ -3715,7 +3746,140 @@ query {
       }
     }
 
+    /* ════════════════════════════════════════════════════════
+       IDIOMA: textos da interface PT -> EN (tradução manual).
+       Nomes de missões, itens, mapas e objetivos NÃO passam por aqui: vêm
+       da API tarkov.dev já no idioma oficial do jogo (ver LANG no topo).
+    ════════════════════════════════════════════════════════ */
+    const EN = {
+      'Central Tática': 'Tactical Hub',
+      'ARMAS': 'WEAPONS', 'MUNIÇÕES': 'AMMO', 'MISSÕES': 'TASKS', 'ITENS': 'ITEMS', 'MAPAS': 'MAPS',
+      'Concluídas:': 'Completed:', 'Ativas:': 'Active:', 'Pendentes:': 'Pending:', 'Catalogados:': 'Cataloged:',
+      'No Flea:': 'On Flea:', 'Sem Flea:': 'No Flea:', 'Todos os Itens': 'All Items',
+      'Carregando dados operacionais...': 'Loading operational data...',
+      'Falha ao conectar com a API': 'Failed to connect to the API',
+      'Verifique sua conexão e tente novamente.': 'Check your connection and try again.',
+      'Erro inesperado ao carregar dados.': 'Unexpected error while loading data.',
+      'Tentar Novamente': 'Try Again', 'Usar Dados Offline': 'Use Offline Data',
+      'Conectando às fontes de dados em Português...': 'Connecting to data sources in English...',
+      'Consultando GraphQL com mapas, zonas e bosses...': 'Querying GraphQL with maps, zones and bosses...',
+      'Buscando dados no CDN oficial Tarkov (PT-BR)...': 'Fetching data from the official Tarkov CDN (EN)...',
+      'Carregando dados offline em Português...': 'Loading offline data...',
+      'Buscar por nome ou calibre...': 'Search by name or caliber...',
+      'Buscar por nome ou sigla do item (ex: LEDX, GPU, Bitcoin)...': 'Search by item name or short name (e.g. LEDX, GPU, Bitcoin)...',
+      'Buscar missão por nome ou diretriz...': 'Search task by name or objective...',
+      'Todas': 'All', 'Todos': 'All', '📌 Ativas (Em Andamento)': '📌 Active (In Progress)',
+      'Pendentes': 'Pending', 'Concluídas': 'Completed', 'Concluída': 'Completed', 'Pendente': 'Pending',
+      'Troca (Barter)': 'Barter', 'Armas & Peças': 'Weapons & Parts', 'Munições': 'Ammo', 'Médico': 'Medical',
+      'Chaves & Cartões': 'Keys & Cards', 'Armaduras & Equip.': 'Armor & Gear', 'Provisões': 'Provisions',
+      'Itens de Troca (Barter)': 'Barter Items', 'Equipamentos': 'Gear',
+      'Ordenar:': 'Sort:', 'Maior Preço Flea': 'Highest Flea Price', 'Menor Preço Flea': 'Lowest Flea Price',
+      'Maior Venda Trader': 'Highest Trader Sell', 'Menor Compra Trader': 'Lowest Trader Buy', 'Nome (A-Z)': 'Name (A-Z)',
+      'Troca': 'Barter', 'Arma/Peça': 'Weapon/Part', 'Munição': 'Ammo', 'Chave': 'Key', 'Equipamento': 'Gear',
+      'Provisão': 'Provision', 'Item': 'Item',
+      'Selecionar Mapa': 'Select Map', 'Mostrar:': 'Show:', 'Missões Ativas': 'Active Tasks',
+      '📌 Missões Ativas': '📌 Active Tasks', 'Extrações PMC / Scav': 'PMC / Scav Extracts', 'Chefes': 'Bosses',
+      'Spawns PMC': 'PMC Spawns', 'Chaves & Locais': 'Keys & Locations',
+      '🗺️ Estilo: Abstrato': '🗺️ Style: Abstract', '🛰️ Estilo: Satélite': '🛰️ Style: Satellite',
+      'Alternar entre mapa abstrato (vetorial) e satélite': 'Switch between abstract (vector) and satellite map',
+      'Extrações de PMC (círculo verde), Scav (quadrado azul) e cooperativas': 'PMC (green circle), Scav (blue square) and co-op extracts',
+      'Trancas (chaves) e transições entre mapas': 'Locks (keys) and transitions between maps',
+      'Extração PMC': 'PMC Extract', 'Extração Scav': 'Scav Extract', 'Extração Cooperativa (PMC + Scav)': 'Co-op Extract (PMC + Scav)',
+      'Chefe': 'Boss', 'Missão': 'Task', 'Spawn PMC': 'PMC Spawn', 'Chave desconhecida': 'Unknown key',
+      'Mapa indisponível.': 'Map unavailable.', 'Alternativa: mapa oficial tarkov.dev': 'Alternative: official tarkov.dev map',
+      'Carregar Mapa Oficial (tarkov.dev)': 'Load Official Map (tarkov.dev)',
+      'neste mapa': 'on this map', 'Nenhuma missão ativa': 'No active tasks', 'marcada para': 'set for',
+      'Marque missões como "Ativa" na aba MISSÕES': 'Mark tasks as "Active" in the TASKS tab',
+      'Andar:': 'Floor:', 'Térreo / Principal': 'Ground / Main', '2º Andar': '2nd Floor', '3º Andar': '3rd Floor',
+      '4º Andar': '4th Floor', '5º Andar': '5th Floor', 'Subsolo': 'Underground', 'Túneis': 'Tunnels',
+      'Garagem': 'Garage', '2º Nível': '2nd Level', 'Nível Técnico': 'Technical Level',
+      'Carregando mapa…': 'Loading map…', 'Carregando posições…': 'Loading positions…',
+      'Posições de extrações, chefes e objetivos indisponíveis (sem conexão com json.tarkov.dev).': 'Extract, boss and objective positions unavailable (no connection to json.tarkov.dev).',
+      'A biblioteca de mapas (Leaflet) não carregou — verifique a conexão.': 'The map library (Leaflet) failed to load — check your connection.',
+      'Não foi possível carregar a calibração do mapa (offline?). Use o mapa oficial do tarkov.dev.': 'Could not load the map calibration (offline?). Use the official tarkov.dev map.',
+      'Marcar como concluída': 'Mark as completed', 'Fixar missão como Ativa / Em Andamento': 'Pin task as Active / In Progress',
+      '📌 Ativa': '📌 Active', '📌 Fixar / Ativa': '📌 Pin / Active', 'EM ANDAMENTO': 'IN PROGRESS',
+      'Diretrizes Operacionais': 'Objectives', 'Itens necessários': 'Required items',
+      '🌍 Qualquer lugar / Global': '🌍 Anywhere / Global', '🗺️ Ver no Mapa': '🗺️ View on Map', '🎒 Necessário:': '🎒 Required:',
+      'Entregar': 'Hand over', 'Vender': 'Sell', 'Plantar': 'Plant', 'Entregar item de missão': 'Hand over task item',
+      'Plantar item de missão': 'Plant task item', 'Marcador': 'Marker', 'Usar': 'Use', 'Montar': 'Build',
+      'Chave (qualquer uma)': 'Key (any)', '· em raide': '· in raid', '· um dos itens:': '· one of:',
+      'Item precisa ser encontrado em raide': 'Item must be found in raid',
+      'Sem Flea / Indisp.': 'No Flea / Unavailable', 'Nenhum': 'None', 'Apenas Loot': 'Loot only', 'Sem Flea': 'No Flea',
+      'Restrito': 'Restricted', '🏷️ Flea Market': '🏷️ Flea Market', 'Não comercializável': 'Not tradable',
+      'Menor oferta atual': 'Lowest current offer', '💰 Venda Trader': '💰 Trader Sell', 'Melhor:': 'Best:', 'Compra:': 'Buy:',
+      'Recuo V.': 'Vert. Recoil', 'Ergonomia': 'Ergonomics', 'Cadência': 'Fire Rate', 'Penetração': 'Penetration',
+      'Dano': 'Damage', 'Dano Armadura': 'Armor Damage', 'Fragmentação': 'Fragmentation',
+      'Nenhum item encontrado.': 'No items found.',
+      'Nenhum item encontrado no filtro selecionado.': 'No items found for the selected filter.',
+      'Nenhuma missão encontrada no filtro selecionado.': 'No tasks found for the selected filter.',
+      'Objetivo operacional': 'Operational objective'
+    };
+    // [regex, substituição] aplicados em ordem a textos com números/nomes embutidos
+    const EN_PATTERNS = [
+      [/^(\d+)% Concluído/, '$1% Completed'],
+      [/^📋 (\d+) diretriz\(es\)$/, '📋 $1 objective(s)'],
+      [/^(\S+) itens encontrados$/, '$1 items found'],
+      [/^1 item$/, '1 item'], [/^(\d+) itens$/, '$1 items'],
+      [/^Carregar Mais \(\+(\d+) Itens\)$/, 'Load More (+$1 Items)'],
+      [/^Exibindo (\S+) de (\S+) itens catalogados$/, 'Showing $1 of $2 cataloged items'],
+      [/^\+(\d+) alternativas$/, '+$1 alternatives'],
+      [/^Requer: /, 'Requires: '],
+      [/\(Nv\. (\d+)\)/, '(Lv. $1)'],
+      [/^\+(.+) no Flea$/, '+$1 on Flea'],
+      [/^Venda no Trader \(\+(.+)\)$/, 'Sell to Trader (+$1)'],
+      [/^em (.+)$/, 'in $1'],
+      [/^Zona: /, 'Zone: '],
+      [/^Chefe · chance de aparecer: /, 'Boss · spawn chance: '],
+      [/ · neste local: /, ' · at this spot: '],
+      [/^Tranca \(porta\)/, 'Lock (door)'], [/^Tranca \(/, 'Lock ('], [/ · precisa de energia/, ' · needs power'],
+      [/^Transição/, 'Transit'],
+      [/^“(.+)”: este objetivo não tem local fixo em (.+) \(vale em qualquer ponto do mapa\)\.$/, '“$1”: this objective has no fixed location on $2 (applies anywhere on the map).'],
+      [/^Não foi possível carregar a imagem do mapa \(/, 'Could not load the map image ('],
+      [/^Não foi possível carregar o andar \(/, 'Could not load the floor (']
+    ];
+
+    function trText(s) {
+      const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(s);
+      const core = m[2];
+      if (!core) return s;
+      let out = EN[core];
+      if (out === undefined) { out = core; for (const [re, rep] of EN_PATTERNS) out = out.replace(re, rep); }
+      return out === core ? s : m[1] + out + m[3];
+    }
+
+    function trAttrs(el) {
+      for (const a of ['placeholder', 'title']) {
+        const v = el.getAttribute && el.getAttribute(a);
+        if (v) { const t = trText(v); if (t !== v) el.setAttribute(a, t); }
+      }
+    }
+
+    function trNode(n) {
+      if (n.nodeType === 3) {
+        const v = trText(n.nodeValue);
+        if (v !== n.nodeValue) n.nodeValue = v;
+      } else if (n.nodeType === 1 && n.nodeName !== 'SCRIPT' && n.nodeName !== 'STYLE') {
+        trAttrs(n);
+        n.childNodes.forEach(trNode);
+      }
+    }
+
+    function setupLang() {
+      document.documentElement.lang = LANG === 'en' ? 'en' : 'pt-BR';
+      document.getElementById('lang-' + LANG).classList.add('active');
+      if (LANG !== 'en') return;
+      document.title = EN['Central Tática'];
+      trNode(document.body);
+      new MutationObserver(ms => ms.forEach(m => {
+        if (m.type === 'attributes') trAttrs(m.target);
+        else if (m.type === 'characterData') trNode(m.target);
+        else m.addedNodes.forEach(trNode);
+      })).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title'] });
+    }
+
     // Inicialização automática
+    setupLang();
     init();
   </script>
 </body>
