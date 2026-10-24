@@ -27,12 +27,12 @@ Catálogo com preço no Flea Market, melhor venda e menor compra nos traders, po
 
 ### Mapas
 
-- Dez mapas: Customs, Woods, Factory, Shoreline, Interchange, Reserve, Lighthouse, Streets of Tarkov, Ground Zero e The Lab.
+- Doze mapas: Customs, Woods, Factory, Shoreline, Interchange, Reserve, Lighthouse, Streets of Tarkov, Ground Zero, The Lab, The Labyrinth e Icebreaker.
 - Zoom e arrasto com as coordenadas oficiais do tarkov.dev, então os ícones caem no lugar certo.
 - Seletor de andares nos mapas que têm mais de um nível.
 - Estilo abstrato ou satélite, nos mapas que têm os dois.
-- Camadas que você liga e desliga: missões ativas, extrações PMC e Scav, chefes com a chance de aparecer, spawns PMC, trancas e transições entre mapas.
-- O nome de cada extração aparece sobre o ícone, sem precisar clicar.
+- Camadas que você liga e desliga: missões ativas, extrações PMC e Scav (com as transições para outros mapas), paradas do BTR, chefes com a chance de aparecer, spawns PMC e trancas.
+- O nome de cada extração, transição e parada do BTR aparece sobre o ícone, sem precisar clicar. As paradas do BTR existem em Woods e Streets of Tarkov.
 - Ao clicar numa extração, o balão diz o que ela exige, quando exige: item, pagamento, interruptor, sinalizador ou restrição de equipamento. Uma parte vem dos dados do tarkov.dev e outra de uma tabela que conferi à mão, então pode ficar desatualizada depois de um patch do jogo.
 - Um painel lista as missões ativas do mapa aberto, com botão para localizar cada objetivo.
 - Se o mapa interativo não carregar, dá para abrir o mapa oficial do tarkov.dev dentro da página.

@@ -1499,6 +1499,7 @@
     .tk-spawn { background: #ffd24d; width: 14px; height: 14px; margin: 6px; font-size: 10px; }
     .tk-poi { background: #bbb; font-size: 12px; }
     .tk-transit { background: #c2aa80; border-radius: 4px; }
+    .tk-btr { background: #4dd0e1; border-radius: 4px; }
     .tk-pulse { position: relative; width: 44px; height: 44px; }
     .tk-pulse::before, .tk-pulse::after {
       content: ''; position: absolute; inset: 0; border-radius: 50%; border: 3px solid #ff9900;
@@ -1708,6 +1709,9 @@
             <button class="map-filter-btn active" id="mf-extractions" onclick="toggleMapFilter('extractions', this)" title="Extrações de PMC (círculo verde), Scav (quadrado azul) e cooperativas">
               <span class="dot-indicator" style="background:#99cc00;"></span> Extrações PMC / Scav
             </button>
+            <button class="map-filter-btn active" id="mf-btr" onclick="toggleMapFilter('btr', this)" title="Paradas do BTR (Woods e Streets of Tarkov)">
+              <span class="dot-indicator" style="background:#4dd0e1;"></span> Paradas BTR
+            </button>
             <button class="map-filter-btn active" id="mf-bosses" onclick="toggleMapFilter('bosses', this)">
               <span class="dot-indicator" style="background:#ff3333;"></span> Chefes
             </button>
@@ -1733,6 +1737,8 @@
               <div class="map-legend">
                 <span><i class="tk-lg" style="background:#99cc00;border-radius:50%"></i>Extração PMC</span>
                 <span><i class="tk-lg" style="background:#3399ff;border-radius:3px"></i>Extração Scav</span>
+                <span><i class="tk-lg" style="background:#c2aa80;border-radius:3px"></i>Transição</span>
+                <span><i class="tk-lg" style="background:#4dd0e1;border-radius:3px"></i>Parada BTR</span>
                 <span><i class="tk-lg" style="background:#ff3333;border-radius:50%"></i>Chefe</span>
                 <span><i class="tk-lg" style="background:#ff9900;border-radius:50%"></i>Missão</span>
               </div>
@@ -1797,7 +1803,7 @@
 
     // Estado dos Mapas
     let currentMapId = 'customs';
-    const mapFilters = { missions: true, bosses: true, extractions: true, spawns: false, poi: false };
+    const mapFilters = { missions: true, bosses: true, extractions: true, btr: true, spawns: false, poi: false };
 
     /* ════════════════════════════════════════════════════════
        TRADERS & FORMATAÇÃO MONETÁRIA
@@ -2396,7 +2402,9 @@ query {
       { id: 'lighthouse',  key: 'lighthouse',        name: 'Lighthouse',        icon: '💡', slug: 'lighthouse' },
       { id: 'streets',     key: 'streets-of-tarkov', name: 'Streets of Tarkov', icon: '🏙️', slug: 'streets-of-tarkov' },
       { id: 'ground-zero', key: 'ground-zero',       name: 'Ground Zero',       icon: '🟥', slug: 'ground-zero' },
-      { id: 'labs',        key: 'the-lab',           name: 'The Lab',           icon: '🧪', slug: 'the-lab' }
+      { id: 'labs',        key: 'the-lab',           name: 'The Lab',           icon: '🧪', slug: 'the-lab' },
+      { id: 'labyrinth',   key: 'the-labyrinth',     name: 'The Labyrinth',     icon: '🌀', slug: 'the-labyrinth' },
+      { id: 'icebreaker',  key: 'icebreaker',        name: 'Icebreaker',        icon: '🚢', slug: 'icebreaker' }
     ];
 
     // IDs de mapa da API tarkov.dev -> id interno (Factory dia/noite, Ground Zero 21+ e Lab dark compartilham o mapa)
@@ -2413,7 +2421,9 @@ query {
       '653e6760052c01c1c805532f': 'ground-zero',
       '65b8d6f5cdde2479cb2a3125': 'ground-zero',
       '5b0fc42d86f7744a585f9105': 'labs',
-      '6a294a5b5eb5f9a1700417b7': 'labs'
+      '6a294a5b5eb5f9a1700417b7': 'labs',
+      '6733700029c367a3d40b02af': 'labyrinth',
+      '69af492a4819ea4ba10a69c5': 'icebreaker'
     };
     const MAP_NORM_NAMES = {
       'customs': 'customs', 'bigmap': 'customs', 'woods': 'woods',
@@ -2422,7 +2432,8 @@ query {
       'reserve': 'reserve', 'rezervbase': 'reserve', 'lighthouse': 'lighthouse',
       'streets-of-tarkov': 'streets', 'tarkovstreets': 'streets',
       'ground-zero': 'ground-zero', 'ground-zero-21': 'ground-zero', 'sandbox': 'ground-zero', 'sandbox_high': 'ground-zero',
-      'the-lab': 'labs', 'laboratory': 'labs', 'the-lab-dark': 'labs'
+      'the-lab': 'labs', 'laboratory': 'labs', 'the-lab-dark': 'labs',
+      'the-labyrinth': 'labyrinth', 'icebreaker': 'icebreaker'
     };
 
     /** Converte qualquer referência de mapa (id, objeto {id,name,normalizedName} ou nome) no id interno de MAPS_DB */
@@ -2514,11 +2525,13 @@ query {
         const geo = {};
         for (const m of Object.values((mj.data && mj.data.maps) || {})) {
           const mid = mapIdOf(m);
-          if (!mid || geo[mid]) continue;
-          const g = geo[mid] = { extracts: [], bosses: [], spawns: [], poi: [] };
+          if (!mid) continue;
+          // variantes do mesmo mapa (ex.: Factory dia/noite, Ground Zero 21+) somam seus dados, sem duplicar
+          const g = geo[mid] || (geo[mid] = { extracts: [], transits: [], btr: [], bosses: [], spawns: [], poi: [], seen: new Set() });
+          const once = k => !g.seen.has(k) && g.seen.add(k);
 
           for (const e of m.extracts || []) {
-            if (!e.position) continue;
+            if (!e.position || !once('e|' + (e.id || e.name))) continue;
             const cur = EXTRACT_REQS[mid + '|' + e.name] || {};
             const req = {
               // transferItem = pago/secreto (dado oficial); o resto vem da tabela EXTRACT_REQS
@@ -2533,7 +2546,7 @@ query {
             const bossName = trn[b.mob] || (mobs[b.mob] && mobs[b.mob].name) || b.mob;
             for (const loc of b.spawnLocations || []) {
               const ps = loc.positions || [];
-              if (!ps.length) continue;
+              if (!ps.length || !once(`b|${b.mob}|${loc.name}`)) continue;
               g.bosses.push({
                 name: bossName, chance: b.spawnChance, locChance: loc.chance, zone: T(loc.name),
                 pos: { x: avg(ps, 'x'), y: avg(ps, 'y'), z: avg(ps, 'z') }
@@ -2542,13 +2555,16 @@ query {
           }
           for (const s of m.spawns || []) {
             const cats = s.categories || [], sides = s.sides || [];
-            if (s.position && cats.includes('player') && (sides.includes('pmc') || sides.includes('all'))) g.spawns.push(s.position);
+            if (s.position && cats.includes('player') && (sides.includes('pmc') || sides.includes('all')) && once('s|' + s.position.x + '|' + s.position.z)) g.spawns.push(s.position);
           }
           for (const l of m.locks || []) {
-            if (l.position) g.poi.push({ type: 'lock', key: l.key, lockType: l.lockType, pos: l.position });
+            if (l.position && once('l|' + l.id)) g.poi.push({ type: 'lock', key: l.key, lockType: l.lockType, pos: l.position });
           }
           for (const t of m.transits || []) {
-            if (t.position) g.poi.push({ type: 'transit', name: T(t.description), target: mapIdOf(t.map), pos: t.position });
+            if (t.position && once('t|' + t.id)) g.transits.push({ name: T(t.description), cond: t.conditions ? T(t.conditions) : '', pos: t.position });
+          }
+          for (const b of m.btrStops || []) {
+            if (once('btr|' + b.name)) g.btr.push({ name: trn[b.name] || 'BTR', pos: { x: b.x, y: b.y, z: b.z } });
           }
         }
 
@@ -2784,7 +2800,7 @@ query {
     /** (Re)desenha todos os marcadores do mapa atual; os filtros decidem quais camadas ficam visíveis */
     function renderMapMarkers() {
       if (!lmap) return;
-      ['missions', 'extractions', 'bosses', 'spawns', 'poi'].forEach(k => lGroups[k].clearLayers());
+      ['missions', 'extractions', 'btr', 'bosses', 'spawns', 'poi'].forEach(k => lGroups[k].clearLayers());
       lMarkers = [];
       const g = mapsGeo && mapsGeo[lMapId];
 
@@ -2796,6 +2812,13 @@ query {
             `<strong>${esc(e.name)}</strong><br><span class="tk-pop-sub">${label}</span>${extractReqHtml(e.req)}`)
             .bindTooltip(esc(e.name), { permanent: true, direction: 'top', offset: [0, -14], className: 'tk-ex-label' });
         });
+        g.transits.forEach(t => addMarker('extractions', t.pos, 'transit', '➜',
+          `<strong>${esc(t.name)}</strong><br><span class="tk-pop-sub">Transição para outro mapa</span>` +
+          (t.cond ? `<br><span class="tk-pop-req">${esc(t.cond)}</span>` : ''))
+          .bindTooltip(esc(t.name), { permanent: true, direction: 'top', offset: [0, -14], className: 'tk-ex-label' }));
+        g.btr.forEach(b => addMarker('btr', b.pos, 'btr', 'B',
+          `<strong>${esc(b.name)}</strong><br><span class="tk-pop-sub">Parada do BTR</span>`)
+          .bindTooltip(esc(b.name), { permanent: true, direction: 'top', offset: [0, -14], className: 'tk-ex-label' }));
         g.bosses.forEach(b => addMarker('bosses', b.pos, 'boss', '☠',
           `<strong>${esc(b.name)}</strong><br><span class="tk-pop-sub">Chefe · chance de aparecer: ${pct(b.chance)}` +
           (b.locChance != null && b.locChance < 1 ? ` · neste local: ${pct(b.locChance)}` : '') +
@@ -2805,10 +2828,6 @@ query {
           if (p.type === 'lock') {
             addMarker('poi', p.pos, 'poi', '🔑',
               `<strong>${esc(keyName(p.key))}</strong><br><span class="tk-pop-sub">Tranca (${esc(p.lockType || 'porta')})${p.needsPower ? ' · precisa de energia' : ''}</span>`);
-          } else {
-            const target = MAPS_DB.find(m => m.id === p.target);
-            addMarker('poi', p.pos, 'transit', '➜',
-              `<strong>Transição${target ? ' → ' + esc(target.name) : ''}</strong><br><span class="tk-pop-sub">${esc(p.name)}</span>`);
           }
         });
       }
@@ -2916,7 +2935,7 @@ query {
       });
       lmap.createPane('tkBase').style.zIndex = 200;
       lmap.createPane('tkFloor').style.zIndex = 250;
-      ['missions', 'extractions', 'bosses', 'spawns', 'poi', 'focus'].forEach(k => {
+      ['missions', 'extractions', 'btr', 'bosses', 'spawns', 'poi', 'focus'].forEach(k => {
         lGroups[k] = L.layerGroup();
         if (k === 'focus' || mapFilters[k]) lGroups[k].addTo(lmap);
       });
@@ -3821,7 +3840,9 @@ query {
       'Provisão': 'Provision', 'Item': 'Item',
       'Selecionar Mapa': 'Select Map', 'Mostrar:': 'Show:', 'Missões Ativas': 'Active Tasks',
       '📌 Missões Ativas': '📌 Active Tasks', 'Extrações PMC / Scav': 'PMC / Scav Extracts', 'Chefes': 'Bosses',
-      'Spawns PMC': 'PMC Spawns', 'Chaves & Locais': 'Keys & Locations',
+      'Spawns PMC': 'PMC Spawns', 'Chaves & Locais': 'Keys & Locations', 'Paradas BTR': 'BTR Stops',
+      'Paradas do BTR (Woods e Streets of Tarkov)': 'BTR stops (Woods and Streets of Tarkov)',
+      'Transição': 'Transit', 'Parada BTR': 'BTR Stop', 'Parada do BTR': 'BTR Stop', 'Transição para outro mapa': 'Transit to another map',
       '🗺️ Estilo: Abstrato': '🗺️ Style: Abstract', '🛰️ Estilo: Satélite': '🛰️ Style: Satellite',
       'Alternar entre mapa abstrato (vetorial) e satélite': 'Switch between abstract (vector) and satellite map',
       'Extrações de PMC (círculo verde), Scav (quadrado azul) e cooperativas': 'PMC (green circle), Scav (blue square) and co-op extracts',
