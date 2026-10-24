@@ -1490,6 +1490,7 @@
       font-size: 0.62rem; font-weight: 700; padding: 1px 5px; white-space: nowrap;
     }
     .tk-ex-label::before { display: none; }
+    .tk-pop-req { display: block; margin-top: 4px; color: #ff9900; font-size: 0.72rem; font-weight: 700; }
     .tk-ex-pmc { background: #99cc00; }
     .tk-ex-scav { background: #3399ff; border-radius: 4px; }
     .tk-ex-shared { background: linear-gradient(90deg, #99cc00 50%, #3399ff 50%); }
@@ -2463,6 +2464,37 @@ query {
       return metaPromise;
     }
 
+    // Extrações de sinalizador (no tarkov.dev só o nome indica); chaves = id da extração na API
+    const FLARE_EXITS = new Set(['wood_sniper_exit', 'Sniper_exit', 'E9_sniper', 'ex_customs_pmc_flare', 'ex_interchange_pmc_sniper']);
+
+    // Requisitos conferidos em tarkov.help (os dados do tarkov.dev ligam o mesmo interruptor a todas as extrações de Customs).
+    // Chave: idMapa|idExtração. items = ids de itens; sw = chave de tradução do interruptor; notes = restrições de equipamento.
+    // shortcut: Labs, Interchange e Streets sem requisitos próprios aqui; conferir e adicionar se necessário.
+    const PARACORD = '5c12688486f77426843c7d32', ICE_PICK = '5c0126f40db834002a125382';
+    const EXTRACT_REQS = {
+      'customs|ex_customs_pmc_zb1013': { items: ['5448ba0b4bdc2d02308b456c'], sw: 'switch_custom_DesignStuff_00034_reserve_electric_switcher_lever' },
+      'customs|ex_customs_pmc_flare': { items: ['6217726288ed9f0845317459'] },
+      'shoreline|RedRebel_alp': { items: [PARACORD, ICE_PICK], notes: ['Sem colete/armadura'] },
+      'reserve|Alpinist': { items: [PARACORD, ICE_PICK], notes: ['Sem colete/armadura'] },
+      'reserve|EXFIL_Bunker': { sw: 'switch_autoId_00632_EXFIL_reserve_electric_switcher_lever' },
+      'reserve|EXFIL_vent': { notes: ['Sem mochila'] }
+    };
+
+    /** Linhas "Requer: ..." do balão de uma extração; vazio quando ela não exige nada */
+    function extractReqHtml(r) {
+      if (!r) return '';
+      const line = t => `<br><span class="tk-pop-req">${t}</span>`;
+      let out = '';
+      if (r.items.length) {
+        if (!keyNames) keyName('');
+        out += line('Requer: ' + r.items.map(i => (i.count > 1 ? i.count.toLocaleString(LOCALE) + ' × ' : '') + esc(keyNames.get(i.item) || '?')).join(', '));
+      }
+      if (r.switches.length) out += line(`Requer acionar: ${esc(r.switches.join(', '))}`);
+      if (r.flare) out += line('Requer sinalizador (flare)');
+      r.notes.forEach(n => { out += line(n); });
+      return out;
+    }
+
     function loadMapGeo() {
       if (geoPromise) return geoPromise;
       geoPromise = (async () => {
@@ -2486,7 +2518,16 @@ query {
           const g = geo[mid] = { extracts: [], bosses: [], spawns: [], poi: [] };
 
           for (const e of m.extracts || []) {
-            if (e.position) g.extracts.push({ name: T(e.name), faction: e.faction || 'shared', pos: e.position });
+            if (!e.position) continue;
+            const cur = EXTRACT_REQS[mid + '|' + e.name] || {};
+            const req = {
+              // transferItem = pago/secreto (dado oficial); o resto vem da tabela EXTRACT_REQS
+              items: [...(e.transferItem ? [e.transferItem] : []), ...(cur.items || []).map(item => ({ item, count: 1 }))],
+              switches: (cur.sw ? [trn[cur.sw]] : []).filter(Boolean),
+              notes: cur.notes || [],
+              flare: FLARE_EXITS.has(e.name) && !cur.items
+            };
+            g.extracts.push({ name: T(e.name), faction: e.faction || 'shared', pos: e.position, req });
           }
           for (const b of m.bosses || []) {
             const bossName = trn[b.mob] || (mobs[b.mob] && mobs[b.mob].name) || b.mob;
@@ -2752,7 +2793,7 @@ query {
           const k = e.faction === 'scav' ? 'scav' : e.faction === 'pmc' ? 'pmc' : 'shared';
           const label = { pmc: 'Extração PMC', scav: 'Extração Scav', shared: 'Extração Cooperativa (PMC + Scav)' }[k];
           addMarker('extractions', e.pos, 'ex-' + k, { pmc: '⇧', scav: 'S', shared: '⇄' }[k],
-            `<strong>${esc(e.name)}</strong><br><span class="tk-pop-sub">${label}</span>`)
+            `<strong>${esc(e.name)}</strong><br><span class="tk-pop-sub">${label}</span>${extractReqHtml(e.req)}`)
             .bindTooltip(esc(e.name), { permanent: true, direction: 'top', offset: [0, -14], className: 'tk-ex-label' });
         });
         g.bosses.forEach(b => addMarker('bosses', b.pos, 'boss', '☠',
@@ -3826,6 +3867,7 @@ query {
       [/^Exibindo (\S+) de (\S+) itens catalogados$/, 'Showing $1 of $2 cataloged items'],
       [/^\+(\d+) alternativas$/, '+$1 alternatives'],
       [/^Requer: /, 'Requires: '],
+      [/^Requer acionar: /, 'Requires activating: '],
       [/\(Nv\. (\d+)\)/, '(Lv. $1)'],
       [/^\+(.+) no Flea$/, '+$1 on Flea'],
       [/^Venda no Trader \(\+(.+)\)$/, 'Sell to Trader (+$1)'],

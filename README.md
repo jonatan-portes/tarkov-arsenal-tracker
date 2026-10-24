@@ -33,6 +33,7 @@ Catálogo com preço no Flea Market, melhor venda e menor compra nos traders, po
 - Estilo abstrato ou satélite, nos mapas que têm os dois.
 - Camadas que você liga e desliga: missões ativas, extrações PMC e Scav, chefes com a chance de aparecer, spawns PMC, trancas e transições entre mapas.
 - O nome de cada extração aparece sobre o ícone, sem precisar clicar.
+- Ao clicar numa extração, o balão diz o que ela exige, quando exige: item, pagamento, interruptor, sinalizador ou restrição de equipamento. Uma parte vem dos dados do tarkov.dev e outra de uma tabela que conferi à mão, então pode ficar desatualizada depois de um patch do jogo.
 - Um painel lista as missões ativas do mapa aberto, com botão para localizar cada objetivo.
 - Se o mapa interativo não carregar, dá para abrir o mapa oficial do tarkov.dev dentro da página.
 
