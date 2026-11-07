@@ -368,6 +368,7 @@
     @media (min-width: 900px) {
       .cards-grid.tasks-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
     }
+    .task-col { display: flex; flex-direction: column; gap: inherit; min-width: 0; }
 
     /* =========================================================
        BASE CARD (ARMAS & MUNIÇÕES)
@@ -1909,23 +1910,34 @@ query {
     ════════════════════════════════════════════════════════ */
     let rawSrc = null;          // fontes brutas do JSON CDN (reaproveitadas quando a carga principal já usou o CDN)
     let taskNeeds = {};         // taskId -> [{ kind, count, fir, items: [{id, name, icon}] }]
+    let taskStart = {};         // taskId -> [{ id, name, icon, count, trader, level }] ("Equipamento inicial" do jogo)
     let needsPromise = null;
 
     const NEED_LABELS = {
       key: 'Chave', give: 'Entregar', find: 'Encontrar', sell: 'Vender', plant: 'Plantar',
       questgive: 'Entregar item de missão', questfind: 'Achar item de missão', questplant: 'Plantar item de missão',
-      mark: 'Marcador', use: 'Usar', build: 'Montar'
+      mark: 'Marcador', use: 'Usar', build: 'Montar', wear: 'Vestir', weapon: 'Usar arma', mod: 'Acessório da arma'
     };
+
+    function itemInfo(S, id) {
+      const it = S.items[id];
+      if (it) return { id, name: S.trans[it.name] || it.normalizedName || id, icon: it.iconLink || `https://assets.tarkov.dev/${id}-icon.webp` };
+      const q = S.quest[id];
+      if (q) return { id, name: S.tasksPt[q.name] || q.normalizedName || id, icon: q.iconLink || `https://assets.tarkov.dev/${id}-icon.webp` };
+      return null;
+    }
+
+    function computeTaskStart(t, S) {
+      const r = t.startRewards || {};
+      return [
+        ...(r.items || []).map(x => ({ ...itemInfo(S, x.item), count: x.count })),
+        ...(r.offerUnlock || []).map(x => ({ ...itemInfo(S, x.item), count: x.count, trader: TRADER_NAMES[x.trader] || '', level: x.level }))
+      ].filter(x => x.id);
+    }
 
     function computeTaskNeeds(t, S) {
       const groups = [], seen = new Set();
-      const info = id => {
-        const it = S.items[id];
-        if (it) return { id, name: S.trans[it.name] || it.normalizedName || id, icon: it.iconLink || `https://assets.tarkov.dev/${id}-icon.webp` };
-        const q = S.quest[id];
-        if (q) return { id, name: S.tasksPt[q.name] || q.normalizedName || id, icon: q.iconLink || `https://assets.tarkov.dev/${id}-icon.webp` };
-        return null;
-      };
+      const info = id => itemInfo(S, id);
       const add = (kind, ids, count, fir) => {
         const items = [...new Set((ids || []).filter(Boolean))].map(info).filter(Boolean);
         if (!items.length) return;
@@ -1938,6 +1950,10 @@ query {
       for (const o of t.objectives || []) {
         for (const g of o.requiredKeys || []) add('key', g);
         const c = o.count, fir = o.foundInRaid;
+        // shortcut: a API usa o mesmo formato para "todos" e "qualquer um" (Dândis x PACA), então listo os itens sem afirmar qual; o texto do objetivo decide
+        add('wear', (o.wearing || []).flat().map(i => i.id));
+        add('weapon', o.usingWeapon);
+        add('mod', (o.usingWeaponMods || []).flat());
         switch (o.type) {
           case 'giveItem':       if (!fir) add('give', o.items, c, fir); break; // "em raide" = item pego durante a raide, não pré-requisito
           case 'sellItem':       add('sell', o.items, c, fir); break;
@@ -1965,12 +1981,15 @@ query {
                 quest: tasks?.data?.questItems || {}, tasksPt: tasksPt?.data || {} };
           fetched = true;
         }
-        const out = {};
+        const out = {}, start = {};
         for (const [id, t] of Object.entries(S.tasks)) {
           const g = computeTaskNeeds(t, S);
           if (g.length) out[id] = g;
+          const st = computeTaskStart(t, S);
+          if (st.length) start[id] = st;
         }
         taskNeeds = out;
+        taskStart = start;
         if (fetched && currentSection === 'tasks') renderSection('tasks');
       })().catch(e => { console.warn('[Missões] Itens necessários indisponíveis:', e.message); needsPromise = null; });
       return needsPromise;
@@ -1992,7 +2011,7 @@ query {
                   <span class="need-kind ${g.kind === 'key' ? 'key' : ''}">${label}</span>
                   ${g.count ? `<span>${g.count}×</span>` : ''}
                   ${g.fir ? '<span title="Item precisa ser encontrado em raide">· em raide</span>' : ''}
-                  ${g.items.length > 1 && g.kind !== 'key' ? '<span>· um dos itens:</span>' : ''}
+                  ${g.items.length > 1 && !['key', 'wear', 'mod'].includes(g.kind) ? '<span>· um dos itens:</span>' : ''}
                 </div>
                 <div class="need-items">
                   ${shown.map(i => `
@@ -2007,10 +2026,26 @@ query {
         </div>`;
     }
 
+    function renderStart(taskId) {
+      const list = taskStart[taskId];
+      if (!list) return '';
+      return `
+        <div class="objectives-heading"><span>🎁</span> Equipamento inicial</div>
+        <div class="needs-box">
+          <div class="need-items">
+            ${list.map(i => `
+              <div class="need-item" title="${esc(i.name)}">
+                <div class="need-thumb-box"><img src="${esc(i.icon)}" alt="${esc(i.name)}" loading="lazy" onerror="this.parentElement.style.display='none'"></div>
+                <span class="need-name">${esc(i.name)}${i.trader == null && i.count > 1 ? ` <span class="need-more">${i.count.toLocaleString(LOCALE)}</span>` : ''}${i.trader != null ? ` <span class="need-more">🛒 ${esc(i.trader)} Nv. ${i.level}</span>` : ''}</span>
+              </div>`).join('')}
+          </div>
+        </div>`;
+    }
+
     /** Balão do mapa: missão + objetivo + fotos dos itens que a missão exige */
     function missionPopup(task, obj) {
       const items = [];
-      (taskNeeds[task.id] || []).forEach(g => g.items.slice(0, 4).forEach(i => items.push(i)));
+      (taskNeeds[task.id] || []).forEach(g => g.items.slice(0, 4).forEach(i => { if (!items.some(x => x.id === i.id)) items.push(i); }));
       const thumbs = items.slice(0, 8).map(i =>
         `<span class="need-thumb-box" title="${esc(i.name)}"><img src="${esc(i.icon)}" alt="${esc(i.name)}" onerror="this.parentElement.style.display='none'"></span>`).join('');
       return `<strong>${esc(task.name)}</strong><br><span class="tk-pop-sub">${esc((obj.type || '').toUpperCase())} — ${esc(obj.description)}</span>` +
@@ -2022,7 +2057,7 @@ query {
       if (!groups || !groups.length) return '';
       const hasKey = groups.some(g => g.kind === 'key');
       const names = groups.map(g => g.items[0].name + (g.items.length > 1 ? ' (+' + (g.items.length - 1) + ')' : '')).slice(0, 4).join(', ');
-      return `<span class="task-need-flag" title="Requer: ${esc(names)}">${hasKey ? '🔑' : '🎒'} ${groups.length}</span>`;
+      return `<span class="task-need-flag" title="Requer: ${esc(names)}">${hasKey ? '🔑' : '🎒'} ${new Set(groups.map(g => g.items[0].id)).size}</span>`;
     }
 
     function formatCaliber(cal) {
@@ -2187,12 +2222,13 @@ query {
               const desc = tasksPt[obj.description] || tasksPt[obj.id] || obj.description || 'Objetivo operacional';
               const maps = (obj.maps || []).map(mapId => ({
                 id: mapId,
-                name: tasksPt[mapId + ' Name'] || mapId
-              }));
+                name: (MAPS_DB.find(m => m.id === mapIdOf(mapId)) || {}).name
+              })).filter(m => m.name);
 
               return {
                 id: obj.id,
                 type: obj.type || 'objective',
+                count: obj.count,
                 description: desc,
                 maps: maps
               };
@@ -3354,7 +3390,7 @@ query {
                 <span>🎯</span> Diretrizes Operacionais
               </div>
               ${task.objectives.map((obj, i) => {
-                const mapNames = (obj.maps || []).map(m => m.name || m).filter(Boolean);
+                const mapNames = [...new Set((obj.maps || []).map(m => m.name || m).filter(Boolean))];
                 const hasMaps = mapNames.length > 0;
                 const mapDisplay = hasMaps ? mapNames.join(', ') : 'Qualquer lugar / Global';
 
@@ -3362,7 +3398,7 @@ query {
                   <div class="objective-item">
                     <div class="obj-meta-row">
                       <span class="obj-type-pill">
-                        ${esc(obj.type.toUpperCase())}
+                        ${esc(obj.type.toUpperCase())}${obj.count > 1 ? ` · ${obj.count}×` : ''}
                       </span>
                       <span class="obj-map-pill ${hasMaps ? 'has-map' : 'global'}">
                         ${hasMaps ? '📍 ' + esc(mapDisplay) : '🌍 ' + esc(mapDisplay)}
@@ -3373,9 +3409,22 @@ query {
                   </div>
                 `;
               }).join('')}
+              ${renderStart(task.id)}
             </div>
           </div>
         </div>`;
+    }
+
+    // Mesmo ponto de quebra do .tasks-grid no CSS
+    const twoTaskCols = window.matchMedia('(min-width: 900px)');
+    twoTaskCols.addEventListener('change', () => { if (currentSection === 'tasks') renderSection('tasks'); });
+
+    /** Colunas independentes: expandir um card só empurra os da própria coluna, sem deixar buraco ao lado */
+    function renderTaskColumns(list) {
+      const n = twoTaskCols.matches ? 2 : 1;
+      const cols = Array.from({ length: n }, () => []);
+      list.forEach((t, i) => cols[i % n].push(renderTaskCard(t)));
+      return cols.map(c => `<div class="task-col">${c.join('')}</div>`).join('');
     }
 
     function toggleTaskExpand(taskId, event) {
@@ -3627,7 +3676,7 @@ query {
         document.getElementById('tasks-progress-percent').textContent = `${pct}% Concluído (${done}/${total})`;
 
         grid.innerHTML = filteredData.length
-          ? filteredData.map(renderTaskCard).join('')
+          ? renderTaskColumns(filteredData)
           : '<div style="color:var(--text-sec); padding:40px; text-align:center; grid-column:1/-1;">Nenhuma missão encontrada no filtro selecionado.</div>';
 
       } else {
@@ -3862,7 +3911,8 @@ query {
       'Não foi possível carregar a calibração do mapa (offline?). Use o mapa oficial do tarkov.dev.': 'Could not load the map calibration (offline?). Use the official tarkov.dev map.',
       'Marcar como concluída': 'Mark as completed', 'Fixar missão como Ativa / Em Andamento': 'Pin task as Active / In Progress',
       '📌 Ativa': '📌 Active', '📌 Fixar / Ativa': '📌 Pin / Active', 'EM ANDAMENTO': 'IN PROGRESS',
-      'Diretrizes Operacionais': 'Objectives', 'Itens necessários': 'Required items',
+      'Diretrizes Operacionais': 'Objectives', 'Itens necessários': 'Required items', 'Equipamento inicial': 'Starting equipment',
+      'Vestir': 'Wear', 'Usar arma': 'Use weapon', 'Acessório da arma': 'Weapon mod',
       '🌍 Qualquer lugar / Global': '🌍 Anywhere / Global', '🗺️ Ver no Mapa': '🗺️ View on Map', '🎒 Necessário:': '🎒 Required:',
       'Entregar': 'Hand over', 'Vender': 'Sell', 'Plantar': 'Plant', 'Entregar item de missão': 'Hand over task item',
       'Plantar item de missão': 'Plant task item', 'Marcador': 'Marker', 'Usar': 'Use', 'Montar': 'Build',
